@@ -70,8 +70,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "your-colmeia-digital-project-id"
+        "projectId": "9911d9a9-48b7-473c-9de9-ca234b93e02a"
       }
-    }
+    },
+    "owner": "yurikauan08"
   }
 }
