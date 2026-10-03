@@ -8,12 +8,16 @@
       "developmentClient": true,
       "distribution": "internal"
     },
-    "preview": {
+        "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      } 
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://colmeia-digital-backend.onrender.com"
+      }
     },
+
     "production": {
       "autoIncrement": true
     }
