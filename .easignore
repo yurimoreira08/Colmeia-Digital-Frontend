@@ -1,0 +1,11 @@
+node_modules
+android
+ios
+.expo
+*.apk
+*.zip
+*.tar.gz
+bun.lockb
+bun.lock
+build
+dist

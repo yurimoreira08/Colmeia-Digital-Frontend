@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "Colmeia Digital",
+    "slug": "colmeia-digital-mobile",
+    "scheme": "colmeiadigital",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Permita o reconhecimento de voz para navegar por comandos.",
+        "NSMicrophoneUsageDescription": "Permita o uso do microfone para comandos de voz.",
+        "NSCameraUsageDescription": "Permita o uso da câmera para tirar fotos técnicas dos manejos e perfil.",
+        "NSPhotoLibraryUsageDescription": "Permita o acesso à galeria para anexar fotos de manejos."
+      }
+    },
+    "android": {
+      "package": "com.colmeiadigital.app",
+      "versionCode": 1,
+      "allowBackup": true,
+      "adaptiveIcon": {
+        "backgroundColor": "#0E4F55",
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#0E4F55"
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Permita o uso do microfone para comandos de voz.",
+          "speechRecognitionPermission": "Permita o reconhecimento de voz para navegar por comandos.",
+          "androidSpeechServicePackages": [
+            "com.google.android.googlequicksearchbox"
+          ]
+        }
+      ],
+      "expo-font",
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/adaptive-icon.png",
+          "color": "#0E4F55"
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "your-colmeia-digital-project-id"
+      }
+    }
+  }
+}
