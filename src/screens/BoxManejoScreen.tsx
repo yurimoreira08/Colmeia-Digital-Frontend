@@ -66,8 +66,10 @@ export function BoxManejoScreen({ navigation, route }: Props) {
     scrollY,
     setScrollY,
     scrollViewRef,
+    onLayoutSection,
     onLayoutGrid,
     onLayoutTask,
+    scrollToTask,
     toggleOption,
     handleFinishManejo,
   } = hook;
@@ -174,7 +176,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
           </Pressable>
 
           {/* Seção de Atividades de Manejo */}
-          <View style={styles.sectionBlock}>
+          <View style={styles.sectionBlock} onLayout={onLayoutSection}>
             <Text style={styles.sectionHeader}>ATIVIDADES DE MANEJO</Text>
             <View style={styles.grid} onLayout={onLayoutGrid}>
               {MANEJO_OPTIONS.map((option) => {
@@ -228,6 +230,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
                               onFocus={() => {
                                 setLastActiveId(task.id);
                                 setActiveVoiceField('name');
+                                scrollToTask(task.id);
                               }}
                             />
                             {tempTaskName[task.id] ? (
@@ -265,6 +268,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
                             onFocus={() => {
                               setLastActiveId(task.id);
                               setActiveVoiceField('obs');
+                              scrollToTask(task.id);
                             }}
                             multiline
                           />
@@ -302,6 +306,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
                             onFocus={() => {
                               setLastActiveId(task.id);
                               setActiveVoiceField('act');
+                              scrollToTask(task.id);
                             }}
                             multiline
                           />

@@ -39,10 +39,10 @@ async function syncLocalApiaryBoxes(apiaryId: number, boxCount: number): Promise
     let nextNum = currentCount + 1;
 
     for (let i = currentCount + 1; i <= boxCount; i++) {
-      let candidateName = normalizeBoxName(`Nova Caixa ${nextNum}`);
+      let candidateName = normalizeBoxName(`Caixa ${String(nextNum).padStart(2, '0')}`);
       while (existingNames.has(candidateName.toLowerCase().trim())) {
         nextNum++;
-        candidateName = normalizeBoxName(`Nova Caixa ${nextNum}`);
+        candidateName = normalizeBoxName(`Caixa ${String(nextNum).padStart(2, '0')}`);
       }
       existingNames.add(candidateName.toLowerCase().trim());
 
@@ -67,7 +67,7 @@ export async function listAllApiaries(): Promise<Apiary[]> {
     id: r.id,
     name: r.name,
     location: r.location,
-    boxCount: r.box_count,
+    boxCount: typeof r.actual_box_count === 'number' ? r.actual_box_count : r.box_count,
     description: r.description,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -82,7 +82,7 @@ export async function loadApiary(id: number): Promise<Apiary | null> {
     id: r.id,
     name: r.name,
     location: r.location,
-    boxCount: r.box_count,
+    boxCount: typeof r.actual_box_count === 'number' ? r.actual_box_count : r.box_count,
     description: r.description,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -95,11 +95,10 @@ export async function saveApiary(params: {
   name: string;
   location: string;
   boxCount: string;
-  description: string;
+  description?: string;
 }): Promise<Apiary> {
   assertRequired(params.name, 'o nome do apiario');
   assertRequired(params.location, 'o local do apiario');
-  assertRequired(params.description, 'a descricao do apiario');
 
   const parsedBoxCount = parseBoxCount(params.boxCount);
 
@@ -119,7 +118,7 @@ export async function saveApiary(params: {
     name: params.name,
     location: params.location,
     boxCount: parsedBoxCount,
-    description: params.description,
+    description: params.description || '',
   });
 
   // Sincronizar as caixas localmente para que apareçam offline imediatamente

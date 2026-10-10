@@ -22,7 +22,8 @@ export async function initializeLocalDb(): Promise<void> {
   if (Platform.OS === 'web') return;
   const db = await getLocalDb();
 
-  await db.execAsync('PRAGMA foreign_keys = ON;');
+  // Foreign keys OFF para permitir remapeamento seguro de IDs temporários locais para IDs definitivos do servidor durante sync
+  await db.execAsync('PRAGMA foreign_keys = OFF;');
 
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS apiaries (
@@ -127,6 +128,67 @@ export async function initializeLocalDb(): Promise<void> {
   try {
     await db.execAsync('CREATE UNIQUE INDEX IF NOT EXISTS idx_manejos_client_uuid ON manejos (client_uuid);');
   } catch {}
+
+  // Limpa caixas duplicadas residuais
+  await cleanupDuplicateBoxesLocal();
+}
+
+export async function cleanupDuplicateBoxesLocal(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    const db = await getLocalDb();
+    // Re-aponta anotações de caixas duplicadas para a caixa principal (menor ID)
+    await db.execAsync(`
+      UPDATE review_reports 
+      SET caixa_id = (
+        SELECT MIN(b2.id) 
+        FROM boxes b2 
+        JOIN boxes b1 ON b1.id = review_reports.caixa_id 
+        WHERE b2.apiary_id = b1.apiary_id 
+          AND LOWER(TRIM(b2.name)) = LOWER(TRIM(b1.name)) 
+          AND b2.archived = 0
+      )
+      WHERE EXISTS (
+        SELECT 1 
+        FROM boxes b1 
+        JOIN boxes b2 ON b2.apiary_id = b1.apiary_id 
+          AND LOWER(TRIM(b2.name)) = LOWER(TRIM(b1.name)) 
+          AND b2.id < b1.id 
+          AND b2.archived = 0
+        WHERE b1.id = review_reports.caixa_id
+      );
+
+      UPDATE manejos 
+      SET caixa_id = (
+        SELECT MIN(b2.id) 
+        FROM boxes b2 
+        JOIN boxes b1 ON b1.id = manejos.caixa_id 
+        WHERE b2.apiary_id = b1.apiary_id 
+          AND LOWER(TRIM(b2.name)) = LOWER(TRIM(b1.name)) 
+          AND b2.archived = 0
+      )
+      WHERE EXISTS (
+        SELECT 1 
+        FROM boxes b1 
+        JOIN boxes b2 ON b2.apiary_id = b1.apiary_id 
+          AND LOWER(TRIM(b2.name)) = LOWER(TRIM(b1.name)) 
+          AND b2.id < b1.id 
+          AND b2.archived = 0
+        WHERE b1.id = manejos.caixa_id
+      );
+
+      DELETE FROM boxes 
+      WHERE id NOT IN (
+        SELECT MIN(id) 
+        FROM boxes 
+        WHERE archived = 0 
+        GROUP BY apiary_id, LOWER(TRIM(name))
+      ) 
+      AND archived = 0;
+    `);
+  } catch (err) {
+    console.warn('[cleanupDuplicateBoxesLocal] Erro ao limpar caixas duplicadas:', err);
+  }
 }
 
 // Configs locais
@@ -197,8 +259,7 @@ export async function updateRecordSyncStatus(
   const db = await getLocalDb();
   if (isNew && localId !== serverId) {
     await db.withTransactionAsync(async () => {
-      await db.runAsync(`UPDATE ${tableName} SET id = ?, synced = 1, is_new = 0 WHERE id = ?;`, [serverId, localId]);
-      
+      // 1. Re-aponta os filhos da chave estrangeira de localId para serverId
       if (tableName === 'apiaries') {
         await db.runAsync('UPDATE boxes SET apiary_id = ? WHERE apiary_id = ?;', [serverId, localId]);
         await db.runAsync('UPDATE review_reports SET apiary_id = ? WHERE apiary_id = ?;', [serverId, localId]);
@@ -208,6 +269,21 @@ export async function updateRecordSyncStatus(
         await db.runAsync('UPDATE manejos SET caixa_id = ? WHERE caixa_id = ?;', [serverId, localId]);
       } else if (tableName === 'review_reports') {
         await db.runAsync('UPDATE manejos SET revisao_id = ? WHERE revisao_id = ?;', [serverId, localId]);
+      }
+
+      // 2. Verifica se o serverId já existe localmente (ex: baixado por um PULL anterior)
+      const existingServerRow = await db.getFirstAsync<{ id: number }>(
+        `SELECT id FROM ${tableName} WHERE id = ?;`,
+        [serverId]
+      );
+
+      if (existingServerRow) {
+        // Se já existe uma linha com o serverId, remove a linha temporária localId e marca serverId como sincronizada
+        await db.runAsync(`DELETE FROM ${tableName} WHERE id = ?;`, [localId]);
+        await db.runAsync(`UPDATE ${tableName} SET synced = 1, is_new = 0 WHERE id = ?;`, [serverId]);
+      } else {
+        // Se não existe, atualiza a chave primária de localId para serverId
+        await db.runAsync(`UPDATE ${tableName} SET id = ?, synced = 1, is_new = 0 WHERE id = ?;`, [serverId, localId]);
       }
     });
   } else {
@@ -311,17 +387,30 @@ export async function deleteApiaryLocal(id: number): Promise<void> {
   if (row && row.is_new === 0) {
     await recordOfflineDeletion('apiaries', id);
   }
+  await db.runAsync('DELETE FROM boxes WHERE apiary_id = ?;', [id]);
+  await db.runAsync('DELETE FROM review_reports WHERE apiary_id = ?;', [id]);
+  await db.runAsync('DELETE FROM manejos WHERE apiary_id = ?;', [id]);
   await db.runAsync('DELETE FROM apiaries WHERE id = ?;', [id]);
 }
 
 export async function listApiariesLocal(): Promise<any[]> {
   const db = await getLocalDb();
-  return db.getAllAsync('SELECT * FROM apiaries ORDER BY updated_at DESC;');
+  return db.getAllAsync(`
+    SELECT a.*, 
+      COALESCE((SELECT COUNT(*) FROM boxes b WHERE b.apiary_id = a.id AND b.archived = 0), 0) as actual_box_count 
+    FROM apiaries a 
+    ORDER BY a.updated_at DESC;
+  `);
 }
 
 export async function getApiaryLocal(id: number): Promise<any | null> {
   const db = await getLocalDb();
-  return db.getFirstAsync('SELECT * FROM apiaries WHERE id = ?;', [id]);
+  return db.getFirstAsync(`
+    SELECT a.*, 
+      COALESCE((SELECT COUNT(*) FROM boxes b WHERE b.apiary_id = a.id AND b.archived = 0), 0) as actual_box_count 
+    FROM apiaries a 
+    WHERE a.id = ?;
+  `, [id]);
 }
 
 export async function getLocalApiaries(): Promise<any[]> {
@@ -384,6 +473,18 @@ export async function replaceApiariesLocal(apiaries: any[]): Promise<void> {
     }
 
     for (const a of apiaries) {
+      // Reconciliação: se existir registro não sincronizado localmente com o mesmo nome
+      const localDuplicate = await db.getFirstAsync<{ id: number }>(
+        'SELECT id FROM apiaries WHERE synced = 0 AND LOWER(TRIM(name)) = LOWER(TRIM(?));',
+        [a.name]
+      );
+      if (localDuplicate && localDuplicate.id !== a.id) {
+        await db.runAsync('UPDATE boxes SET apiary_id = ? WHERE apiary_id = ?;', [a.id, localDuplicate.id]);
+        await db.runAsync('UPDATE review_reports SET apiary_id = ? WHERE apiary_id = ?;', [a.id, localDuplicate.id]);
+        await db.runAsync('UPDATE manejos SET apiary_id = ? WHERE apiary_id = ?;', [a.id, localDuplicate.id]);
+        await db.runAsync('DELETE FROM apiaries WHERE id = ?;', [localDuplicate.id]);
+      }
+
       const existing = await db.getFirstAsync<{ synced: number }>(
         'SELECT synced FROM apiaries WHERE id = ?;',
         [a.id]
@@ -471,6 +572,8 @@ export async function deleteBoxLocal(id: number): Promise<void> {
   if (row && row.is_new === 0) {
     await recordOfflineDeletion('boxes', id);
   }
+  await db.runAsync('DELETE FROM review_reports WHERE caixa_id = ?;', [id]);
+  await db.runAsync('DELETE FROM manejos WHERE caixa_id = ?;', [id]);
   await db.runAsync('DELETE FROM boxes WHERE id = ?;', [id]);
 }
 
@@ -576,6 +679,17 @@ export async function replaceBoxesLocal(boxes: any[]): Promise<void> {
     }
 
     for (const b of boxes) {
+      // Reconciliação: se existir caixa não sincronizada localmente com o mesmo apiary_id e mesmo nome/posição
+      const localDuplicateBox = await db.getFirstAsync<{ id: number }>(
+        'SELECT id FROM boxes WHERE synced = 0 AND apiary_id = ? AND (LOWER(TRIM(name)) = LOWER(TRIM(?)) OR position = ?);',
+        [b.apiaryId, b.name, b.position]
+      );
+      if (localDuplicateBox && localDuplicateBox.id !== b.id) {
+        await db.runAsync('UPDATE review_reports SET caixa_id = ? WHERE caixa_id = ?;', [b.id, localDuplicateBox.id]);
+        await db.runAsync('UPDATE manejos SET caixa_id = ? WHERE caixa_id = ?;', [b.id, localDuplicateBox.id]);
+        await db.runAsync('DELETE FROM boxes WHERE id = ?;', [localDuplicateBox.id]);
+      }
+
       const existing = await db.getFirstAsync<{ synced: number }>(
         'SELECT synced FROM boxes WHERE id = ?;',
         [b.id]

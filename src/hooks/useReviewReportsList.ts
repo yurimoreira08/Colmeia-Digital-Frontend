@@ -86,7 +86,16 @@ export function useReviewReportsList(routeParams: any) {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [deleteManejoId, setDeleteManejoId] = useState<number | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'revisoes' | 'manejos'>('revisoes');
+  const [activeTab, setActiveTab] = useState<'revisoes' | 'manejos'>(
+    routeParams?.initialTab === 'manejos' ? 'manejos' : 'revisoes'
+  );
+
+  useEffect(() => {
+    if (routeParams?.initialTab) {
+      setActiveTab(routeParams.initialTab);
+    }
+  }, [routeParams?.initialTab]);
+
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState<string | null>(null);
 
@@ -106,6 +115,9 @@ export function useReviewReportsList(routeParams: any) {
   useFocusEffect(
     useCallback(() => {
       let mounted = true;
+      if (routeParams?.initialTab) {
+        setActiveTab(routeParams.initialTab);
+      }
       async function load(): Promise<void> {
         setLoading(true);
         await loadData();
@@ -115,7 +127,7 @@ export function useReviewReportsList(routeParams: any) {
       return () => {
         mounted = false;
       };
-    }, [loadData])
+    }, [loadData, routeParams?.initialTab])
   );
 
   async function handleArchiveSingle(id: number) {

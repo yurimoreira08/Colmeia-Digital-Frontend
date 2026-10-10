@@ -100,6 +100,7 @@ export function useBoxManejo(navigation: any, routeParams: any) {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollY, setScrollY] = useState(0);
   const taskPositions = useRef<Record<string, { y: number; h: number }>>({});
+  const sectionYRef = useRef(0);
   const gridYRef = useRef(0);
   const lastActiveIdRef = useRef<string | null>(null);
   const latestTasksRef = useRef(selectedTasks);
@@ -121,8 +122,16 @@ export function useBoxManejo(navigation: any, routeParams: any) {
     activeVoiceFieldRef.current = activeVoiceField;
   }, [activeVoiceField]);
 
+  const onLayoutSection = useCallback((e: any) => {
+    if (e?.nativeEvent?.layout) {
+      sectionYRef.current = e.nativeEvent.layout.y;
+    }
+  }, []);
+
   const onLayoutGrid = useCallback((e: any) => {
-    gridYRef.current = e.nativeEvent.layout.y;
+    if (e?.nativeEvent?.layout) {
+      gridYRef.current = e.nativeEvent.layout.y;
+    }
   }, []);
 
   const onLayoutTask = useCallback((id: string, e: any) => {
@@ -135,6 +144,16 @@ export function useBoxManejo(navigation: any, routeParams: any) {
       y: layoutY,
       h: layoutHeight,
     };
+  }, []);
+
+  const scrollToTask = useCallback((id: string) => {
+    setTimeout(() => {
+      const pos = taskPositions.current[id];
+      if (pos && scrollViewRef.current) {
+        const targetY = Math.max(0, sectionYRef.current + gridYRef.current + pos.y - 40);
+        scrollViewRef.current.scrollTo({ y: targetY, animated: true });
+      }
+    }, 60);
   }, []);
 
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
@@ -227,7 +246,9 @@ export function useBoxManejo(navigation: any, routeParams: any) {
       }
       return next;
     });
-  }, []);
+
+    scrollToTask(id);
+  }, [scrollToTask]);
 
   const setOptionState = useCallback((id: string, checked: boolean) => {
     setSelectedTasks((prev) => {
@@ -262,7 +283,11 @@ export function useBoxManejo(navigation: any, routeParams: any) {
         return next;
       }
     });
-  }, []);
+
+    if (checked) {
+      scrollToTask(id);
+    }
+  }, [scrollToTask]);
 
   const handleFinishManejo = useCallback(() => {
     const tasks = Object.values(latestTasksRef.current);
@@ -454,6 +479,7 @@ export function useBoxManejo(navigation: any, routeParams: any) {
                 setLastActiveId(currentLoopTaskId);
                 const isOutro = currentLoopTaskId === 'outro';
                 setActiveVoiceField(isOutro ? 'name' : 'obs');
+                scrollToTask(currentLoopTaskId);
                 if (cleanPayload) {
                   const formatted = cleanPayload.charAt(0).toUpperCase() + cleanPayload.slice(1);
                   updateTaskText(currentLoopTaskId, isOutro ? 'name' : 'obs', formatted, isFinal);
@@ -466,6 +492,7 @@ export function useBoxManejo(navigation: any, routeParams: any) {
               currentLoopMode = trigger.type === 'obs' ? 'obs' : trigger.type === 'act' ? 'act' : 'name';
               if (currentLoopTaskId) {
                 setActiveVoiceField(currentLoopMode);
+                scrollToTask(currentLoopTaskId);
                 if (isFinal) {
                   if (cleanPayload) {
                     const formatted = cleanPayload.charAt(0).toUpperCase() + cleanPayload.slice(1);
@@ -552,7 +579,7 @@ export function useBoxManejo(navigation: any, routeParams: any) {
         unsubscribe();
         void stopListening();
       };
-    }, [handleFinishManejo, registerScreenCommandHandler, setOptionState, startListening, stopListening])
+    }, [handleFinishManejo, registerScreenCommandHandler, setOptionState, startListening, stopListening, scrollToTask])
   );
 
   return {
@@ -588,8 +615,10 @@ export function useBoxManejo(navigation: any, routeParams: any) {
     scrollY,
     setScrollY,
     scrollViewRef,
+    onLayoutSection,
     onLayoutGrid,
     onLayoutTask,
+    scrollToTask,
     toggleOption,
     handleFinishManejo,
   };

@@ -122,6 +122,7 @@ export function ManejoListScreen({ navigation }: Props) {
                     apiaryId: apiary.id,
                     apiaryName: apiary.name,
                     role: apiary.role || 'owner',
+                    initialTab: 'manejos',
                   })
                 }
               >

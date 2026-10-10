@@ -21,6 +21,7 @@ import { AppHeader } from "../components/AppHeader";
 import { PhotoOptionsModal } from "../components/PhotoOptionsModal";
 import { useAppTheme } from "../theme/ThemeContext";
 import { updateManejoService } from "../services/manejoService";
+import { markBoxModifiedInSession } from "../services/sessionStore";
 import { MANEJO_OPTION_LABELS, ManejoTask } from "../types/manejo";
 import type { RootStackParamList } from "../types/auth";
 
@@ -129,6 +130,10 @@ export function EditManejoNotesScreen({ navigation, route }: Props) {
         indicacoes: ind,
         photoUri: photoUri,
       });
+
+      if (manejo.caixaId) {
+        markBoxModifiedInSession(manejo.caixaId, 'manejo');
+      }
 
       Alert.alert("Sucesso", "Manejo atualizado com sucesso!");
       navigation.goBack();

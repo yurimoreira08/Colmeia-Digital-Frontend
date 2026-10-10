@@ -130,6 +130,7 @@ export function RevisionListScreen({ navigation }: Props) {
                     apiaryId: apiary.id,
                     apiaryName: apiary.name,
                     role: apiary.role || 'owner',
+                    initialTab: 'revisoes',
                   })
                 }
               >

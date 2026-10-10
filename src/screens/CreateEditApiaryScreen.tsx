@@ -213,7 +213,7 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
 
           <TextInput
             style={[styles.input, styles.textArea]}
-            placeholder="Digite a descrição do seu apiário..."
+            placeholder="Digite a descrição do seu apiário (opcional)..."
             placeholderTextColor={colors.textMuted}
             value={description}
             onChangeText={setDescription}

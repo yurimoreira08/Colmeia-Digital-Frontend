@@ -214,7 +214,11 @@ export async function syncOfflineData(): Promise<void> {
           description: a.description,
         };
         const res = await apiRequest('/apiaries', 'POST', payload);
-        await updateRecordSyncStatus('apiaries', a.id, res.id, !!a.is_new);
+        if (res && res.id) {
+          await updateRecordSyncStatus('apiaries', a.id, res.id, !!a.is_new);
+        } else {
+          await db.runAsync('UPDATE apiaries SET synced = 1, is_new = 0 WHERE id = ?;', [a.id]);
+        }
       } catch (err: any) {
         if (isAuthError(err)) {
           console.warn('[Sync] 401 ao enviar apiários. Pausando sync.');
@@ -237,14 +241,22 @@ export async function syncOfflineData(): Promise<void> {
         continue;
       }
       try {
+        // Garante leitura atualizada da chave estrangeira apiary_id caso tenha sido atualizada pelo sync
+        const currentBox = await db.getFirstAsync<{ apiary_id: number }>('SELECT apiary_id FROM boxes WHERE id = ?;', [b.id]);
+        const targetApiaryId = currentBox?.apiary_id ?? b.apiary_id;
+
         if (b.is_new) {
           const payload = {
-            apiaryId: b.apiary_id,
+            apiaryId: targetApiaryId,
             name: b.name,
             position: b.position,
           };
           const res = await apiRequest('/boxes', 'POST', payload);
-          await updateRecordSyncStatus('boxes', b.id, res.id, true);
+          if (res && res.id) {
+            await updateRecordSyncStatus('boxes', b.id, res.id, true);
+          } else {
+            await db.runAsync('UPDATE boxes SET synced = 1, is_new = 0 WHERE id = ?;', [b.id]);
+          }
         } else {
           await apiRequest(`/boxes/${b.id}/rename`, 'PUT', { name: b.name });
           if (b.archived) {

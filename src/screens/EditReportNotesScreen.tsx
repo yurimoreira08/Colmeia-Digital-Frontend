@@ -16,6 +16,7 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { AppHeader } from "../components/AppHeader";
 import { useAppTheme } from "../theme/ThemeContext";
 import { updateRevision } from "../services/reviewReportService";
+import { markBoxModifiedInSession } from "../services/sessionStore";
 import type { RootStackParamList } from "../types/auth";
 
 type Props = NativeStackScreenProps<RootStackParamList, "EditReportNotes">;
@@ -92,6 +93,10 @@ export function EditReportNotesScreen({ navigation, route }: Props) {
         indicacoes: ind,
         checkedOptions: finalChecked,
       });
+
+      if (report.caixaId) {
+        markBoxModifiedInSession(report.caixaId, 'revisao');
+      }
 
       Alert.alert("Sucesso", "Revisão atualizada com sucesso!");
       navigation.goBack();

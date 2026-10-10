@@ -118,6 +118,21 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
   const scrollViewRef = useRef<ScrollView>(null);
   const [scrollY, setScrollY] = useState(0);
   const handledKeywordsRef = useRef<Set<string>>(new Set());
+  const sectionYRef = useRef<Record<string, number>>({});
+  const itemPositionsRef = useRef<Record<string, number>>({});
+
+  const scrollToItem = useCallback((itemId: string) => {
+    setTimeout(() => {
+      const y = itemPositionsRef.current[itemId];
+      if (typeof y === 'number' && scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({
+          y: Math.max(0, y - 60),
+          animated: true,
+        });
+      }
+    }, 60);
+  }, []);
+
   // Ref com snapshot dos valores para handleFinishRevision — evita que obs/indication
   // no dep array causem re-run do useFocusEffect a cada palavra falada
   const latestRevisionValuesRef = useRef({ selectedOptions, observation, indication });
@@ -276,6 +291,7 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
               }
 
               if (optionMatched) {
+                scrollToItem(option.id);
                 return true;
               }
             }
@@ -368,6 +384,7 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
 
             // Gatilhos de Campo (obs / act)
             setActiveVoiceField(trigger.type);
+            scrollToItem(trigger.type);
             if (isFinal) {
               if (cleanPayload) {
                 const formatted = cleanPayload.charAt(0).toUpperCase() + cleanPayload.slice(1);
@@ -526,7 +543,12 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
           </Pressable>
 
           {/* Categoria 1: Tipo & Espaço */}
-          <View style={styles.sectionBlock}>
+          <View
+            style={styles.sectionBlock}
+            onLayout={(e) => {
+              sectionYRef.current['sec1'] = e.nativeEvent.layout.y;
+            }}
+          >
             <Text style={styles.sectionHeader}>TIPO E ESPAÇO</Text>
             <View style={styles.grid2Col}>
               {[
@@ -541,6 +563,9 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
                     key={option.id}
                     style={[styles.itemCard, active ? styles.itemCardActive : null]}
                     onPress={() => toggleOption(option.id)}
+                    onLayout={(e) => {
+                      itemPositionsRef.current[option.id] = (sectionYRef.current['sec1'] || 0) + e.nativeEvent.layout.y;
+                    }}
                   >
                     <Text style={[styles.itemCardText, active ? styles.itemCardTextActive : null]}>
                       {option.label}
@@ -552,7 +577,12 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
           </View>
 
           {/* Categoria 2: Sanidade, Rainha & Postura */}
-          <View style={styles.sectionBlock}>
+          <View
+            style={styles.sectionBlock}
+            onLayout={(e) => {
+              sectionYRef.current['sec2'] = e.nativeEvent.layout.y;
+            }}
+          >
             <Text style={styles.sectionHeader}>RAINHA, CRIA E ALIMENTO</Text>
             <View style={styles.grid2Col}>
               {[
@@ -570,6 +600,9 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
                     key={option.id}
                     style={[styles.itemCard, active ? styles.itemCardActive : null]}
                     onPress={() => toggleOption(option.id)}
+                    onLayout={(e) => {
+                      itemPositionsRef.current[option.id] = (sectionYRef.current['sec2'] || 0) + e.nativeEvent.layout.y;
+                    }}
                   >
                     <Text style={[styles.itemCardText, active ? styles.itemCardTextActive : null]}>
                       {option.label}
@@ -581,7 +614,12 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
           </View>
 
           {/* Categoria 3: Força do Enxame */}
-          <View style={styles.sectionBlock}>
+          <View
+            style={styles.sectionBlock}
+            onLayout={(e) => {
+              sectionYRef.current['sec3'] = e.nativeEvent.layout.y;
+            }}
+          >
             <Text style={styles.sectionHeader}>FORÇA DO ENXAME</Text>
             <View style={styles.strengthContainer}>
               {[
@@ -600,6 +638,9 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
                         : null,
                     ]}
                     onPress={() => toggleOption(strength.id)}
+                    onLayout={(e) => {
+                      itemPositionsRef.current[strength.id] = (sectionYRef.current['sec3'] || 0) + e.nativeEvent.layout.y;
+                    }}
                   >
                     <Text 
                       style={[
@@ -616,11 +657,21 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
           </View>
 
           {/* Categoria 4: Anotações de Campo */}
-          <View style={styles.sectionBlock}>
+          <View
+            style={styles.sectionBlock}
+            onLayout={(e) => {
+              sectionYRef.current['sec4'] = e.nativeEvent.layout.y;
+            }}
+          >
             <Text style={styles.sectionHeader}>ANOTAÇÕES DE CAMPO</Text>
             
             {/* Observações */}
-            <View style={styles.textAreaCard}>
+            <View
+              style={styles.textAreaCard}
+              onLayout={(e) => {
+                itemPositionsRef.current['obs'] = (sectionYRef.current['sec4'] || 0) + e.nativeEvent.layout.y;
+              }}
+            >
               <View style={styles.fieldHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="create-outline" size={18} color="#059669" />
@@ -651,7 +702,12 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
             </View>
 
             {/* O Que Fazer */}
-            <View style={styles.textAreaCard}>
+            <View
+              style={styles.textAreaCard}
+              onLayout={(e) => {
+                itemPositionsRef.current['act'] = (sectionYRef.current['sec4'] || 0) + e.nativeEvent.layout.y;
+              }}
+            >
               <View style={styles.fieldHeader}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Ionicons name="bulb-outline" size={18} color={colors.warmAccent} />

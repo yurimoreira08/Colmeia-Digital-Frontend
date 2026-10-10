@@ -68,6 +68,7 @@ export type RootStackParamList = {
         apiaryId?: number;
         apiaryName?: string;
         role?: 'owner' | 'editor' | 'reader';
+        initialTab?: 'revisoes' | 'manejos';
       }
     | undefined;
   Settings: undefined;

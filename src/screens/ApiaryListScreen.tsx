@@ -268,6 +268,21 @@ export function ApiaryListScreen({ navigation }: Props) {
 
                     <Pressable
                       style={styles.actionBtn}
+                      onPress={() => {
+                        navigation.navigate('BoxesList', {
+                          apiaryId: apiary.id,
+                          apiaryName: apiary.name,
+                          role: 'owner',
+                          openAddBox: true,
+                        });
+                      }}
+                    >
+                      <Ionicons name="add-circle-outline" size={16} color={colors.accent} />
+                      <Text style={[styles.actionBtnText, { color: colors.accent }]}>+ Caixa</Text>
+                    </Pressable>
+
+                    <Pressable
+                      style={styles.actionBtn}
                       onPress={() => navigation.navigate('CreateEditApiary', { apiaryId: apiary.id })}
                     >
                       <Ionicons name="pencil-outline" size={16} color={colors.textMuted} />
