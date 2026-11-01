@@ -12,17 +12,17 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [themeName, setThemeName] = useState<AppThemeName>('petroleo-digital');
+  const [themeName, setThemeName] = useState<AppThemeName>('claro');
 
   const value = useMemo<ThemeContextValue>(() => {
     return {
       themeName,
-      colors: themes[themeName],
+      colors: themes[themeName] || themes.claro,
       setThemeName,
-      options: (Object.keys(themes) as AppThemeName[]).map((id) => ({
-        id,
-        label: themeLabel[id],
-      })),
+      options: [
+        { id: 'claro', label: 'Claro' },
+        { id: 'escuro', label: 'Escuro' },
+      ],
     };
   }, [themeName]);
 

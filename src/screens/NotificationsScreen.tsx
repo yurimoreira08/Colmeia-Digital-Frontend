@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppHeader } from '../components/AppHeader';
 import { BottomDock } from '../components/BottomDock';
@@ -64,8 +64,8 @@ export function NotificationsScreen({ navigation }: Props) {
 
         {!loading && notifications.length === 0 ? (
           <Animated.View style={[styles.emptyCard, { opacity: fadeAnim }]}>
-            <Ionicons
-              name="notifications-off-outline"
+            <MaterialCommunityIcons
+              name="bell-off-outline"
               size={24}
               color={colors.textMuted}
               style={styles.emptyIcon}

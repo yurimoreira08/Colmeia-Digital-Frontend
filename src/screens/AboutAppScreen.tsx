@@ -1,10 +1,10 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppHeader } from '../components/AppHeader';
 import { BottomDock } from '../components/BottomDock';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 import type { RootStackParamList } from '../types/auth';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AboutApp'>;
@@ -14,44 +14,46 @@ export function AboutAppScreen({ navigation }: Props) {
   const styles = createStyles(colors);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <AppHeader
-        title="Sobre o Colmeia Digital"
+        title="Sobre o Aplicativo"
         showBack
         onPressBack={() => navigation.goBack()}
         onPressBell={() => navigation.navigate('Notifications')}
       />
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.title}>COLMEIA DIGITAL</Text>
           <Text style={styles.paragraph}>
-            Sistema integrado para gestão, monitoramento e diagnóstico de apiários e caixas em campo.
+            Sistema integrado de alta performance para gestão, monitoramento e diagnóstico inteligente de apiários e caixas em campo.
           </Text>
           <Text style={styles.paragraph}>
-            Arquitetura Offline-First robusta: todos os registros operacionais são persistidos localmente no dispositivo e sincronizados de forma transparente com o servidor.
+            Arquitetura Offline-First robusta: todos os registros operacionais são persistidos localmente no dispositivo e sincronizados de forma transparente e segura com o servidor na nuvem.
           </Text>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Módulos Operacionais</Text>
-          <Text style={styles.bullet}>• Apiários: Cadastro e gestão georreferenciada de apiários.</Text>
-          <Text style={styles.bullet}>• Caixas: Mapeamento e controle de caixas ativas.</Text>
-          <Text style={styles.bullet}>• Revisões: Avaliação técnica padronizada de enxames.</Text>
-          <Text style={styles.bullet}>• Manejos: Registro de atividades e intervenções de campo.</Text>
-          <Text style={styles.bullet}>• Relatórios: Estatísticas analíticas, métricas de crescimento e acompanhamento operacional.</Text>
+          <Text style={styles.bullet}>• Apiários: Cadastro e gestão georreferenciada de apiários com controle de permissões.</Text>
+          <Text style={styles.bullet}>• Caixas: Mapeamento detalhado e controle individual de caixas ativas.</Text>
+          <Text style={styles.bullet}>• Revisões: Avaliação técnica padronizada de enxames com registro de postura e crias.</Text>
+          <Text style={styles.bullet}>• Manejos: Registro de intervenções técnicas, alimentação, divisão e fotos comprovatórias.</Text>
+          <Text style={styles.bullet}>• Relatórios: Estatísticas analíticas, métricas de crescimento e acompanhamento histórico.</Text>
+          <Text style={styles.bullet}>• Comandos de Voz: Operação em campo com as mãos livres sem precisar retirar as luvas.</Text>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Tecnologia e Segurança</Text>
-          <Text style={styles.bullet}>• React Native & Expo no aplicativo móvel.</Text>
-          <Text style={styles.bullet}>• SQLite local para trabalho ininterrupto sem sinal de rede.</Text>
-          <Text style={styles.bullet}>• Sincronização segura com backend Node.js / Express / PostgreSQL.</Text>
+          <Text style={styles.bullet}>• React Native & Expo no aplicativo móvel com tipografia moderna Inter.</Text>
+          <Text style={styles.bullet}>• SQLite local para trabalho ininterrupto em áreas remotas sem sinal de internet.</Text>
+          <Text style={styles.bullet}>• Sincronização segura com backend Node.js, Express e banco de dados PostgreSQL.</Text>
         </View>
 
         <View style={styles.footerCard}>
-          <Text style={styles.footerText}>Colmeia Digital v1.0</Text>
+          <Text style={styles.footerText}>Colmeia Digital v2.0</Text>
           <Text style={styles.footerSubtext}>Projeto FAPEPI • 2026</Text>
+          <Text style={styles.fromBoiles}>FROM BOILES</Text>
         </View>
       </ScrollView>
 
@@ -60,7 +62,7 @@ export function AboutAppScreen({ navigation }: Props) {
         onPressHome={() => navigation.replace('Home')}
         onPressSettings={() => navigation.replace('Settings')}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -68,65 +70,81 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
   return StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: PALETTE.lightSurface,
     },
     content: {
-      paddingHorizontal: 18,
+      paddingHorizontal: 16,
       paddingTop: 16,
-      paddingBottom: 14,
-      gap: 12,
+      paddingBottom: 28,
+      gap: 14,
     },
     card: {
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      borderRadius: 16,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      backgroundColor: colors.card,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
+      borderRadius: 18,
+      paddingHorizontal: 18,
+      paddingVertical: 18,
+      backgroundColor: '#FFFFFF',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.04,
+      shadowRadius: 6,
+      elevation: 2,
     },
     title: {
-      fontSize: 20,
-      color: colors.textPrimary,
-      marginBottom: 8,
+      fontSize: 22,
+      color: PALETTE.primaryDark,
+      marginBottom: 10,
       fontWeight: '800',
       letterSpacing: 0.5,
     },
     sectionTitle: {
-      fontSize: 16,
-      color: colors.textPrimary,
-      marginBottom: 8,
-      fontWeight: '700',
+      fontSize: 18,
+      color: PALETTE.primaryDark,
+      marginBottom: 10,
+      fontWeight: '800',
     },
     paragraph: {
-      fontSize: 14,
-      lineHeight: 22,
-      color: colors.textPrimary,
+      fontSize: 15,
+      lineHeight: 23,
+      color: PALETTE.primaryDark,
       marginBottom: 8,
+      fontWeight: '500',
     },
     bullet: {
-      fontSize: 14,
-      lineHeight: 22,
-      color: colors.textPrimary,
-      marginBottom: 4,
+      fontSize: 14.5,
+      lineHeight: 23,
+      color: PALETTE.primaryDark,
+      marginBottom: 6,
+      fontWeight: '500',
     },
     footerCard: {
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      backgroundColor: colors.surface,
-      minHeight: 84,
+      borderRadius: 18,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
+      backgroundColor: '#FFFFFF',
+      paddingVertical: 20,
+      paddingHorizontal: 16,
+      gap: 6,
     },
     footerText: {
-      fontSize: 16,
-      color: colors.textPrimary,
-      fontWeight: 'bold',
+      fontSize: 18,
+      color: PALETTE.primaryDark,
+      fontWeight: '800',
     },
     footerSubtext: {
-      marginTop: 2,
-      fontSize: 12,
-      color: colors.textMuted,
+      fontSize: 13,
+      color: PALETTE.secondaryDark,
+      fontWeight: '600',
+    },
+    fromBoiles: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: PALETTE.secondaryDark,
+      letterSpacing: 2,
+      marginTop: 4,
     },
   });
 }

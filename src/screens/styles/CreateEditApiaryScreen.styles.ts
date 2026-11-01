@@ -1,48 +1,73 @@
 import { StyleSheet } from 'react-native';
 import type { AppThemeColors } from '../../theme/themes';
-import { createCommonStyles } from '../../theme/commonStyles';
+import { PALETTE } from '../../theme/themes';
 
 export function createStyles(colors: AppThemeColors) {
-  const common = createCommonStyles(colors);
-
   return StyleSheet.create({
-    safeArea: common.safeArea,
-    input: common.input,
+    safeArea: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
     content: {
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 50,
+      gap: 16,
+    },
+    inputLabel: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: PALETTE.primaryDark,
+      marginBottom: 6,
+    },
+    input: {
+      minHeight: 58,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryMedium,
+      backgroundColor: '#FFFFFF',
+      color: PALETTE.primaryDark,
       paddingHorizontal: 18,
-      paddingTop: 16,
-      paddingBottom: 40,
-      gap: 14,
+      paddingVertical: 14,
+      fontSize: 17,
+      fontWeight: '500',
     },
     textArea: {
-      minHeight: 120,
+      minHeight: 140,
       textAlignVertical: 'top',
-      paddingVertical: 12,
+      paddingVertical: 14,
     },
     errorText: {
       alignSelf: 'flex-start',
-      color: colors.error,
-      fontSize: 13,
-      fontWeight: '500',
+      color: PALETTE.dangerRed,
+      fontSize: 14,
+      fontWeight: '600',
     },
     submitButton: {
-      marginTop: 12,
-      minWidth: 236,
-      height: 54,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      backgroundColor: colors.accent,
+      marginTop: 16,
+      width: '100%',
+      minHeight: 58,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
+      backgroundColor: PALETTE.primaryDark,
+      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      alignSelf: 'center',
-      paddingHorizontal: 22,
+      gap: 10,
+      paddingHorizontal: 24,
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
     },
     submitButtonText: {
-      fontSize: 15,
-      color: colors.buttonText,
+      fontSize: 18,
+      color: '#FFFFFF',
       textAlign: 'center',
-      fontWeight: '600',
+      fontWeight: '800',
+      letterSpacing: 0.3,
     },
   });
 }

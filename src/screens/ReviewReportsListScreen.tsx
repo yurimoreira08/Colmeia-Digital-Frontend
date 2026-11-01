@@ -1,15 +1,17 @@
 import { useState, useCallback } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { loadApiary } from '../services/apiaryService';
 
 import { AppHeader } from '../components/AppHeader';
 import { BottomDock } from '../components/BottomDock';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { ReportCard } from '../components/ReportCard';
+import { ExportPdfModal } from '../components/ExportPdfModal';
 import { useReviewReportsList } from '../hooks/useReviewReportsList';
 import { createStyles } from './styles/ReviewReportsListScreen.styles';
+import { PALETTE } from '../theme/themes';
 
 export function ReviewReportsListScreen({ navigation, route }: { navigation: any; route: any }) {
   const reportsListHook = useReviewReportsList(route.params);
@@ -65,6 +67,7 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
     setQuickFilter,
   } = reportsListHook;
 
+  const [exportModalVisible, setExportModalVisible] = useState(false);
   const screenTitle = route.params?.apiaryName ? `Histórico - ${route.params.apiaryName}` : 'Histórico de Atividades';
 
   return (
@@ -74,6 +77,28 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
         showBack
         onPressBack={() => navigation.goBack()}
         onPressBell={() => navigation.navigate('Notifications')}
+        rightElement={
+          <Pressable
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 8,
+              backgroundColor: '#FEF2F2',
+              borderWidth: 1,
+              borderColor: '#FCA5A5',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              marginLeft: 6,
+            }}
+            onPress={() => setExportModalVisible(true)}
+            hitSlop={8}
+            accessibilityLabel="Exportar histórico em PDF"
+          >
+            <MaterialCommunityIcons name="file-pdf-box" size={20} color="#DC2626" />
+            <Text style={{ fontSize: 12, fontWeight: '800', color: '#DC2626' }}>PDF</Text>
+          </Pressable>
+        }
       />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -83,10 +108,10 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
             style={[styles.segmentBtn, activeTab === 'revisoes' ? styles.segmentBtnActiveRevisao : null]}
             onPress={() => setActiveTab('revisoes')}
           >
-            <Ionicons
-              name="clipboard-outline"
-              size={18}
-              color={activeTab === 'revisoes' ? '#FFFFFF' : colors.textMuted}
+            <MaterialCommunityIcons
+              name="clipboard-text-outline"
+              size={20}
+              color={activeTab === 'revisoes' ? '#FFFFFF' : PALETTE.secondaryDark}
             />
             <Text style={[styles.segmentText, activeTab === 'revisoes' ? styles.segmentTextActive : null]}>
               Revisões
@@ -96,10 +121,10 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
             style={[styles.segmentBtn, activeTab === 'manejos' ? styles.segmentBtnActiveManejo : null]}
             onPress={() => setActiveTab('manejos')}
           >
-            <Ionicons
-              name="construct-outline"
-              size={18}
-              color={activeTab === 'manejos' ? '#FFFFFF' : colors.textMuted}
+            <MaterialCommunityIcons
+              name="tools"
+              size={20}
+              color={activeTab === 'manejos' ? '#FFFFFF' : PALETTE.secondaryDark}
             />
             <Text style={[styles.segmentText, activeTab === 'manejos' ? styles.segmentTextActive : null]}>
               Manejos
@@ -113,7 +138,11 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
             style={[styles.filterPill, quickFilter === 'thisMonth' ? styles.filterPillActive : null]}
             onPress={() => setQuickFilter('thisMonth')}
           >
-            <Ionicons name="calendar" size={16} color={quickFilter === 'thisMonth' ? colors.buttonText : colors.accent} />
+            <MaterialCommunityIcons
+              name="calendar-month-outline"
+              size={18}
+              color={quickFilter === 'thisMonth' ? '#FFFFFF' : PALETTE.primaryDark}
+            />
             <Text style={[styles.filterPillText, quickFilter === 'thisMonth' ? styles.filterPillTextActive : null]}>
               Mês Atual
             </Text>
@@ -123,7 +152,11 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
             style={[styles.filterPill, quickFilter === '7days' ? styles.filterPillActive : null]}
             onPress={() => setQuickFilter('7days')}
           >
-            <Ionicons name="time" size={16} color={quickFilter === '7days' ? colors.buttonText : colors.accent} />
+            <MaterialCommunityIcons
+              name="clock-outline"
+              size={18}
+              color={quickFilter === '7days' ? '#FFFFFF' : PALETTE.primaryDark}
+            />
             <Text style={[styles.filterPillText, quickFilter === '7days' ? styles.filterPillTextActive : null]}>
               7 Dias
             </Text>
@@ -133,7 +166,11 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
             style={[styles.filterPill, quickFilter === 'all' ? styles.filterPillActive : null]}
             onPress={() => setQuickFilter('all')}
           >
-            <Ionicons name="eye" size={16} color={quickFilter === 'all' ? colors.buttonText : colors.accent} />
+            <MaterialCommunityIcons
+              name="view-grid-outline"
+              size={18}
+              color={quickFilter === 'all' ? '#FFFFFF' : PALETTE.primaryDark}
+            />
             <Text style={[styles.filterPillText, quickFilter === 'all' ? styles.filterPillTextActive : null]}>
               Ver Tudo
             </Text>
@@ -142,27 +179,27 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
 
         {/* Campo de Busca */}
         <View style={styles.searchWrap}>
-          <Ionicons name="search-outline" size={20} color={colors.textMuted} />
+          <MaterialCommunityIcons name="magnify" size={22} color={PALETTE.secondaryDark} />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar por caixa ou palavra..."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={PALETTE.secondaryDark}
             value={searchTerm}
             onChangeText={setSearchTerm}
           />
           {searchTerm ? (
             <Pressable onPress={() => setSearchTerm('')} hitSlop={10}>
-              <Ionicons name="close-circle" size={20} color={colors.textMuted} />
+              <MaterialCommunityIcons name="close-circle" size={20} color={PALETTE.secondaryDark} />
             </Pressable>
           ) : null}
         </View>
 
-        {loading && <ActivityIndicator size="large" color={colors.accent} style={{ marginVertical: 30 }} />}
+        {loading && <ActivityIndicator size="large" color={PALETTE.primaryDark} style={{ marginVertical: 30 }} />}
 
         {!loading && activeTab === 'revisoes' && (
           groupedReports.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="clipboard-outline" size={44} color={colors.textMuted} style={{ marginBottom: 8 }} />
+              <MaterialCommunityIcons name="clipboard-text-outline" size={44} color={PALETTE.secondaryDark} style={{ marginBottom: 8 }} />
               <Text style={styles.emptyTitle}>Nenhuma revisão encontrada</Text>
               <Text style={styles.emptySubtitle}>Não há revisões registradas para os filtros selecionados.</Text>
             </View>
@@ -183,7 +220,7 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
         {!loading && activeTab === 'manejos' && (
           groupedManejos.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="construct-outline" size={44} color={colors.textMuted} style={{ marginBottom: 8 }} />
+              <MaterialCommunityIcons name="tools" size={44} color={PALETTE.secondaryDark} style={{ marginBottom: 8 }} />
               <Text style={styles.emptyTitle}>Nenhum manejo encontrado</Text>
               <Text style={styles.emptySubtitle}>Não há manejos registrados para os filtros selecionados.</Text>
             </View>
@@ -219,6 +256,16 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
         onCancel={() => setDeleteManejoId(null)}
       />
 
+      <ExportPdfModal
+        visible={exportModalVisible}
+        onClose={() => setExportModalVisible(false)}
+        targetTitle={route.params?.boxName ? `Caixa ${route.params.boxName}` : (route.params?.apiaryName || 'Histórico')}
+        targetSubtitle={route.params?.apiaryName ? `Apiário: ${route.params.apiaryName}` : undefined}
+        apiaryId={route.params?.apiaryId ? Number(route.params.apiaryId) : undefined}
+        caixaId={route.params?.boxId ? Number(route.params.boxId) : undefined}
+        boxName={route.params?.boxName}
+      />
+
       <BottomDock
         active={null}
         onPressHome={() => navigation.replace('Home')}
@@ -227,7 +274,3 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
     </View>
   );
 }
-
-const commonStylesLoader = {
-  marginVertical: 24,
-};

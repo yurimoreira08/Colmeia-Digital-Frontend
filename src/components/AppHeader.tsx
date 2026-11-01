@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getUnreadNotificationsCount } from '../services/notificationsService';
@@ -81,13 +81,16 @@ export function AppHeader({
             onPress={onPressBack}
             style={styles.iconButton}
           >
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#FFFFFF" />
           </Pressable>
         ) : null}
 
-        <View style={styles.logoBadge}>
-          <Ionicons name="grid-outline" size={20} color="#FFFFFF" />
-        </View>
+        {/* Logo oficial sem fundo inline (28x28dp) à esquerda do título */}
+        <Image
+          source={require('../../assets/logo-colmeiadigital-semfundo.png')}
+          style={styles.inlineLogo}
+          resizeMode="contain"
+        />
 
         <View style={styles.titleWrap}>
           <Text
@@ -118,7 +121,11 @@ export function AppHeader({
             }}
             style={[styles.iconButton, isListening ? styles.iconButtonListening : null]}
           >
-            <Ionicons name={isListening ? 'mic' : 'mic-outline'} size={22} color="#FFFFFF" />
+            <MaterialCommunityIcons
+              name={isListening ? 'microphone' : 'microphone-outline'}
+              size={22}
+              color={isListening ? '#2C4251' : '#FFFFFF'}
+            />
           </Pressable>
         ) : null}
 
@@ -131,7 +138,7 @@ export function AppHeader({
             style={styles.iconButton}
           >
             <View style={{ position: 'relative' }}>
-              <Ionicons name="notifications-outline" size={24} color="#FFFFFF" />
+              <MaterialCommunityIcons name="bell-outline" size={24} color="#FFFFFF" />
               {unreadCount > 0 ? (
                 <View style={styles.badge} />
               ) : null}
@@ -163,13 +170,9 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       alignItems: 'center',
       gap: 10,
     },
-    logoBadge: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      backgroundColor: 'rgba(255,255,255,0.15)',
-      alignItems: 'center',
-      justifyContent: 'center',
+    inlineLogo: {
+      width: 28,
+      height: 28,
     },
     iconButton: {
       width: 40,
@@ -180,7 +183,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       backgroundColor: 'rgba(255,255,255,0.1)',
     },
     iconButtonListening: {
-      backgroundColor: colors.warmAccent,
+      backgroundColor: '#9FD1D4',
     },
     rightArea: {
       flexDirection: 'row',
@@ -215,7 +218,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       position: 'absolute',
       right: 0,
       top: 0,
-      backgroundColor: '#E26D5C',
+      backgroundColor: '#DC2626',
       width: 8,
       height: 8,
       borderRadius: 4,

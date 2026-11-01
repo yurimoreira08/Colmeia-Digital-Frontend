@@ -1,5 +1,5 @@
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../theme/ThemeContext';
 import { isoDateToDisplay } from '../utils/date';
 import type { ReviewReport } from '../types/reviewReport';
@@ -85,8 +85,8 @@ export function HistoryCard({
         <View style={styles.titleContainer}>
           {selectionMode && onToggleSelection && (
             <View style={styles.checkbox}>
-              <Ionicons
-                name={isSelected ? 'checkbox' : 'square-outline'}
+              <MaterialCommunityIcons
+                name={isSelected ? 'checkbox-marked' : 'checkbox-blank-outline'}
                 size={22}
                 color={isSelected ? colors.accent : colors.textMuted}
               />
@@ -102,12 +102,12 @@ export function HistoryCard({
           <View style={styles.actionsContainer}>
             {onEdit && (
               <Pressable style={styles.iconBtn} onPress={() => onEdit(item)} hitSlop={8}>
-                <Ionicons name="pencil" size={20} color={colors.textPrimary} />
+                <MaterialCommunityIcons name="pencil" size={20} color={colors.textPrimary} />
               </Pressable>
             )}
             {onDelete && (
               <Pressable style={styles.iconBtn} onPress={() => onDelete(item)} hitSlop={8}>
-                <Ionicons name="trash-outline" size={20} color={colors.error} />
+                <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.error} />
               </Pressable>
             )}
             {(onArchive || onDownload) && (

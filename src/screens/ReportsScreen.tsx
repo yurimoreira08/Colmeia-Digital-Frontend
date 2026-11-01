@@ -1,13 +1,15 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View, FlatList } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppHeader } from '../components/AppHeader';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { BottomDock } from '../components/BottomDock';
 import { ReportCard } from '../components/ReportCard';
+import { ExportPdfModal } from '../components/ExportPdfModal';
 import { useReports } from '../hooks/useReports';
 import { createStyles } from './styles/ReportsScreen.styles';
+import { PALETTE } from '../theme/themes';
 
 export function ReportsScreen({ navigation, route }: { navigation: any; route: any }) {
   const reportsHook = useReports(route.params);
@@ -63,13 +65,38 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
     return [];
   }, [paginatedItems, filter]);
 
+  const [exportModalVisible, setExportModalVisible] = useState(false);
+
   return (
     <View style={styles.safeArea}>
       <AppHeader
         title={screenTitle.toUpperCase()}
         showBack
+        showMic={true}
         onPressBack={() => navigation.goBack()}
         onPressBell={() => navigation.navigate('Notifications')}
+        rightElement={
+          <Pressable
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 8,
+              backgroundColor: '#FEF2F2',
+              borderWidth: 1,
+              borderColor: '#FCA5A5',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 4,
+              marginLeft: 6,
+            }}
+            onPress={() => setExportModalVisible(true)}
+            hitSlop={8}
+            accessibilityLabel="Exportar relatório em PDF"
+          >
+            <MaterialCommunityIcons name="file-pdf-box" size={20} color="#DC2626" />
+            <Text style={{ fontSize: 12, fontWeight: '800', color: '#DC2626' }}>PDF</Text>
+          </Pressable>
+        }
       />
 
       <FlatList
@@ -83,10 +110,10 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
                 style={[styles.segmentBtn, filter === 'revisoes' ? styles.segmentBtnActiveRevisao : null]}
                 onPress={() => setFilter('revisoes')}
               >
-                <Ionicons
-                  name="clipboard-outline"
-                  size={17}
-                  color={filter === 'revisoes' ? '#FFFFFF' : colors.textMuted}
+                <MaterialCommunityIcons
+                  name="clipboard-text-outline"
+                  size={19}
+                  color={filter === 'revisoes' ? '#FFFFFF' : PALETTE.secondaryDark}
                 />
                 <Text style={[styles.segmentText, filter === 'revisoes' ? styles.segmentTextActive : null]}>
                   Revisões
@@ -97,10 +124,10 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
                 style={[styles.segmentBtn, filter === 'manejos' ? styles.segmentBtnActiveManejo : null]}
                 onPress={() => setFilter('manejos')}
               >
-                <Ionicons
-                  name="construct-outline"
-                  size={17}
-                  color={filter === 'manejos' ? '#FFFFFF' : colors.textMuted}
+                <MaterialCommunityIcons
+                  name="tools"
+                  size={19}
+                  color={filter === 'manejos' ? '#FFFFFF' : PALETTE.secondaryDark}
                 />
                 <Text style={[styles.segmentText, filter === 'manejos' ? styles.segmentTextActive : null]}>
                   Manejos
@@ -108,16 +135,16 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
               </Pressable>
             </View>
 
-            {/* Filtros Rápidos (Chips) - Começando com 7 Dias como padrão */}
+            {/* Filtros Rápidos (Chips) */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsRow}>
               <Pressable
                 style={[styles.filterChip, quickFilter === '7days' ? styles.filterChipActive : null]}
                 onPress={() => setQuickFilter('7days')}
               >
-                <Ionicons 
-                  name="time-outline" 
-                  size={15} 
-                  color={quickFilter === '7days' ? (colors.buttonText || '#FFFFFF') : colors.accent} 
+                <MaterialCommunityIcons 
+                  name="clock-outline" 
+                  size={16} 
+                  color={quickFilter === '7days' ? '#FFFFFF' : PALETTE.primaryDark} 
                 />
                 <Text style={[styles.filterChipText, quickFilter === '7days' ? styles.filterChipTextActive : null]}>
                   7 Dias
@@ -128,10 +155,10 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
                 style={[styles.filterChip, quickFilter === 'thisMonth' ? styles.filterChipActive : null]}
                 onPress={() => setQuickFilter('thisMonth')}
               >
-                <Ionicons 
-                  name="calendar-outline" 
-                  size={15} 
-                  color={quickFilter === 'thisMonth' ? (colors.buttonText || '#FFFFFF') : colors.accent} 
+                <MaterialCommunityIcons 
+                  name="calendar-month-outline" 
+                  size={16} 
+                  color={quickFilter === 'thisMonth' ? '#FFFFFF' : PALETTE.primaryDark} 
                 />
                 <Text style={[styles.filterChipText, quickFilter === 'thisMonth' ? styles.filterChipTextActive : null]}>
                   Mês Atual
@@ -142,10 +169,10 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
                 style={[styles.filterChip, quickFilter === 'apiary' ? styles.filterChipActive : null]}
                 onPress={() => setQuickFilter('apiary')}
               >
-                <Ionicons 
-                  name="location-outline" 
-                  size={15} 
-                  color={quickFilter === 'apiary' ? (colors.buttonText || '#FFFFFF') : colors.accent} 
+                <MaterialCommunityIcons 
+                  name="map-marker-outline" 
+                  size={16} 
+                  color={quickFilter === 'apiary' ? '#FFFFFF' : PALETTE.primaryDark} 
                 />
                 <Text style={[styles.filterChipText, quickFilter === 'apiary' ? styles.filterChipTextActive : null]}>
                   Por Apiário
@@ -156,10 +183,10 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
                 style={[styles.filterChip, quickFilter === 'all' ? styles.filterChipActive : null]}
                 onPress={() => setQuickFilter('all')}
               >
-                <Ionicons 
-                  name="grid-outline" 
-                  size={15} 
-                  color={quickFilter === 'all' ? (colors.buttonText || '#FFFFFF') : colors.accent} 
+                <MaterialCommunityIcons 
+                  name="view-grid-outline" 
+                  size={16} 
+                  color={quickFilter === 'all' ? '#FFFFFF' : PALETTE.primaryDark} 
                 />
                 <Text style={[styles.filterChipText, quickFilter === 'all' ? styles.filterChipTextActive : null]}>
                   Ver Tudo
@@ -169,17 +196,17 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
 
             {/* Busca */}
             <View style={styles.searchContainerFull}>
-              <Ionicons name="search-outline" size={18} color={colors.textMuted} />
+              <MaterialCommunityIcons name="magnify" size={22} color={PALETTE.secondaryDark} />
               <TextInput
                 style={styles.searchInputFull}
                 placeholder="Buscar por caixa ou palavra..."
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={PALETTE.secondaryDark}
                 value={searchTerm}
                 onChangeText={setSearchTerm}
               />
               {searchTerm ? (
                 <Pressable onPress={() => setSearchTerm('')} hitSlop={10}>
-                  <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+                  <MaterialCommunityIcons name="close-circle" size={20} color={PALETTE.secondaryDark} />
                 </Pressable>
               ) : null}
             </View>
@@ -272,10 +299,10 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
         ListEmptyComponent={
           !loading && (filter === 'revisoes' || filter === 'manejos' || filter === 'caixas') ? (
             <View style={styles.emptyCard}>
-              <Ionicons 
-                name={filter === 'revisoes' ? 'clipboard-outline' : 'construct-outline'} 
-                size={40} 
-                color={colors.textMuted} 
+              <MaterialCommunityIcons 
+                name={filter === 'revisoes' ? 'clipboard-text-outline' : 'tools'} 
+                size={42} 
+                color={PALETTE.secondaryDark} 
                 style={{ marginBottom: 8 }}
               />
               <Text style={styles.emptyTitle}>
@@ -308,6 +335,19 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
         message="Tem certeza que deseja excluir este manejo? Esta ação não pode ser desfeita."
         onConfirm={() => void confirmDeleteManejo()}
         onCancel={() => setDeleteManejoId(null)}
+      />
+
+      <ExportPdfModal
+        visible={exportModalVisible}
+        onClose={() => setExportModalVisible(false)}
+        targetTitle={
+          selectedApiaryId
+            ? (apiaries.find((a) => a.id === selectedApiaryId)?.name || 'Apiário Selecionado')
+            : 'Relatório Geral de Atividades'
+        }
+        targetSubtitle={selectedApiaryId ? 'Todas as caixas deste apiário' : 'Todos os apiários e colmeias'}
+        apiaryId={selectedApiaryId || undefined}
+        apiaryName={selectedApiaryId ? (apiaries.find((a) => a.id === selectedApiaryId)?.name || undefined) : undefined}
       />
 
       <BottomDock

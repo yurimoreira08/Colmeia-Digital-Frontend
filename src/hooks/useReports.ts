@@ -19,6 +19,7 @@ import {
   getLocalRevisions, 
   getLocalManejos 
 } from '../services/localDbService';
+import { subscribeToSyncStatus } from '../services/syncService';
 
 const MANEJO_OPTION_LABELS: Record<string, string> = {
   alimentacao: 'Alimentação',
@@ -138,7 +139,7 @@ export function useReports(routeParams?: any) {
       setToDate(isoDateToDisplay(toIsoDate(new Date())));
     } else if (quickFilter === 'all') {
       const date = new Date();
-      date.setDate(date.getDate() - 180);
+      date.setFullYear(date.getFullYear() - 10);
       setFromDate(isoDateToDisplay(toIsoDate(date)));
       setToDate(isoDateToDisplay(toIsoDate(new Date())));
     }
@@ -400,6 +401,17 @@ export function useReports(routeParams?: any) {
       void loadData(true);
     }, [filter, dateWindow, selectedApiaryId, selectedBoxId, searchTerm, quickFilter])
   );
+
+  useEffect(() => {
+    const unsubscribe = subscribeToSyncStatus((status) => {
+      if (!status.isSyncing) {
+        void loadData(true);
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [loadData]);
 
   useFocusEffect(
     useCallback(() => {

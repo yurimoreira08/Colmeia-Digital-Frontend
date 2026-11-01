@@ -9,11 +9,13 @@ import {
   View,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppHeader } from '../components/AppHeader';
 import { useCreateEditApiary } from '../hooks/useCreateEditApiary';
 import { createStyles } from './styles/CreateEditApiaryScreen.styles';
+import { PALETTE } from '../theme/themes';
 import type { RootStackParamList } from '../types/auth';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
 
@@ -189,7 +191,7 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Digite o nome do seu apiário...."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={PALETTE.secondaryMedium}
             value={name}
             onChangeText={setName}
           />
@@ -197,7 +199,7 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Digite o local do seu apiário..."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={PALETTE.secondaryMedium}
             value={location}
             onChangeText={setLocation}
           />
@@ -205,7 +207,7 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Digite a quantidade de caixas do seu apiário..."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={PALETTE.secondaryMedium}
             keyboardType="number-pad"
             value={boxCount}
             onChangeText={setBoxCount}
@@ -214,7 +216,7 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Digite a descrição do seu apiário (opcional)..."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={PALETTE.secondaryMedium}
             value={description}
             onChangeText={setDescription}
             multiline
@@ -227,9 +229,12 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
             style={styles.submitButton}
             onPress={handleSave}
             disabled={saving}
+            accessibilityRole="button"
+            accessibilityLabel={isEditing ? 'Salvar alterações' : 'Finalizar cadastro'}
           >
+            <MaterialCommunityIcons name="check-circle-outline" size={22} color="#FFFFFF" />
             <Text style={styles.submitButtonText}>
-              {saving ? 'Salvando...' : 'Finalizar cadastro'}
+              {saving ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Finalizar cadastro'}
             </Text>
           </Pressable>
         </ScrollView>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useAppTheme } from '../theme/ThemeContext';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { PALETTE } from '../theme/themes';
 
 interface ActionButtonsBarProps {
   onArchive: () => void;
@@ -10,20 +10,18 @@ interface ActionButtonsBarProps {
 }
 
 export function ActionButtonsBar({ onArchive, onDownload, isArchived }: ActionButtonsBarProps) {
-  const { colors } = useAppTheme();
-
   return (
     <View style={styles.container}>
       {onDownload && (
         <Pressable style={styles.button} onPress={onDownload} hitSlop={8}>
-          <Ionicons name="download-outline" size={20} color={colors.accent} />
+          <MaterialCommunityIcons name="download-outline" size={20} color={PALETTE.primaryDark} />
         </Pressable>
       )}
       <Pressable style={styles.button} onPress={onArchive} hitSlop={8}>
-        <Ionicons
-          name={isArchived ? 'refresh-outline' : 'archive-outline'}
+        <MaterialCommunityIcons
+          name={isArchived ? 'package-up' : 'archive-arrow-down-outline'}
           size={20}
-          color={colors.accent}
+          color={PALETTE.primaryDark}
         />
       </Pressable>
     </View>

@@ -5,6 +5,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { saveImagePermanently } from '../utils/filePersistence';
 
 import { saveManejoService } from '../services/manejoService';
+import { uploadManejoPhoto } from '../services/storageService';
 import { markBoxModifiedInSession } from '../services/sessionStore';
 import type { ManejoTask } from '../types/manejo';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
@@ -289,7 +290,7 @@ export function useBoxManejo(navigation: any, routeParams: any) {
     }
   }, [scrollToTask]);
 
-  const handleFinishManejo = useCallback(() => {
+  const handleFinishManejo = useCallback(async () => {
     const tasks = Object.values(latestTasksRef.current);
 
     if (tasks.length === 0) {
@@ -297,26 +298,43 @@ export function useBoxManejo(navigation: any, routeParams: any) {
       return;
     }
 
-    saveManejoService({
-      caixaId: routeParams.boxId,
-      caixaName: routeParams.boxName,
-      apiaryId: routeParams.apiaryId,
-      apiaryName: routeParams.apiaryName,
-      tipo: routeParams.tipo,
-      revisaoId: routeParams.revisaoId,
-      checkedOptions: tasks,
-      observacoes: '',
-      indicacoes: '',
-      photoUri: photoUri ?? undefined,
-    })
-      .then(() => {
-        markBoxModifiedInSession(routeParams.boxId, 'manejo');
-        setSuccessModal(true);
-        void stopListening();
-      })
-      .catch((err) => {
-        setErrorModal(err?.message || 'Não foi possível salvar o manejo. Tente novamente.');
+    let finalPhotoUri = photoUri ?? undefined;
+    if (photoUri && !photoUri.startsWith('http://') && !photoUri.startsWith('https://')) {
+      try {
+        const uploadedUrl = await uploadManejoPhoto(photoUri);
+        if (uploadedUrl) {
+          finalPhotoUri = uploadedUrl;
+          setPhotoUri(uploadedUrl);
+        }
+      } catch (uploadErr) {
+        console.warn('[useBoxManejo] Falha no upload imediato da foto, mantendo local para sync:', uploadErr);
+        Alert.alert(
+          'Aviso de Foto',
+          'Não foi possível enviar a foto para a nuvem no momento. O manejo será salvo localmente e a foto será enviada na próxima sincronização.'
+        );
+      }
+    }
+
+    try {
+      await saveManejoService({
+        caixaId: routeParams.boxId,
+        caixaName: routeParams.boxName,
+        apiaryId: routeParams.apiaryId,
+        apiaryName: routeParams.apiaryName,
+        tipo: routeParams.tipo,
+        revisaoId: routeParams.revisaoId,
+        checkedOptions: tasks,
+        observacoes: '',
+        indicacoes: '',
+        photoUri: finalPhotoUri,
       });
+
+      markBoxModifiedInSession(routeParams.boxId, 'manejo');
+      setSuccessModal(true);
+      void stopListening();
+    } catch (err: any) {
+      setErrorModal(err?.message || 'Não foi possível salvar o manejo. Tente novamente.');
+    }
   }, [routeParams, stopListening, photoUri]);
 
   useFocusEffect(

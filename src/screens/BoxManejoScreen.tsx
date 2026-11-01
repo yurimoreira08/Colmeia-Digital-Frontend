@@ -10,7 +10,7 @@ import {
   Animated,
   Keyboard,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { ConfirmModal } from '../components/ConfirmModal';
@@ -19,6 +19,7 @@ import { BottomDock } from '../components/BottomDock';
 import { FloatingScrollButtons } from '../components/FloatingScrollButtons';
 import { PhotoOptionsModal } from '../components/PhotoOptionsModal';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 import { useBoxManejo, MANEJO_OPTIONS } from '../hooks/useBoxManejo';
 import { useKeyboardVisible } from '../hooks/useKeyboardVisible';
 import { createStyles } from './styles/BoxManejoScreen.styles';
@@ -74,6 +75,8 @@ export function BoxManejoScreen({ navigation, route }: Props) {
     handleFinishManejo,
   } = hook;
 
+  const isFilled = Object.keys(selectedTasks).length > 0 || !!photoUri;
+
   return (
     <View style={styles.safeArea}>
       <AppHeader
@@ -95,8 +98,8 @@ export function BoxManejoScreen({ navigation, route }: Props) {
               marginBottom: currentTranscript ? 4 : 0,
             }}
           >
-            <Ionicons name="mic" size={16} color={colors.textPrimary} />
-            <Text style={[styles.floatingTranscriptText, { opacity: 0.8 }]}>
+            <MaterialCommunityIcons name="microphone" size={16} color="#FFFFFF" />
+            <Text style={[styles.floatingTranscriptText, { opacity: 0.9 }]}>
               {activeVoiceField === 'obs'
                 ? 'Ouvindo Observação...'
                 : activeVoiceField === 'act'
@@ -130,12 +133,12 @@ export function BoxManejoScreen({ navigation, route }: Props) {
           {/* Header Hero da Caixa e Apiário */}
           <View style={styles.heroCard}>
             <View style={styles.heroIconBadge}>
-              <Ionicons name="construct" size={24} color="#D97706" />
+              <MaterialCommunityIcons name="tools" size={26} color={PALETTE.primaryDark} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={styles.heroBoxTitle}>{route.params.boxName}</Text>
               <View style={styles.heroApiaryRow}>
-                <Ionicons name="business-outline" size={13} color={colors.textMuted} />
+                <MaterialCommunityIcons name="beehive-outline" size={15} color={PALETTE.secondaryDark} />
                 <Text style={styles.heroApiaryText}>{route.params.apiaryName}</Text>
               </View>
               {route.params.revisaoId ? (
@@ -160,7 +163,11 @@ export function BoxManejoScreen({ navigation, route }: Props) {
             }}
           >
             <View style={[styles.voiceIconWrap, isListening ? styles.voiceIconWrapActive : null]}>
-              <Ionicons name={isListening ? "mic" : "mic-outline"} size={24} color={isListening ? "#FFFFFF" : "#D97706"} />
+              <MaterialCommunityIcons
+                name={isListening ? "microphone" : "microphone-outline"}
+                size={26}
+                color={isListening ? "#FFFFFF" : PALETTE.primaryDark}
+              />
             </View>
             <View style={styles.voiceTextWrap}>
               <Text style={styles.voiceTitle}>{isListening ? 'Ouvindo seus comandos...' : 'Comando por Voz'}</Text>
@@ -206,7 +213,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
                               <Text style={styles.fieldLabel}>Qual o outro manejo?</Text>
                               {activeVoiceField === 'name' && isListening && lastActiveId === task.id ? (
                                 <View style={styles.voiceFieldBadge}>
-                                  <Ionicons name="mic" size={12} color="#D97706" />
+                                  <MaterialCommunityIcons name="microphone" size={14} color={PALETTE.primaryDark} />
                                   <Text style={styles.voiceFieldBadgeText}>Ouvindo...</Text>
                                 </View>
                               ) : null}
@@ -244,7 +251,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
                             <Text style={styles.fieldLabel}>Observações</Text>
                             {activeVoiceField === 'obs' && isListening && lastActiveId === task.id ? (
                               <View style={styles.voiceFieldBadge}>
-                                <Ionicons name="mic" size={12} color="#D97706" />
+                                <MaterialCommunityIcons name="microphone" size={14} color={PALETTE.primaryDark} />
                                 <Text style={styles.voiceFieldBadgeText}>Ouvindo...</Text>
                               </View>
                             ) : null}
@@ -282,7 +289,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
                             <Text style={styles.fieldLabel}>O que fazer</Text>
                             {activeVoiceField === 'act' && isListening && lastActiveId === task.id ? (
                               <View style={styles.voiceFieldBadge}>
-                                <Ionicons name="mic" size={12} color="#D97706" />
+                                <MaterialCommunityIcons name="microphone" size={14} color={PALETTE.primaryDark} />
                                 <Text style={styles.voiceFieldBadgeText}>Ouvindo...</Text>
                               </View>
                             ) : null}
@@ -345,14 +352,14 @@ export function BoxManejoScreen({ navigation, route }: Props) {
               <Text style={styles.fieldLabel}>Foto do Manejo (opcional)</Text>
             </View>
             <Pressable style={styles.photoButton} onPress={handleTakePhoto}>
-              <Ionicons name="camera-outline" size={24} color="#D97706" />
+              <MaterialCommunityIcons name="camera-outline" size={24} color={PALETTE.primaryDark} />
               <Text style={styles.photoButtonText}>{photoUri ? 'Trocar Foto' : 'Tirar Foto do Manejo'}</Text>
             </Pressable>
             {photoUri ? (
               <View style={styles.photoPreviewContainer}>
                 <Image source={{ uri: photoUri }} style={styles.photoPreview} resizeMode="cover" />
                 <Pressable style={styles.removePhotoBtn} onPress={() => setPhotoUri(null)}>
-                  <Ionicons name="close-circle" size={24} color={colors.error} />
+                  <MaterialCommunityIcons name="close-circle" size={24} color={PALETTE.danger} />
                 </Pressable>
               </View>
             ) : null}
@@ -363,12 +370,19 @@ export function BoxManejoScreen({ navigation, route }: Props) {
             <Pressable 
               style={({ pressed }) => [
                 styles.primaryAction,
+                isFilled ? styles.primaryActionFilled : null,
                 pressed ? { transform: [{ scale: 0.985 }] } : null,
               ]} 
               onPress={handleFinishManejo}
             >
-              <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
-              <Text style={styles.primaryActionText}>Salvar Manejo</Text>
+              <MaterialCommunityIcons
+                name="check-circle"
+                size={26}
+                color={isFilled ? PALETTE.primaryDark : '#FFFFFF'}
+              />
+              <Text style={[styles.primaryActionText, isFilled ? styles.primaryActionTextFilled : null]}>
+                Salvar Manejo
+              </Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -377,7 +391,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
       <FloatingScrollButtons
         scrollRef={scrollViewRef}
         currentY={scrollY}
-        bottomOffset={isKeyboardVisible ? keyboardHeight + 16 : 110}
+        bottomOffset={isKeyboardVisible ? keyboardHeight + 16 : 170}
       />
 
       {!isKeyboardVisible && (

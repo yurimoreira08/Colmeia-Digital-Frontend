@@ -65,3 +65,11 @@ export function subscribeSessionModifications(listener: () => void): () => void 
     listeners.delete(listener);
   };
 }
+
+/**
+ * Limpa o histórico de caixas modificadas da sessão (usado no logout / troca de conta).
+ */
+export function clearSessionStore(): void {
+  modifiedBoxesMap.clear();
+  notifyListeners();
+}

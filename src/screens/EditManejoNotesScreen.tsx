@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { saveImagePermanently } from "../utils/filePersistence";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -21,6 +21,7 @@ import { AppHeader } from "../components/AppHeader";
 import { PhotoOptionsModal } from "../components/PhotoOptionsModal";
 import { useAppTheme } from "../theme/ThemeContext";
 import { updateManejoService } from "../services/manejoService";
+import { uploadManejoPhoto } from "../services/storageService";
 import { markBoxModifiedInSession } from "../services/sessionStore";
 import { MANEJO_OPTION_LABELS, ManejoTask } from "../types/manejo";
 import type { RootStackParamList } from "../types/auth";
@@ -115,6 +116,23 @@ export function EditManejoNotesScreen({ navigation, route }: Props) {
 
   async function handleSave() {
     try {
+      let finalPhotoUri = photoUri;
+      if (photoUri && !photoUri.startsWith("http://") && !photoUri.startsWith("https://")) {
+        try {
+          const uploadedUrl = await uploadManejoPhoto(photoUri);
+          if (uploadedUrl) {
+            finalPhotoUri = uploadedUrl;
+            setPhotoUri(uploadedUrl);
+          }
+        } catch (uploadErr) {
+          console.warn("[EditManejoNotesScreen] Falha no upload imediato da foto, mantendo local para sync:", uploadErr);
+          Alert.alert(
+            "Aviso de Foto",
+            "Não foi possível enviar a foto para a nuvem no momento. As alterações serão salvas localmente e a foto enviada na próxima sincronização."
+          );
+        }
+      }
+
       const finalTasks: ManejoTask[] = Object.values(tasks)
         .filter((t) => t.active)
         .map(({ id, obs, ind, customName }) => ({
@@ -128,7 +146,7 @@ export function EditManejoNotesScreen({ navigation, route }: Props) {
         checkedOptions: finalTasks,
         observacoes: obs,
         indicacoes: ind,
-        photoUri: photoUri,
+        photoUri: finalPhotoUri,
       });
 
       if (manejo.caixaId) {
@@ -232,7 +250,7 @@ export function EditManejoNotesScreen({ navigation, route }: Props) {
           <Text style={styles.sectionTitle}>Geral e Foto</Text>
 
           <Pressable style={styles.photoButton} onPress={handleTakePhoto}>
-            <Ionicons name="camera" size={20} color={colors.textPrimary} />
+            <MaterialCommunityIcons name="camera" size={20} color={colors.textPrimary} />
             <Text style={{ color: colors.textPrimary }}>
               {photoUri ? "Alterar Foto" : "Tirar Foto"}
             </Text>
@@ -245,7 +263,7 @@ export function EditManejoNotesScreen({ navigation, route }: Props) {
                 style={styles.removePhoto}
                 onPress={() => setPhotoUri(undefined)}
               >
-                <Ionicons name="close-circle" size={26} color={colors.error} />
+                <MaterialCommunityIcons name="close-circle" size={26} color={colors.error} />
               </Pressable>
             </View>
           )}

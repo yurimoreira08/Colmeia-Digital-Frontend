@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { login } from '../services/authService';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -113,7 +113,7 @@ export function LoginScreen({ navigation }: Props) {
               },
             ]}
           >
-            <Image source={require('../../assets/applogo.png')} style={styles.logo} resizeMode="contain" />
+            <Image source={require('../../assets/logo-colmeiadigital-semfundo.png')} style={styles.logo} resizeMode="contain" />
             <Text style={styles.brandHeader}>COLMEIA DIGITAL</Text>
             <Text style={styles.title}>Acesse sua conta</Text>
             <Text style={styles.subtitle}>Gestão e monitoramento inteligente de apiários</Text>
@@ -163,7 +163,7 @@ export function LoginScreen({ navigation }: Props) {
                 accessibilityRole="button"
                 accessibilityLabel={secureText ? 'Mostrar senha' : 'Ocultar senha'}
               >
-                <Ionicons
+                <MaterialCommunityIcons
                   name={secureText ? 'eye-outline' : 'eye-off-outline'}
                   size={20}
                   color={secureText ? colors.accent : colors.buttonText}

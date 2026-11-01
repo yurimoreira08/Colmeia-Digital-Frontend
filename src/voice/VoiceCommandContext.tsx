@@ -32,10 +32,13 @@ type VoiceCommandContextValue = {
   isListening: boolean;
   isVoiceEnabledByUser: boolean;
   currentTranscript: string;
+  voiceFeedback: string | null;
+  navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>;
   startListening: (isManual?: boolean) => Promise<void>;
   stopListening: (isManual?: boolean) => void;
   toggleListening: () => Promise<void>;
   registerScreenCommandHandler: (handler: VoiceScreenCommandHandler) => () => void;
+  showVoiceFeedback: (text: string) => void;
 };
 
 const VoiceCommandContext = createContext<VoiceCommandContextValue | null>(null);
@@ -55,6 +58,20 @@ export function VoiceCommandProvider({ children, navigationRef }: VoiceCommandPr
 
   const [isVoiceEnabledByUser, setIsVoiceEnabledByUser] = useState(true);
   const [currentTranscript, setCurrentTranscript] = useState('');
+  const [voiceFeedback, setVoiceFeedback] = useState<string | null>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showVoiceFeedback = useCallback((text: string) => {
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    setVoiceFeedback(text);
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setVoiceFeedback(null);
+      feedbackTimeoutRef.current = null;
+    }, 2500);
+  }, []);
+
   const lastHandledTranscriptRef = useRef<string | null>(null);
   const screenCommandHandlersRef = useRef<VoiceScreenCommandHandler[]>([]);
   const speechModuleRef = useRef<SpeechRecognitionModuleLike | null>(null);
@@ -103,18 +120,36 @@ export function VoiceCommandProvider({ children, navigationRef }: VoiceCommandPr
       }
 
       if (
-        normalizedTranscript.includes('ajuda de voz') ||
+        normalizedTranscript === 'ajuda de voz' ||
+        normalizedTranscript === 'comandos disponiveis' ||
+        normalizedTranscript === 'ajuda' ||
         normalizedTranscript.includes('quais comandos') ||
-        normalizedTranscript.includes('comandos disponiveis')
+        normalizedTranscript.includes('comandos disponiveis') ||
+        normalizedTranscript.includes('ajuda de voz')
       ) {
         shouldRestartListeningRef.current = true;
+        showVoiceFeedback('Ajuda de Comandos');
         Alert.alert(
-          'Comandos de Voz',
-          'Exemplos de uso:\n• Revisão: "caixa", "núcleo", "rainha", "mel", "observação [texto]"\n• Manejo: "alimentação", "divisão", "troca de cera"\n• Cadastro: "nome [texto]", "local [texto]", "caixas [qtd]"\n• Navegação: "apiários", "caixas", "revisão", "manejos", "relatórios"\n• Finalizar: "salvar" ou "encerrar".',
+          'Comandos de Voz Disponíveis',
+          'Navegação Global:\n' +
+            '• "Início" ou "Home" → Painel principal\n' +
+            '• "Apiários" → Lista de apiários\n' +
+            '• "Caixas" → Lista de colmeias\n' +
+            '• "Revisões" → Histórico de revisões\n' +
+            '• "Manejos" → Histórico de manejos\n' +
+            '• "Relatórios" → Relatórios e gráficos\n' +
+            '• "Configurações" → Configurações do sistema\n' +
+            '• "Voltar" → Retornar à tela anterior\n' +
+            '• "Parar escuta" → Desativar microfone\n\n' +
+            'Nas telas de Revisão e Manejo:\n' +
+            '• Fale o nome do item para marcar (ex: "rainha", "mel", "alimentação")\n' +
+            '• Diga "observação [texto]" para ditar\n' +
+            '• Diga "salvar" ou "encerrar" para finalizar.',
         );
         return;
       }
 
+      // Prioridade Máxima: Handlers registrados pela tela ativa no momento
       const handlers = [...screenCommandHandlersRef.current].reverse();
       for (const handler of handlers) {
         if (handler(transcript, isFinal)) {
@@ -122,7 +157,7 @@ export function VoiceCommandProvider({ children, navigationRef }: VoiceCommandPr
         }
       }
 
-      // Global Navigation & Back Handlers (fallback when screen does not capture)
+      // Navegação Global: Voltar
       if (
         normalizedTranscript === 'voltar' ||
         normalizedTranscript === 'retornar' ||
@@ -130,14 +165,18 @@ export function VoiceCommandProvider({ children, navigationRef }: VoiceCommandPr
         normalizedTranscript === 'fechar tela'
       ) {
         if (navigationRef.isReady() && navigationRef.canGoBack()) {
+          showVoiceFeedback('Voltando...');
           navigationRef.goBack();
           return;
         }
       }
 
-      const routeMatch = parseVoiceNavigationCommand(transcript);
+      // Navegação Global: Rotas mapeadas
+      const currentRouteName = navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name : undefined;
+      const routeMatch = parseVoiceNavigationCommand(transcript, currentRouteName);
       if (routeMatch && navigationRef.isReady()) {
         try {
+          showVoiceFeedback(`Indo para ${routeMatch.label}...`);
           navigationRef.navigate(routeMatch.route as any);
           return;
         } catch (e) {
@@ -145,7 +184,7 @@ export function VoiceCommandProvider({ children, navigationRef }: VoiceCommandPr
         }
       }
     },
-    [navigationRef],
+    [navigationRef, showVoiceFeedback],
   );
 
   const bindSpeechListeners = useCallback(
@@ -372,12 +411,15 @@ export function VoiceCommandProvider({ children, navigationRef }: VoiceCommandPr
       isListening,
       isVoiceEnabledByUser,
       currentTranscript,
+      voiceFeedback,
       startListening,
       stopListening,
       toggleListening,
       registerScreenCommandHandler,
+      showVoiceFeedback,
+      navigationRef,
     };
-  }, [isListening, isVoiceEnabledByUser, currentTranscript, registerScreenCommandHandler, startListening, stopListening, toggleListening]);
+  }, [isListening, isVoiceEnabledByUser, currentTranscript, voiceFeedback, navigationRef, registerScreenCommandHandler, startListening, stopListening, toggleListening, showVoiceFeedback]);
 
   return <VoiceCommandContext.Provider value={value}>{children}</VoiceCommandContext.Provider>;
 }

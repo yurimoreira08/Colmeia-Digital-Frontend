@@ -94,11 +94,6 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const userId = await getCachedUserId();
-  if (userId) {
-    headers['X-User-Id'] = userId;
-  }
-
   return headers;
 }
 
@@ -134,6 +129,50 @@ export async function apiRequest<T = any>(
       }
     } catch {
       // Ignore parse failure
+    }
+    const error = new Error(errorMessage) as any;
+    error.status = response.status;
+    error.data = data;
+    throw error;
+  }
+
+  const contentType = response.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return response.json() as Promise<T>;
+  }
+  return {} as T;
+}
+
+export async function apiMultipartRequest<T = any>(
+  endpoint: string,
+  formData: FormData
+): Promise<T> {
+  const baseUrl = await getBackendUrl();
+  const cleanBaseUrl = baseUrl.trim().replace(/\/api\/v1\/?$/, '');
+  const url = `${cleanBaseUrl}/api/v1${endpoint}`;
+
+  const headers: Record<string, string> = {};
+  const token = await getCachedToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errorMessage = `Erro HTTP ${response.status}`;
+    let data: any = null;
+    try {
+      data = await response.json();
+      if (data && data.message) {
+        errorMessage = data.message;
+      }
+    } catch {
+      // Ignore
     }
     const error = new Error(errorMessage) as any;
     error.status = response.status;

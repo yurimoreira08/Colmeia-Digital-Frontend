@@ -1,6 +1,29 @@
-export type AppThemeName = 'petroleo-digital' | 'verde-floresta' | 'obsidian-dark';
+// PALETA DE CORES OFICIAL DO COLMEIA DIGITAL
+export const PALETTE = {
+  primaryDark: '#2C4251',     // Primária escura (fundos, headers, botões principais)
+  secondaryMedium: '#7798AB', // Secundária média (elementos de apoio, bordas, ícones inativos)
+  secondaryLight: '#6DA6B4',  // Secundária clara (destaques, selecionados, hover)
+  lightBg: '#BACEE1',         // Fundo claro (backgrounds de card, inputs, telas light)
+  lightSurface: '#BACEE1',    // Alias de fundo claro para cards e superfícies
+  secondaryDark: '#2C4251',   // Alias para primária escura / texto escuro
+  vibrantAccent: '#9FD1D4',   // Acento/vibração (botões de ação após preenchimento, badges, alertas positivos)
+  dangerRed: '#DC2626',       // Vermelho para lixeira e ações destrutivas (mantido)
+  danger: '#DC2626',          // Alias para ações de exclusão / alerta
+  white: '#FFFFFF',
+};
+
+export type AppThemeName = 'claro' | 'escuro' | 'petroleo-digital' | 'obsidian-dark' | 'verde-floresta';
 
 export type AppThemeColors = {
+  // Cores da paleta oficial
+  primaryDark: string;
+  secondaryMedium: string;
+  secondaryLight: string;
+  lightBg: string;
+  vibrantAccent: string;
+  dangerRed: string;
+
+  // Tokens de interface
   background: string;
   surface: string;
   headerBackground: string;
@@ -23,77 +46,73 @@ export type AppThemeColors = {
   glowB: string;
 };
 
-export const themes: Record<AppThemeName, AppThemeColors> = {
-  'petroleo-digital': {
-    background: '#F4F7F6',
+export const themes: Record<string, AppThemeColors> = {
+  claro: {
+    primaryDark: PALETTE.primaryDark,
+    secondaryMedium: PALETTE.secondaryMedium,
+    secondaryLight: PALETTE.secondaryLight,
+    lightBg: PALETTE.lightBg,
+    vibrantAccent: PALETTE.vibrantAccent,
+    dangerRed: PALETTE.dangerRed,
+
+    background: '#F4F7F9',
     surface: '#FFFFFF',
-    headerBackground: '#0E4F55',
+    headerBackground: PALETTE.primaryDark,
     card: '#FFFFFF',
-    cardBorder: '#E2E8F0',
-    accent: '#16808C',
-    accentSoft: '#E6F4F5',
-    warmAccent: '#E26D5C',
-    buttonBackground: '#0E4F55',
+    cardBorder: PALETTE.lightBg,
+    accent: PALETTE.primaryDark,
+    accentSoft: PALETTE.lightBg,
+    warmAccent: PALETTE.vibrantAccent,
+    buttonBackground: PALETTE.primaryDark,
     buttonText: '#FFFFFF',
     inputBackground: '#FFFFFF',
-    inputBorder: '#CBD5E1',
-    textPrimary: '#0F172A',
-    textMuted: '#64748B',
-    divider: '#E2E8F0',
-    error: '#DC2626',
-    dockBackground: '#FFFFFF',
-    dockActive: '#0E4F55',
-    glowA: '#16808C',
-    glowB: '#0E4F55',
+    inputBorder: PALETTE.secondaryMedium,
+    textPrimary: PALETTE.primaryDark,
+    textMuted: PALETTE.secondaryMedium,
+    divider: PALETTE.lightBg,
+    error: PALETTE.dangerRed,
+    dockBackground: PALETTE.primaryDark,
+    dockActive: PALETTE.secondaryLight,
+    glowA: PALETTE.secondaryLight,
+    glowB: PALETTE.primaryDark,
   },
-  'verde-floresta': {
-    background: '#F1F5F2',
-    surface: '#FFFFFF',
-    headerBackground: '#1A4331',
-    card: '#FFFFFF',
-    cardBorder: '#D8E2DC',
-    accent: '#2D6A4F',
-    accentSoft: '#E8F5EE',
-    warmAccent: '#D97706',
-    buttonBackground: '#1A4331',
-    buttonText: '#FFFFFF',
-    inputBackground: '#FFFFFF',
-    inputBorder: '#B7C9BE',
-    textPrimary: '#14281D',
-    textMuted: '#52796F',
-    divider: '#D8E2DC',
-    error: '#B91C1C',
-    dockBackground: '#FFFFFF',
-    dockActive: '#1A4331',
-    glowA: '#2D6A4F',
-    glowB: '#1A4331',
-  },
-  'obsidian-dark': {
-    background: '#0B1319',
-    surface: '#13222B',
-    headerBackground: '#13222B',
-    card: '#13222B',
-    cardBorder: '#223A48',
-    accent: '#1FB6C6',
-    accentSoft: '#1A3D47',
-    warmAccent: '#F87171',
-    buttonBackground: '#1FB6C6',
-    buttonText: '#0B1319',
-    inputBackground: '#192D38',
-    inputBorder: '#2A4B5D',
-    textPrimary: '#F1F5F9',
-    textMuted: '#94A3B8',
-    divider: '#223A48',
-    error: '#EF4444',
-    dockBackground: '#13222B',
-    dockActive: '#1FB6C6',
-    glowA: '#1FB6C6',
-    glowB: '#0E4F55',
+  escuro: {
+    primaryDark: PALETTE.primaryDark,
+    secondaryMedium: PALETTE.secondaryMedium,
+    secondaryLight: PALETTE.secondaryLight,
+    lightBg: PALETTE.lightBg,
+    vibrantAccent: PALETTE.vibrantAccent,
+    dangerRed: PALETTE.dangerRed,
+
+    background: '#1A2933',
+    surface: PALETTE.primaryDark,
+    headerBackground: '#1E2F3A',
+    card: PALETTE.primaryDark,
+    cardBorder: '#3D5A6E',
+    accent: PALETTE.secondaryLight,
+    accentSoft: '#223847',
+    warmAccent: PALETTE.vibrantAccent,
+    buttonBackground: PALETTE.secondaryLight,
+    buttonText: PALETTE.primaryDark,
+    inputBackground: '#1E2F3A',
+    inputBorder: PALETTE.secondaryMedium,
+    textPrimary: '#FFFFFF',
+    textMuted: PALETTE.lightBg,
+    divider: '#3D5A6E',
+    error: PALETTE.dangerRed,
+    dockBackground: '#1E2F3A',
+    dockActive: PALETTE.vibrantAccent,
+    glowA: PALETTE.vibrantAccent,
+    glowB: PALETTE.primaryDark,
   },
 };
 
-export const themeLabel: Record<AppThemeName, string> = {
-  'petroleo-digital': 'Petróleo Digital (Padrão)',
-  'verde-floresta': 'Verde Floresta',
-  'obsidian-dark': 'Obsidian Escuro',
+// Aliases para retrocompatibilidade
+themes['petroleo-digital'] = themes.claro;
+themes['obsidian-dark'] = themes.escuro;
+themes['verde-floresta'] = themes.claro;
+
+export const themeLabel: Record<string, string> = {
+  claro: 'Claro (Padrão Oficial)',
+  escuro: 'Escuro',
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { useAppTheme } from '../theme/ThemeContext';
 
@@ -46,7 +46,7 @@ export function PhotoOptionsModal({
               }}
             >
               <View style={[styles.iconWrapper, { backgroundColor: colors.accentSoft }]}>
-                <Ionicons name="camera-outline" size={24} color={colors.accent} />
+                <MaterialCommunityIcons name="camera-outline" size={24} color={colors.accent} />
               </View>
               <Text style={styles.optionText}>Tirar Foto Agora</Text>
             </Pressable>
@@ -59,7 +59,7 @@ export function PhotoOptionsModal({
               }}
             >
               <View style={[styles.iconWrapper, { backgroundColor: colors.accentSoft }]}>
-                <Ionicons name="images-outline" size={24} color={colors.accent} />
+                <MaterialCommunityIcons name="image-multiple-outline" size={24} color={colors.accent} />
               </View>
               <Text style={styles.optionText}>Escolher da Galeria</Text>
             </Pressable>
@@ -73,9 +73,9 @@ export function PhotoOptionsModal({
                 }}
               >
                 <View style={[styles.iconWrapper, { backgroundColor: '#FFEBEE' }]}>
-                  <Ionicons name="trash-outline" size={24} color="#C62828" />
+                  <MaterialCommunityIcons name="trash-can-outline" size={24} color="#DC2626" />
                 </View>
-                <Text style={[styles.optionText, { color: '#C62828' }]}>Remover Foto Atual</Text>
+                <Text style={[styles.optionText, { color: '#DC2626' }]}>Remover Foto Atual</Text>
               </Pressable>
             ) : null}
           </View>

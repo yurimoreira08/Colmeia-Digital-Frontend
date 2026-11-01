@@ -2,7 +2,7 @@
 
 Aplicativo móvel desenvolvido com **React Native + Expo** para o sistema **Colmeia Digital** (Projeto FAPEPI).
 
-O aplicativo oferece uma arquitetura robusta **Offline-First**, permitindo que técnicos e apicultores realizem vistorias, inspeções e registros de manejo no campo, mesmo sem qualquer conexão com a internet, persistindo tudo localmente no SQLite e sincronizando com o backend quando a conectividade for restabelecida.
+O aplicativo oferece uma arquitetura robusta **Offline-First**, permitindo que técnicos e apicultores realizem vistorias, revisões e registros de manejo no campo, mesmo sem qualquer conexão com a internet, persistindo tudo localmente no SQLite e sincronizando com o backend quando a conectividade for restabelecida.
 
 ---
 
@@ -10,7 +10,7 @@ O aplicativo oferece uma arquitetura robusta **Offline-First**, permitindo que t
 
 1. **Apiários**: Cadastro, edição, geolocalização e gestão de apiários com controle de membros e permissões.
 2. **Caixas (Colmeias)**: Gerenciamento individual de colmeias por apiário com histórico e status.
-3. **Revisões (Inspeção Técnica)**: Registro de parâmetros biológicos (cria, postura, espaço, rainha, força do enxame).
+3. **Revisões**: Registro de parâmetros biológicos (cria, postura, espaço, rainha, força do enxame).
 4. **Manejos de Campo**: Registro de intervenções e atividades operacionais (alimentação, troca de cera/rainha, divisão, redução de alvado) com suporte a fotos.
 5. **Relatórios e Acompanhamento**: Painéis estatísticos, métricas analíticas de crescimento e atividade operacional em tela.
 

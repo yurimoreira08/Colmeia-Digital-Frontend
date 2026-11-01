@@ -1,18 +1,22 @@
 import { StyleSheet } from 'react-native';
 import type { AppThemeColors } from '../../theme/themes';
+import { PALETTE } from '../../theme/themes';
 import { createCommonStyles } from '../../theme/commonStyles';
 
 export function createStyles(colors: AppThemeColors) {
   const common = createCommonStyles(colors);
 
   return StyleSheet.create({
-    safeArea: common.safeArea,
+    safeArea: {
+      flex: 1,
+      backgroundColor: PALETTE.lightSurface,
+    },
     emptyCard: {
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderRadius: 18,
       borderWidth: 1.5,
-      borderColor: colors.cardBorder,
-      padding: 24,
+      borderColor: PALETTE.secondaryLight,
+      padding: 28,
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: 20,
@@ -21,12 +25,12 @@ export function createStyles(colors: AppThemeColors) {
     emptyTitle: {
       fontSize: 17,
       fontWeight: '800',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
       textAlign: 'center',
     },
     emptySubtitle: {
       fontSize: 14,
-      color: colors.textMuted,
+      color: PALETTE.secondaryDark,
       textAlign: 'center',
       lineHeight: 20,
     },
@@ -40,16 +44,16 @@ export function createStyles(colors: AppThemeColors) {
     // Segmented Controller
     segmentedContainer: {
       flexDirection: 'row',
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderRadius: 16,
       borderWidth: 1.5,
-      borderColor: colors.cardBorder,
-      padding: 4,
-      gap: 6,
+      borderColor: PALETTE.secondaryLight,
+      padding: 6,
+      gap: 8,
     },
     segmentBtn: {
       flex: 1,
-      height: 44,
+      height: 48,
       borderRadius: 12,
       flexDirection: 'row',
       alignItems: 'center',
@@ -57,16 +61,16 @@ export function createStyles(colors: AppThemeColors) {
       gap: 8,
     },
     segmentBtnActiveRevisao: {
-      backgroundColor: '#059669',
-      shadowColor: '#059669',
+      backgroundColor: PALETTE.primaryDark,
+      shadowColor: PALETTE.primaryDark,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 4,
       elevation: 2,
     },
     segmentBtnActiveManejo: {
-      backgroundColor: '#D97706',
-      shadowColor: '#D97706',
+      backgroundColor: PALETTE.secondaryLight,
+      shadowColor: PALETTE.secondaryLight,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.25,
       shadowRadius: 4,
@@ -75,7 +79,7 @@ export function createStyles(colors: AppThemeColors) {
     segmentText: {
       fontSize: 15,
       fontWeight: '700',
-      color: colors.textMuted,
+      color: PALETTE.secondaryDark,
     },
     segmentTextActive: {
       color: '#FFFFFF',
@@ -93,44 +97,43 @@ export function createStyles(colors: AppThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
-      height: 42,
+      height: 46,
       borderRadius: 12,
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderWidth: 1.5,
-      borderColor: colors.cardBorder,
+      borderColor: PALETTE.secondaryDark,
     },
     filterPillActive: {
-      backgroundColor: colors.accent,
-      borderColor: colors.accent,
+      backgroundColor: PALETTE.primaryDark,
+      borderColor: PALETTE.primaryDark,
     },
     filterPillText: {
-      fontSize: 13,
+      fontSize: 13.5,
       fontWeight: '700',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
     },
     filterPillTextActive: {
-      color: colors.buttonText || '#FFFFFF',
-      fontWeight: '900',
+      color: '#FFFFFF',
+      fontWeight: '800',
     },
 
-    // Search Bar
+    // Search Box
     searchWrap: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderRadius: 14,
       borderWidth: 1.5,
-      borderColor: colors.cardBorder,
+      borderColor: PALETTE.secondaryDark,
       paddingHorizontal: 14,
-      height: 48,
+      height: 52,
       gap: 10,
     },
     searchInput: {
       flex: 1,
-      fontSize: 15,
+      fontSize: 16,
+      color: PALETTE.primaryDark,
       fontWeight: '600',
-      color: colors.textPrimary,
-      paddingVertical: 0,
     },
   });
 }

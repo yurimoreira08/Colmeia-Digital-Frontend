@@ -8,6 +8,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppHeader } from '../components/AppHeader';
 import { BottomDock } from '../components/BottomDock';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 import type { RootStackParamList } from '../types/auth';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
 
@@ -100,7 +101,7 @@ export function HomeScreen({ navigation }: Props) {
       subtitle: 'Cadastro e gestão de apiários e locais',
       icon: 'beehive-outline',
       route: 'ApiaryList',
-      accentColor: colors.accent,
+      accentColor: PALETTE.primaryDark,
     },
     {
       id: 'boxes',
@@ -108,7 +109,7 @@ export function HomeScreen({ navigation }: Props) {
       subtitle: 'Mapeamento e controle de colmeias',
       icon: 'cube-outline',
       route: 'BoxesList',
-      accentColor: '#0284C7',
+      accentColor: PALETTE.secondaryLight,
     },
     {
       id: 'revisions',
@@ -116,7 +117,7 @@ export function HomeScreen({ navigation }: Props) {
       subtitle: 'Avaliação periódica e saúde do enxame',
       icon: 'clipboard-text-outline',
       route: 'RevisionList',
-      accentColor: '#059669',
+      accentColor: PALETTE.primaryDark,
     },
     {
       id: 'manejos',
@@ -124,7 +125,7 @@ export function HomeScreen({ navigation }: Props) {
       subtitle: 'Alimentação, divisões e intervenções',
       icon: 'tools',
       route: 'ManejoList',
-      accentColor: colors.warmAccent,
+      accentColor: PALETTE.secondaryLight,
     },
     {
       id: 'reports',
@@ -132,7 +133,7 @@ export function HomeScreen({ navigation }: Props) {
       subtitle: 'Estatísticas, análises e acompanhamento',
       icon: 'chart-box-outline',
       route: 'Reports',
-      accentColor: '#6366F1',
+      accentColor: PALETTE.secondaryDark,
     },
   ];
 
@@ -176,7 +177,7 @@ export function HomeScreen({ navigation }: Props) {
                 }}
               >
                 <View style={[styles.iconContainer, { backgroundColor: item.accentColor + '18' }]}>
-                  <MaterialCommunityIcons name={item.icon} size={28} color={item.accentColor} />
+                  <MaterialCommunityIcons name={item.icon} size={30} color={item.accentColor} />
                 </View>
 
                 <View style={styles.moduleInfo}>
@@ -185,7 +186,7 @@ export function HomeScreen({ navigation }: Props) {
                 </View>
 
                 <View style={styles.arrowBadge}>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMuted} />
+                  <MaterialCommunityIcons name="chevron-right" size={22} color={PALETTE.secondaryDark} />
                 </View>
               </Pressable>
             </Animated.View>
@@ -206,7 +207,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
   return StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: PALETTE.lightSurface,
     },
     contentArea: {
       flex: 1,
@@ -214,7 +215,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     scrollContent: {
       flexGrow: 1,
       paddingTop: 18,
-      paddingHorizontal: 18,
+      paddingHorizontal: 16,
       paddingBottom: 28,
       justifyContent: 'space-around',
     },
@@ -228,10 +229,10 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       alignItems: 'center',
       paddingVertical: 18,
       paddingHorizontal: 18,
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderRadius: 18,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.05,
@@ -239,39 +240,40 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       elevation: 2,
     },
     moduleCardPressed: {
-      backgroundColor: colors.accentSoft,
+      backgroundColor: PALETTE.lightSurface,
       transform: [{ scale: 0.985 }],
     },
     iconContainer: {
-      width: 52,
-      height: 52,
-      borderRadius: 15,
+      width: 56,
+      height: 56,
+      borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: 16,
     },
     moduleInfo: {
       flex: 1,
-      gap: 3,
+      gap: 4,
     },
     moduleTitle: {
-      fontSize: 17,
-      fontWeight: '700',
-      color: colors.textPrimary,
+      fontSize: 18,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
       letterSpacing: 0.2,
     },
     moduleSubtitle: {
-      fontSize: 12.5,
-      color: colors.textMuted,
-      lineHeight: 16,
+      fontSize: 13,
+      color: PALETTE.secondaryDark,
+      lineHeight: 18,
+      fontWeight: '500',
     },
     arrowBadge: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
-      backgroundColor: colors.surface,
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: PALETTE.lightSurface,
       borderWidth: 1,
-      borderColor: colors.cardBorder,
+      borderColor: PALETTE.secondaryLight,
       alignItems: 'center',
       justifyContent: 'center',
       marginLeft: 10,

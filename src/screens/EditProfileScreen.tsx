@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 
 import { AppHeader } from '../components/AppHeader';
@@ -151,11 +151,11 @@ export function EditProfileScreen({ navigation }: Props) {
                 <Image source={{ uri: photoUri }} style={styles.avatar} />
               ) : (
                 <View style={styles.avatarPlaceholder}>
-                  <Ionicons name="person-outline" size={60} color={colors.textMuted} />
+                  <MaterialCommunityIcons name="account-outline" size={60} color={colors.textMuted} />
                 </View>
               )}
               <View style={styles.cameraIconContainer}>
-                <Ionicons name="camera" size={20} color={colors.buttonText} />
+                <MaterialCommunityIcons name="camera" size={20} color={colors.buttonText} />
               </View>
             </Pressable>
             <Text style={styles.avatarHint}>Toque para alterar a foto</Text>

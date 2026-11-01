@@ -1,9 +1,11 @@
 import React from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 import { isoDateToDisplay } from '../utils/date';
 import { OPTION_LABELS as REVISION_OPTION_LABELS } from '../types/reviewReport';
+import { exportSingleReportPdf, normalizeReportItem } from '../services/pdfExportService';
 
 const MANEJO_OPTION_LABELS: Record<string, string> = {
   alimentacao: 'Alimentação',
@@ -27,6 +29,7 @@ type Props = {
   type: 'revisao' | 'manejo';
   onEdit?: (item: any) => void;
   onDelete?: (item: any) => void;
+  onExportPdf?: (item: any, type: 'revisao' | 'manejo') => void;
 };
 
 const getReportType = (item: any): 'revisao' | 'manejo' => {
@@ -68,6 +71,7 @@ export function ReportCard({
   type,
   onEdit,
   onDelete,
+  onExportPdf,
 }: Props) {
   const { colors, themeName } = useAppTheme();
   const styles = createStyles(colors, themeName);
@@ -80,7 +84,7 @@ export function ReportCard({
       <View style={styles.apiaryHeader}>
         <View style={styles.apiaryHeaderLeft}>
           <View style={styles.apiaryIconCircle}>
-            <Ionicons name="location" size={15} color={colors.accent} />
+            <MaterialCommunityIcons name="map-marker" size={16} color={PALETTE.primaryDark} />
           </View>
           <Text style={styles.apiaryTitle} numberOfLines={1}>
             {formattedApiaryName}
@@ -95,7 +99,8 @@ export function ReportCard({
 
       {/* 2. Lista de Atividades do Apiário */}
       <View style={styles.reportsList}>
-        {reports.map((item, index) => {
+        {reports.map((rawItem, index) => {
+          const item = normalizeReportItem(rawItem);
           const itemType = getReportType(item);
           const isRevisao = itemType === 'revisao';
           const { day, month, time } = formatParsedDate(item.createdAt);
@@ -124,16 +129,16 @@ export function ReportCard({
                   <View style={styles.boxInfoWrap}>
                     <View style={styles.boxTitleRow}>
                       <View style={styles.boxNameContainer}>
-                        <Ionicons name="cube-outline" size={16} color={colors.textPrimary} />
+                        <MaterialCommunityIcons name="cube-outline" size={17} color={PALETTE.primaryDark} />
                         <Text style={styles.boxNameText} numberOfLines={1}>
                           {item.caixaName || 'Caixa'}
                         </Text>
                       </View>
                       <View style={[styles.typePill, isRevisao ? styles.typePillRevisao : styles.typePillManejo]}>
-                        <Ionicons
-                          name={isRevisao ? 'clipboard-outline' : 'construct-outline'}
-                          size={11}
-                          color={isRevisao ? '#059669' : '#D97706'}
+                        <MaterialCommunityIcons
+                          name={isRevisao ? 'clipboard-text-outline' : 'tools'}
+                          size={12}
+                          color={isRevisao ? PALETTE.primaryDark : PALETTE.secondaryLight}
                         />
                         <Text style={[styles.typePillText, isRevisao ? styles.typePillTextRevisao : styles.typePillTextManejo]}>
                           {isRevisao ? 'REVISÃO' : 'MANEJO'}
@@ -142,14 +147,29 @@ export function ReportCard({
                     </View>
                     {time ? (
                       <View style={styles.timeRow}>
-                        <Ionicons name="time-outline" size={12} color={colors.textMuted} />
+                        <MaterialCommunityIcons name="clock-outline" size={13} color={PALETTE.secondaryDark} />
                         <Text style={styles.timeText}>{time}</Text>
                       </View>
                     ) : null}
                   </View>
 
-                  {/* Apenas Botões Editar e Excluir */}
+                  {/* Botões de Ação: PDF, Editar e Excluir */}
                   <View style={styles.actionButtonsRow}>
+                    <Pressable
+                      style={[styles.actionCircleBtn, styles.actionCircleBtnPdf]}
+                      onPress={() => {
+                        if (onExportPdf) {
+                          onExportPdf(item, itemType);
+                        } else {
+                          void exportSingleReportPdf(item, itemType);
+                        }
+                      }}
+                      hitSlop={8}
+                      accessibilityLabel="Baixar anotação em PDF"
+                    >
+                      <MaterialCommunityIcons name="file-pdf-box" size={19} color="#DC2626" />
+                    </Pressable>
+
                     {onEdit && (
                       <Pressable
                         style={styles.actionCircleBtn}
@@ -157,7 +177,7 @@ export function ReportCard({
                         hitSlop={8}
                         accessibilityLabel="Editar registro"
                       >
-                        <Ionicons name="pencil" size={15} color={colors.accent} />
+                        <MaterialCommunityIcons name="pencil-outline" size={17} color={PALETTE.secondaryDark} />
                       </Pressable>
                     )}
                     {onDelete && (
@@ -167,7 +187,7 @@ export function ReportCard({
                         hitSlop={8}
                         accessibilityLabel="Excluir registro"
                       >
-                        <Ionicons name="trash-outline" size={15} color="#EF4444" />
+                        <MaterialCommunityIcons name="trash-can-outline" size={17} color={PALETTE.danger} />
                       </Pressable>
                     )}
                   </View>
@@ -179,7 +199,7 @@ export function ReportCard({
                   {isRevisao && item.checkedOptions && item.checkedOptions.length > 0 && (
                     <View style={styles.sectionBlock}>
                       <View style={styles.sectionHeaderRow}>
-                        <Ionicons name="checkmark-circle-outline" size={14} color="#059669" />
+                        <MaterialCommunityIcons name="check-circle-outline" size={15} color={PALETTE.primaryDark} />
                         <Text style={styles.sectionHeading}>CONDIÇÕES IDENTIFICADAS</Text>
                       </View>
                       <View style={styles.tagsGrid}>
@@ -188,7 +208,7 @@ export function ReportCard({
                           const label = REVISION_OPTION_LABELS[optionKey] || optionKey || 'Opção';
                           return (
                             <View key={optionKey} style={styles.conditionTag}>
-                              <Ionicons name="checkmark" size={12} color="#059669" />
+                              <MaterialCommunityIcons name="check" size={13} color={PALETTE.primaryDark} />
                               <Text style={styles.conditionTagText}>{String(label)}</Text>
                             </View>
                           );
@@ -201,8 +221,8 @@ export function ReportCard({
                   {!isRevisao && item.checkedOptions && item.checkedOptions.length > 0 && (
                     <View style={styles.sectionBlock}>
                       <View style={styles.sectionHeaderRow}>
-                        <Ionicons name="hammer-outline" size={14} color="#D97706" />
-                        <Text style={[styles.sectionHeading, { color: '#D97706' }]}>TAREFAS REALIZADAS</Text>
+                        <MaterialCommunityIcons name="tools" size={15} color={PALETTE.secondaryLight} />
+                        <Text style={[styles.sectionHeading, { color: PALETTE.secondaryLight }]}>TAREFAS REALIZADAS</Text>
                       </View>
                       <View style={styles.tasksListWrap}>
                         {item.checkedOptions.map((task: any, idx: number) => (
@@ -212,7 +232,7 @@ export function ReportCard({
                               <Text style={styles.taskItemTitle}>
                                 {task.id === 'outro' && task.customName
                                   ? task.customName
-                                  : (MANEJO_OPTION_LABELS[task.id] || task.id)}
+                                  : (MANEJO_OPTION_LABELS[task.id] || task.customName || task.id)}
                               </Text>
                             </View>
                             {task.obs ? (
@@ -223,8 +243,8 @@ export function ReportCard({
                             ) : null}
                             {task.ind ? (
                               <View style={[styles.taskDetailBlock, styles.taskActionBlock]}>
-                                <Text style={[styles.taskDetailLabel, { color: '#D97706' }]}>O que fazer:</Text>
-                                <Text style={[styles.taskDetailText, { color: colors.textPrimary }]}>{task.ind}</Text>
+                                <Text style={[styles.taskDetailLabel, { color: PALETTE.secondaryLight }]}>O que fazer:</Text>
+                                <Text style={[styles.taskDetailText, { color: PALETTE.primaryDark }]}>{task.ind}</Text>
                               </View>
                             ) : null}
                           </View>
@@ -233,14 +253,14 @@ export function ReportCard({
                     </View>
                   )}
 
-                  {/* Foto do Manejo */}
-                  {!isRevisao && item.photoUri ? (
+                  {/* Foto Anexada (Manejo ou Revisão) */}
+                  {item.photoUri ? (
                     <View style={styles.sectionBlock}>
                       <View style={styles.photoContainer}>
                         <Image source={{ uri: item.photoUri }} style={styles.manejoPhoto} resizeMode="cover" />
                         <View style={styles.photoOverlayBadge}>
-                          <Ionicons name="camera" size={13} color="#FFFFFF" />
-                          <Text style={styles.photoOverlayText}>Foto do Manejo</Text>
+                          <MaterialCommunityIcons name="camera" size={14} color="#FFFFFF" />
+                          <Text style={styles.photoOverlayText}>Foto Anexada</Text>
                         </View>
                       </View>
                     </View>
@@ -250,7 +270,7 @@ export function ReportCard({
                   {item.observacoes ? (
                     <View style={styles.obsCallout}>
                       <View style={styles.calloutHeader}>
-                        <Ionicons name="document-text-outline" size={15} color="#059669" />
+                        <MaterialCommunityIcons name="file-document-outline" size={16} color={PALETTE.primaryDark} />
                         <Text style={styles.obsCalloutLabel}>Observações Gerais</Text>
                       </View>
                       <Text style={styles.obsCalloutText}>{item.observacoes}</Text>
@@ -261,7 +281,7 @@ export function ReportCard({
                   {item.indicacoes ? (
                     <View style={styles.actionCallout}>
                       <View style={styles.calloutHeader}>
-                        <Ionicons name="bulb-outline" size={15} color="#D97706" />
+                        <MaterialCommunityIcons name="lightbulb-outline" size={16} color={PALETTE.primaryDark} />
                         <Text style={styles.actionCalloutLabel}>O Que Fazer / Recomendações</Text>
                       </View>
                       <Text style={styles.actionCalloutText}>{item.indicacoes}</Text>
@@ -282,15 +302,15 @@ function createStyles(colors: any, themeName: string) {
 
   return StyleSheet.create({
     apiaryGroupCard: {
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderRadius: 18,
       borderWidth: 1.5,
-      borderColor: colors.cardBorder,
+      borderColor: PALETTE.secondaryLight,
       marginBottom: 18,
       overflow: 'hidden',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.25 : 0.05,
+      shadowOpacity: 0.05,
       shadowRadius: 6,
       elevation: 2,
     },
@@ -300,9 +320,9 @@ function createStyles(colors: any, themeName: string) {
       justifyContent: 'space-between',
       paddingHorizontal: 16,
       paddingVertical: 12,
-      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+      backgroundColor: PALETTE.lightSurface,
       borderBottomWidth: 1,
-      borderBottomColor: colors.cardBorder,
+      borderBottomColor: PALETTE.secondaryLight,
     },
     apiaryHeaderLeft: {
       flexDirection: 'row',
@@ -312,31 +332,29 @@ function createStyles(colors: any, themeName: string) {
       marginRight: 10,
     },
     apiaryIconCircle: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      backgroundColor: colors.accentSoft,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: '#FFFFFF',
       alignItems: 'center',
       justifyContent: 'center',
     },
     apiaryTitle: {
       flex: 1,
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: '800',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
       letterSpacing: 0.5,
     },
     countBadge: {
-      backgroundColor: colors.accentSoft,
+      backgroundColor: PALETTE.secondaryLight,
       paddingHorizontal: 10,
-      paddingVertical: 3,
+      paddingVertical: 4,
       borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
     },
     countBadgeText: {
-      color: colors.accent,
-      fontSize: 11.5,
+      color: '#FFFFFF',
+      fontSize: 12,
       fontWeight: '700',
     },
     reportsList: {
@@ -344,10 +362,10 @@ function createStyles(colors: any, themeName: string) {
       gap: 12,
     },
     activityCard: {
-      backgroundColor: colors.surface,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: PALETTE.lightSurface,
       position: 'relative',
       overflow: 'hidden',
     },
@@ -362,14 +380,14 @@ function createStyles(colors: any, themeName: string) {
       left: 0,
       top: 0,
       bottom: 0,
-      width: 4,
+      width: 5,
       zIndex: 2,
     },
     sideBarRevisao: {
-      backgroundColor: '#059669',
+      backgroundColor: PALETTE.primaryDark,
     },
     sideBarManejo: {
-      backgroundColor: '#D97706',
+      backgroundColor: PALETTE.secondaryLight,
     },
     cardInner: {
       padding: 14,
@@ -382,26 +400,26 @@ function createStyles(colors: any, themeName: string) {
       gap: 10,
     },
     dateCapsule: {
-      width: 44,
-      height: 46,
-      borderRadius: 10,
+      width: 46,
+      height: 48,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
     },
     dateCapsuleRevisao: {
-      backgroundColor: '#059669',
+      backgroundColor: PALETTE.primaryDark,
     },
     dateCapsuleManejo: {
-      backgroundColor: '#D97706',
+      backgroundColor: PALETTE.secondaryLight,
     },
     dateDay: {
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: '900',
       color: '#FFFFFF',
-      lineHeight: 18,
+      lineHeight: 19,
     },
     dateMonth: {
-      fontSize: 10,
+      fontSize: 10.5,
       fontWeight: '800',
       color: 'rgba(255, 255, 255, 0.9)',
       letterSpacing: 0.5,
@@ -419,41 +437,41 @@ function createStyles(colors: any, themeName: string) {
     boxNameContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: 5,
     },
     boxNameText: {
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: '800',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
     },
     typePill: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 3,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 6,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
     },
     typePillRevisao: {
-      backgroundColor: isDark ? 'rgba(5, 150, 105, 0.2)' : '#ECFDF5',
+      backgroundColor: PALETTE.lightSurface,
       borderWidth: 1,
-      borderColor: '#A7F3D0',
+      borderColor: PALETTE.secondaryLight,
     },
     typePillManejo: {
-      backgroundColor: isDark ? 'rgba(217, 119, 6, 0.2)' : '#FEF3C7',
+      backgroundColor: PALETTE.lightSurface,
       borderWidth: 1,
-      borderColor: '#FDE68A',
+      borderColor: PALETTE.secondaryDark,
     },
     typePillText: {
-      fontSize: 10.5,
+      fontSize: 11,
       fontWeight: '800',
       letterSpacing: 0.4,
     },
     typePillTextRevisao: {
-      color: isDark ? '#34D399' : '#059669',
+      color: PALETTE.primaryDark,
     },
     typePillTextManejo: {
-      color: isDark ? '#FBBF24' : '#D97706',
+      color: PALETTE.secondaryLight,
     },
     timeRow: {
       flexDirection: 'row',
@@ -461,8 +479,8 @@ function createStyles(colors: any, themeName: string) {
       gap: 4,
     },
     timeText: {
-      fontSize: 11.5,
-      color: colors.textMuted,
+      fontSize: 12,
+      color: PALETTE.secondaryDark,
       fontWeight: '600',
     },
     actionButtonsRow: {
@@ -471,18 +489,20 @@ function createStyles(colors: any, themeName: string) {
       gap: 6,
     },
     actionCircleBtn: {
-      width: 32,
-      height: 32,
-      borderRadius: 8,
-      backgroundColor: colors.card,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      width: 34,
+      height: 34,
+      borderRadius: 17,
+      backgroundColor: PALETTE.lightSurface,
       alignItems: 'center',
       justifyContent: 'center',
     },
     actionCircleBtnDelete: {
-      backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2',
-      borderColor: isDark ? 'rgba(239, 68, 68, 0.3)' : '#FECACA',
+      backgroundColor: '#FEE2E2',
+    },
+    actionCircleBtnPdf: {
+      backgroundColor: '#FEF2F2',
+      borderWidth: 1,
+      borderColor: '#FCA5A5',
     },
     activityBody: {
       gap: 10,
@@ -493,13 +513,13 @@ function createStyles(colors: any, themeName: string) {
     sectionHeaderRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: 6,
     },
     sectionHeading: {
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: '800',
-      color: colors.textMuted,
-      letterSpacing: 0.5,
+      color: PALETTE.primaryDark,
+      letterSpacing: 0.6,
     },
     tagsGrid: {
       flexDirection: 'row',
@@ -509,29 +529,27 @@ function createStyles(colors: any, themeName: string) {
     conditionTag: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : colors.card,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      gap: 5,
       paddingHorizontal: 10,
       paddingVertical: 5,
       borderRadius: 8,
+      backgroundColor: PALETTE.lightSurface,
+      borderWidth: 1,
+      borderColor: PALETTE.secondaryLight,
     },
     conditionTagText: {
-      fontSize: 12.5,
-      fontWeight: '600',
-      color: colors.textPrimary,
+      fontSize: 13,
+      fontWeight: '700',
+      color: PALETTE.primaryDark,
     },
     tasksListWrap: {
-      gap: 6,
+      gap: 8,
     },
     taskItemCard: {
-      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : colors.card,
+      backgroundColor: PALETTE.lightSurface,
       borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
       padding: 10,
-      gap: 5,
+      gap: 6,
     },
     taskItemHeader: {
       flexDirection: 'row',
@@ -539,51 +557,52 @@ function createStyles(colors: any, themeName: string) {
       gap: 6,
     },
     taskAmberDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: '#D97706',
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: PALETTE.secondaryLight,
     },
     taskItemTitle: {
-      fontSize: 13.5,
-      fontWeight: '700',
-      color: colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
     },
     taskDetailBlock: {
-      marginLeft: 12,
+      marginLeft: 14,
       borderLeftWidth: 2,
-      borderLeftColor: colors.cardBorder,
+      borderLeftColor: PALETTE.secondaryDark,
       paddingLeft: 8,
-      gap: 1,
+      gap: 2,
     },
     taskActionBlock: {
-      borderLeftColor: '#F59E0B',
-      backgroundColor: isDark ? 'rgba(245, 158, 11, 0.08)' : '#FFFBEB',
-      paddingVertical: 3,
-      borderRadius: 4,
+      borderLeftColor: PALETTE.secondaryLight,
+      backgroundColor: '#FFFFFF',
+      paddingVertical: 4,
+      paddingHorizontal: 6,
+      borderRadius: 6,
     },
     taskDetailLabel: {
-      fontSize: 11,
+      fontSize: 11.5,
       fontWeight: '700',
-      color: colors.textMuted,
+      color: PALETTE.secondaryDark,
     },
     taskDetailText: {
-      fontSize: 13,
-      fontWeight: '500',
-      color: colors.textPrimary,
-      lineHeight: 18,
+      fontSize: 13.5,
+      fontWeight: '600',
+      color: PALETTE.primaryDark,
+      lineHeight: 19,
     },
     photoContainer: {
       position: 'relative',
-      borderRadius: 10,
+      borderRadius: 12,
       overflow: 'hidden',
       borderWidth: 1,
-      borderColor: colors.cardBorder,
+      borderColor: PALETTE.secondaryLight,
     },
     manejoPhoto: {
       width: '100%',
-      height: 180,
-      backgroundColor: colors.card,
+      height: 190,
+      backgroundColor: PALETTE.lightSurface,
     },
     photoOverlayBadge: {
       position: 'absolute',
@@ -592,62 +611,62 @@ function createStyles(colors: any, themeName: string) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 6,
+      backgroundColor: 'rgba(44, 66, 81, 0.85)',
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 8,
     },
     photoOverlayText: {
       color: '#FFFFFF',
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: '700',
     },
     obsCallout: {
-      backgroundColor: isDark ? 'rgba(5, 150, 105, 0.1)' : '#ECFDF5',
+      backgroundColor: PALETTE.lightSurface,
       borderWidth: 1,
-      borderColor: isDark ? 'rgba(5, 150, 105, 0.25)' : '#A7F3D0',
-      borderRadius: 10,
-      padding: 10,
+      borderColor: PALETTE.secondaryLight,
+      borderRadius: 12,
+      padding: 12,
       gap: 4,
     },
     calloutHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
+      gap: 6,
     },
     obsCalloutLabel: {
-      fontSize: 11,
+      fontSize: 11.5,
       fontWeight: '800',
-      color: isDark ? '#34D399' : '#065F46',
+      color: PALETTE.primaryDark,
       textTransform: 'uppercase',
       letterSpacing: 0.4,
     },
     obsCalloutText: {
-      fontSize: 13,
+      fontSize: 13.5,
       fontWeight: '500',
-      color: isDark ? '#A7F3D0' : '#065F46',
-      lineHeight: 19,
+      color: PALETTE.primaryDark,
+      lineHeight: 20,
     },
     actionCallout: {
-      backgroundColor: isDark ? 'rgba(217, 119, 6, 0.1)' : '#FFFBEB',
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(217, 119, 6, 0.25)' : '#FDE68A',
-      borderRadius: 10,
-      padding: 10,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
+      borderRadius: 12,
+      padding: 12,
       gap: 4,
     },
     actionCalloutLabel: {
-      fontSize: 11,
+      fontSize: 11.5,
       fontWeight: '800',
-      color: isDark ? '#FBBF24' : '#92400E',
+      color: PALETTE.primaryDark,
       textTransform: 'uppercase',
       letterSpacing: 0.4,
     },
     actionCalloutText: {
-      fontSize: 13,
+      fontSize: 13.5,
       fontWeight: '500',
-      color: isDark ? '#FDE68A' : '#92400E',
-      lineHeight: 19,
+      color: PALETTE.primaryDark,
+      lineHeight: 20,
     },
   });
 }

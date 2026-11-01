@@ -28,9 +28,11 @@ import { AppSplashScreen } from "../screens/SplashScreen";
 import { EditManejoNotesScreen } from "../screens/EditManejoNotesScreen";
 import { EditReportNotesScreen } from "../screens/EditReportNotesScreen";
 import { TermsOfUseScreen } from "../screens/TermsOfUseScreen";
+import { TermsScreen } from "../screens/TermsScreen";
 import { VoiceTutorialScreen } from "../screens/VoiceTutorialScreen";
 import type { RootStackParamList } from "../types/auth";
 import { VoiceCommandProvider } from "../voice/VoiceCommandContext";
+import { GlobalVoiceButton } from "../voice/GlobalVoiceButton";
 
 import { useAutoSync } from "../hooks/useAutoSync";
 import { useDeepLinking } from "../hooks/useDeepLinking";
@@ -60,6 +62,7 @@ export function AppNavigator() {
           screenOptions={{ headerShown: false }}
         >
           <Stack.Screen name="Splash" component={AppSplashScreen} />
+          <Stack.Screen name="Terms" component={TermsScreen} />
           <Stack.Screen name="TermsOfUse" component={TermsOfUseScreen} />
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Register" component={RegisterScreen} />
@@ -96,6 +99,7 @@ export function AppNavigator() {
             component={EditReportNotesScreen}
           />
         </Stack.Navigator>
+        <GlobalVoiceButton />
       </NavigationContainer>
     </VoiceCommandProvider>
   );

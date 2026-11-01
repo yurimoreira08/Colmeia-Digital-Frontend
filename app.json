@@ -3,9 +3,9 @@
     "name": "Colmeia Digital",
     "slug": "colmeia-digital-mobile",
     "scheme": "colmeiadigital",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/logo-colmeiadigital.jpeg",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
@@ -18,11 +18,11 @@
     },
     "android": {
       "package": "com.colmeiadigital.app",
-      "versionCode": 1,
+      "versionCode": 2,
       "allowBackup": true,
       "adaptiveIcon": {
-        "backgroundColor": "#0E4F55",
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2C4251",
+        "foregroundImage": "./assets/logo-colmeiadigital.jpeg",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
@@ -42,9 +42,9 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
+          "image": "./assets/logo-colmeiadigital.jpeg",
           "resizeMode": "contain",
-          "backgroundColor": "#0E4F55"
+          "backgroundColor": "#2C4251"
         }
       ],
       [
@@ -62,8 +62,8 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/adaptive-icon.png",
-          "color": "#0E4F55"
+          "icon": "./assets/logo-colmeiadigital.jpeg",
+          "color": "#2C4251"
         }
       ],
       "expo-secure-store"

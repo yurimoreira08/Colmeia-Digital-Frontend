@@ -1,12 +1,13 @@
 import { useCallback } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppHeader } from '../components/AppHeader';
 import { BottomDock } from '../components/BottomDock';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 import type { RootStackParamList } from '../types/auth';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
 
@@ -56,28 +57,28 @@ export function RevisionManejoChoiceScreen({ navigation }: Props) {
           style={styles.choiceCard}
           onPress={() => navigation.navigate('RevisionList')}
         >
-          <View style={[styles.iconWrap, { backgroundColor: '#E0F2F1' }]}>
-            <Ionicons name="clipboard-outline" size={32} color={colors.headerBackground} />
+          <View style={[styles.iconWrap, { backgroundColor: PALETTE.primaryDark }]}>
+            <MaterialCommunityIcons name="clipboard-text-outline" size={32} color="#FFFFFF" />
           </View>
           <View style={styles.textWrap}>
             <Text style={styles.choiceTitle}>Revisão Periódica</Text>
             <Text style={styles.choiceSubtitle}>Avaliação de rainha, postura, crias, mel e pólen</Text>
           </View>
-          <Ionicons name="chevron-forward" size={24} color={colors.textMuted} />
+          <MaterialCommunityIcons name="chevron-right" size={28} color={PALETTE.secondaryMedium} />
         </Pressable>
 
         <Pressable
           style={styles.choiceCard}
           onPress={() => navigation.navigate('ManejoList')}
         >
-          <View style={[styles.iconWrap, { backgroundColor: '#FEF3C7' }]}>
-            <Ionicons name="construct-outline" size={32} color={colors.warmAccent} />
+          <View style={[styles.iconWrap, { backgroundColor: PALETTE.secondaryLight }]}>
+            <MaterialCommunityIcons name="tools" size={32} color="#FFFFFF" />
           </View>
           <View style={styles.textWrap}>
             <Text style={styles.choiceTitle}>Manejo Técnico</Text>
             <Text style={styles.choiceSubtitle}>Alimentação, divisão de enxame, cera e intervenções</Text>
           </View>
-          <Ionicons name="chevron-forward" size={24} color={colors.textMuted} />
+          <MaterialCommunityIcons name="chevron-right" size={28} color={PALETTE.secondaryMedium} />
         </Pressable>
       </View>
 
@@ -105,7 +106,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     instructionText: {
       fontSize: 14,
       fontWeight: '700',
-      color: colors.textMuted,
+      color: PALETTE.secondaryMedium,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
       marginBottom: 4,
@@ -114,20 +115,21 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 20,
+      minHeight: 90,
       borderRadius: 16,
       backgroundColor: colors.surface,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryMedium + '40',
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.05,
+      shadowOpacity: 0.08,
       shadowRadius: 8,
-      elevation: 2,
+      elevation: 3,
       gap: 16,
     },
     iconWrap: {
-      width: 56,
-      height: 56,
+      width: 58,
+      height: 58,
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
@@ -141,10 +143,10 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       color: colors.textPrimary,
     },
     choiceSubtitle: {
-      fontSize: 13,
+      fontSize: 14,
       color: colors.textMuted,
       marginTop: 4,
-      lineHeight: 18,
+      lineHeight: 19,
     },
   });
 }

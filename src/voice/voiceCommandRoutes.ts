@@ -15,12 +15,17 @@ const VOICE_ROUTE_ALIASES: VoiceRouteAlias[] = [
   {
     route: 'Home',
     label: 'Início',
-    aliases: ['inicio', 'home', 'tela inicial', 'menu principal', 'pagina inicial', 'ir para o inicio'],
+    aliases: ['inicio', 'home', 'ir para inicio', 'ir para o inicio', 'ir para a home', 'tela inicial', 'menu principal', 'pagina inicial'],
   },
   {
     route: 'ApiaryList',
     label: 'Apiários',
-    aliases: ['apiarios', 'meus apiarios', 'lista de apiarios', 'ver apiarios', 'abrir apiarios'],
+    aliases: ['apiarios', 'ir para apiarios', 'ir para os apiarios', 'abrir apiarios', 'meus apiarios', 'lista de apiarios', 'ver apiarios'],
+  },
+  {
+    route: 'BoxesList',
+    label: 'Caixas',
+    aliases: ['caixas', 'ir para caixas', 'ir para as caixas', 'abrir caixas', 'minhas caixas', 'lista de caixas', 'ver caixas', 'colmeias', 'ir para colmeias'],
   },
   {
     route: 'CreateEditApiary',
@@ -35,27 +40,27 @@ const VOICE_ROUTE_ALIASES: VoiceRouteAlias[] = [
   {
     route: 'RevisionList',
     label: 'Revisões',
-    aliases: ['revisoes', 'lista de revisoes', 'fazer revisao', 'inspecoes', 'lista de inspecoes'],
+    aliases: ['revisoes', 'ir para revisoes', 'ir para as revisoes', 'abrir revisoes', 'lista de revisoes', 'fazer revisao', 'inspecoes', 'lista de inspecoes'],
   },
   {
     route: 'ManejoList',
     label: 'Manejos',
-    aliases: ['manejos', 'lista de manejos', 'fazer manejo', 'intervencoes'],
+    aliases: ['manejos', 'ir para manejos', 'ir para os manejos', 'abrir manejos', 'lista de manejos', 'fazer manejo', 'intervencoes'],
   },
   {
     route: 'Reports',
     label: 'Relatórios',
-    aliases: ['relatorios', 'ver relatorios', 'historico', 'historico geral', 'relatorio'],
+    aliases: ['relatorios', 'ir para relatorios', 'ir para os relatorios', 'abrir relatorios', 'ver relatorios', 'historico', 'historico geral', 'relatorio'],
   },
   {
     route: 'Notifications',
     label: 'Notificações',
-    aliases: ['notificacoes', 'avisos', 'alertas', 'mensagens'],
+    aliases: ['notificacoes', 'ir para notificacoes', 'avisos', 'alertas', 'mensagens'],
   },
   {
     route: 'Settings',
     label: 'Configurações',
-    aliases: ['configuracoes', 'ajustes', 'preferencias', 'opcoes'],
+    aliases: ['configuracoes', 'ir para configuracoes', 'abrir configuracoes', 'ajustes', 'preferencias', 'opcoes'],
   },
   {
     route: 'VoiceTutorial',
@@ -91,7 +96,10 @@ function removeNavigationPrefixes(value: string): string {
     .trim();
 }
 
-export function parseVoiceNavigationCommand(rawCommand: string): VoiceRouteMatch | null {
+export function parseVoiceNavigationCommand(
+  rawCommand: string,
+  currentRouteName?: string
+): VoiceRouteMatch | null {
   const normalized = normalizeVoiceText(rawCommand);
 
   if (!normalized) {
@@ -99,10 +107,36 @@ export function parseVoiceNavigationCommand(rawCommand: string): VoiceRouteMatch
   }
 
   const cleanedCommand = removeNavigationPrefixes(normalized);
+  const isInsideRevisionScreen = currentRouteName === 'BoxRevision';
 
   for (const item of VOICE_ROUTE_ALIASES) {
+    if (
+      item.route === 'BoxesList' &&
+      isInsideRevisionScreen &&
+      (cleanedCommand === 'caixa' || cleanedCommand === 'caixas')
+    ) {
+      continue;
+    }
+
     for (const alias of item.aliases) {
-      if (cleanedCommand === alias || cleanedCommand.includes(alias)) {
+      if (cleanedCommand === alias || cleanedCommand === normalizeVoiceText(alias)) {
+        return { route: item.route, label: item.label };
+      }
+    }
+  }
+
+  // Fallback para frases completas com includes
+  for (const item of VOICE_ROUTE_ALIASES) {
+    if (
+      item.route === 'BoxesList' &&
+      isInsideRevisionScreen &&
+      (cleanedCommand === 'caixa' || cleanedCommand === 'caixas')
+    ) {
+      continue;
+    }
+
+    for (const alias of item.aliases) {
+      if (cleanedCommand.includes(alias)) {
         return { route: item.route, label: item.label };
       }
     }

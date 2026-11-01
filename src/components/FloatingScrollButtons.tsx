@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, View, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
 import { useAppTheme } from '../theme/ThemeContext';
 
@@ -65,7 +65,7 @@ export function FloatingScrollButtons({ scrollRef, bottomOffset = 16, currentY =
         onPress={handleScrollUp}
         hitSlop={10}
       >
-        <Ionicons name="chevron-up" size={28} color={colors.buttonText} />
+        <MaterialCommunityIcons name="chevron-up" size={28} color={colors.buttonText} />
       </Pressable>
       <Pressable 
         style={[
@@ -79,7 +79,7 @@ export function FloatingScrollButtons({ scrollRef, bottomOffset = 16, currentY =
         onPress={handleScrollDown}
         hitSlop={10}
       >
-        <Ionicons name="chevron-down" size={28} color={colors.buttonText} />
+        <MaterialCommunityIcons name="chevron-down" size={28} color={colors.buttonText} />
       </Pressable>
     </View>
   );

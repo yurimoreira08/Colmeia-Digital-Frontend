@@ -11,7 +11,7 @@ import {
   Keyboard,
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AppHeader } from '../components/AppHeader';
 import { BottomDock } from '../components/BottomDock';
@@ -22,6 +22,7 @@ import type { RootStackParamList } from '../types/auth';
 import { OPTION_LABELS } from '../types/reviewReport';
 import { MANEJO_OPTION_LABELS } from '../types/manejo';
 import { ActionButtonsBar } from '../components/ActionButtonsBar';
+import { PALETTE } from '../theme/themes';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BoxesList'>;
 
@@ -93,7 +94,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
 
         {apiarySections.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Ionicons name="cube-outline" size={42} color={colors.textMuted} />
+            <MaterialCommunityIcons name="cube-outline" size={42} color={colors.textMuted} />
             <Text style={styles.emptyTitle}>Nenhuma caixa encontrada</Text>
             <Text style={styles.emptySubtitle}>
               {selectedApiaryId && role !== 'reader'
@@ -109,7 +110,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
             <View style={styles.sectionHeaderRow}>
               <View style={styles.sectionTitleArea}>
                 <View style={styles.sectionIconBadge}>
-                  <MaterialCommunityIcons name="beehive-outline" size={22} color={colors.accent} />
+                  <MaterialCommunityIcons name="beehive-outline" size={22} color={PALETTE.primaryDark} />
                 </View>
                 <Text style={styles.sectionApiaryName}>{section.apiaryName}</Text>
                 <View style={styles.sectionCountBadge}>
@@ -119,7 +120,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                 </View>
                 {section.lastModifiedTime > 0 ? (
                   <View style={styles.sectionUpdatedBadge}>
-                    <Ionicons name="sparkles" size={10} color="#059669" />
+                    <MaterialCommunityIcons name="star-four-points" size={12} color="#059669" />
                     <Text style={styles.sectionUpdatedBadgeText}>Recente</Text>
                   </View>
                 ) : null}
@@ -130,7 +131,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                   style={styles.sectionAddBtn}
                   onPress={() => handleOpenAddBox(section.apiaryId, section.apiaryName)}
                 >
-                  <Ionicons name="add" size={15} color="#FFFFFF" />
+                  <MaterialCommunityIcons name="plus" size={16} color="#FFFFFF" />
                   <Text style={styles.sectionAddBtnText}>Caixa</Text>
                 </Pressable>
               ) : null}
@@ -148,10 +149,10 @@ export function BoxesListScreen({ navigation, route }: Props) {
                     <View style={styles.boxCardHeader}>
                       <View style={styles.boxTitleArea}>
                         <View style={[styles.boxIconWrap, box.isHandled ? styles.boxIconWrapHandled : null]}>
-                          <Ionicons
-                            name="cube"
-                            size={20}
-                            color={box.isHandled ? '#059669' : colors.headerBackground}
+                          <MaterialCommunityIcons
+                            name="cube-outline"
+                            size={22}
+                            color={box.isHandled ? '#059669' : PALETTE.primaryDark}
                           />
                         </View>
                         <View style={{ flex: 1 }}>
@@ -159,7 +160,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                             <Text style={styles.boxName}>{box.name}</Text>
                             {box.isHandled ? (
                               <View style={styles.handledBadge}>
-                                <Ionicons name="sparkles" size={11} color="#059669" />
+                                <MaterialCommunityIcons name="star-four-points" size={11} color="#059669" />
                                 <Text style={styles.handledBadgeText}>
                                   {box.modificationType === 'manejo'
                                     ? 'Manejo recente'
@@ -178,7 +179,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                           style={styles.iconBtn}
                           onPress={() => handleOpenAnnotations(box)}
                         >
-                          <Ionicons name="time-outline" size={20} color={colors.accent} />
+                          <MaterialCommunityIcons name="history" size={22} color={PALETTE.secondaryDark} />
                         </Pressable>
                         {section.role !== 'reader' && (
                           <>
@@ -186,13 +187,13 @@ export function BoxesListScreen({ navigation, route }: Props) {
                               style={styles.iconBtn}
                               onPress={() => handleOpenRename(box)}
                             >
-                              <Ionicons name="pencil-outline" size={20} color={colors.textMuted} />
+                              <MaterialCommunityIcons name="pencil-outline" size={20} color={PALETTE.secondaryDark} />
                             </Pressable>
                             <Pressable
                               style={styles.iconBtn}
                               onPress={() => setDeleteBoxId(box.rawId)}
                             >
-                              <Ionicons name="trash-outline" size={18} color={colors.error} />
+                              <MaterialCommunityIcons name="trash-can-outline" size={20} color={PALETTE.danger} />
                             </Pressable>
                           </>
                         )}
@@ -201,7 +202,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
 
                     <View style={styles.cardBottomActions}>
                       <Pressable
-                        style={[styles.mainActionBtn, { backgroundColor: colors.headerBackground }]}
+                        style={[styles.mainActionBtn, { backgroundColor: PALETTE.primaryDark }]}
                         onPress={() => {
                           navigation.navigate('BoxRevision', {
                             boxId: box.rawId,
@@ -212,12 +213,12 @@ export function BoxesListScreen({ navigation, route }: Props) {
                           });
                         }}
                       >
-                        <Ionicons name="clipboard-outline" size={16} color="#FFFFFF" />
+                        <MaterialCommunityIcons name="clipboard-text-outline" size={18} color="#FFFFFF" />
                         <Text style={styles.mainActionBtnText}>Nova Revisão</Text>
                       </Pressable>
 
                       <Pressable
-                        style={[styles.mainActionBtn, { backgroundColor: colors.warmAccent }]}
+                        style={[styles.mainActionBtn, { backgroundColor: PALETTE.secondaryLight }]}
                         onPress={() => {
                           navigation.navigate('BoxManejo', {
                             boxId: box.rawId,
@@ -228,7 +229,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                           });
                         }}
                       >
-                        <Ionicons name="construct-outline" size={16} color="#FFFFFF" />
+                        <MaterialCommunityIcons name="tools" size={18} color="#FFFFFF" />
                         <Text style={styles.mainActionBtnText}>Novo Manejo</Text>
                       </Pressable>
                     </View>
@@ -281,7 +282,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>Histórico • {selectedBoxForAnnotations?.name}</Text>
               <Pressable onPress={() => setAnnotationsModalVisible(false)}>
-                <Ionicons name="close" size={24} color={colors.textPrimary} />
+                <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
               </Pressable>
             </View>
 
@@ -300,7 +301,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                     <View style={styles.historyHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Text style={styles.historyTag}>Revisão</Text>
-                        <Ionicons name="chevron-forward" size={13} color={colors.textMuted} />
+                        <MaterialCommunityIcons name="chevron-right" size={16} color={colors.textMuted} />
                       </View>
                       <Text style={styles.historyDate}>{new Date(rev.createdAt).toLocaleDateString('pt-BR')}</Text>
                     </View>
@@ -323,7 +324,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                     <View style={styles.historyHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                         <Text style={[styles.historyTag, { backgroundColor: colors.accentSoft, color: colors.accent }]}>Manejo</Text>
-                        <Ionicons name="chevron-forward" size={13} color={colors.textMuted} />
+                        <MaterialCommunityIcons name="chevron-right" size={16} color={colors.textMuted} />
                       </View>
                       <Text style={styles.historyDate}>{new Date(man.createdAt).toLocaleDateString('pt-BR')}</Text>
                     </View>
@@ -335,7 +336,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
               {allRevisions.filter((r) => r.caixaId === selectedBoxForAnnotations?.rawId).length === 0 &&
               allManejos.filter((m) => m.caixaId === selectedBoxForAnnotations?.rawId).length === 0 ? (
                 <View style={{ alignItems: 'center', paddingVertical: 24, gap: 8 }}>
-                  <Ionicons name="time-outline" size={36} color={colors.textMuted} />
+                  <MaterialCommunityIcons name="clock-outline" size={36} color={colors.textMuted} />
                   <Text style={{ color: colors.textMuted, fontSize: 13, textAlign: 'center' }}>
                     Nenhuma anotação registrada ainda para esta caixa.
                   </Text>
@@ -345,7 +346,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
 
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.cardBorder }}>
               <Pressable
-                style={[styles.mainActionBtn, { flex: 1, backgroundColor: colors.headerBackground, paddingVertical: 10 }]}
+                style={[styles.mainActionBtn, { flex: 1, backgroundColor: PALETTE.primaryDark, paddingVertical: 10 }]}
                 onPress={() => {
                   setAnnotationsModalVisible(false);
                   navigation.navigate('ReviewReportsList', {
@@ -356,12 +357,12 @@ export function BoxesListScreen({ navigation, route }: Props) {
                   });
                 }}
               >
-                <Ionicons name="clipboard-outline" size={15} color="#FFFFFF" />
+                <MaterialCommunityIcons name="clipboard-text-outline" size={16} color="#FFFFFF" />
                 <Text style={[styles.mainActionBtnText, { fontSize: 12 }]}>Histórico Revisões</Text>
               </Pressable>
 
               <Pressable
-                style={[styles.mainActionBtn, { flex: 1, backgroundColor: colors.warmAccent, paddingVertical: 10 }]}
+                style={[styles.mainActionBtn, { flex: 1, backgroundColor: PALETTE.secondaryLight, paddingVertical: 10 }]}
                 onPress={() => {
                   setAnnotationsModalVisible(false);
                   navigation.navigate('ReviewReportsList', {
@@ -372,7 +373,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                   });
                 }}
               >
-                <Ionicons name="construct-outline" size={15} color="#FFFFFF" />
+                <MaterialCommunityIcons name="tools" size={16} color="#FFFFFF" />
                 <Text style={[styles.mainActionBtnText, { fontSize: 12 }]}>Histórico Manejos</Text>
               </Pressable>
             </View>

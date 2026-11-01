@@ -1,7 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 
 type BottomDockProps = {
   active: 'home' | 'settings' | null;
@@ -26,10 +27,10 @@ export function BottomDock({ active, onPressHome, onPressSettings }: BottomDockP
           onPress={onPressHome}
           style={[styles.navButton, homeActive ? styles.navButtonActive : null]}
         >
-          <Ionicons
-            name={homeActive ? 'grid' : 'grid-outline'}
-            size={22}
-            color={homeActive ? colors.buttonText : colors.textMuted}
+          <MaterialCommunityIcons
+            name={homeActive ? 'view-dashboard' : 'view-dashboard-outline'}
+            size={26}
+            color={homeActive ? PALETTE.primaryDark : PALETTE.lightBg}
           />
           <Text style={[styles.navLabel, homeActive ? styles.navLabelActive : null]}>
             Início
@@ -43,10 +44,10 @@ export function BottomDock({ active, onPressHome, onPressSettings }: BottomDockP
           onPress={onPressSettings}
           style={[styles.navButton, settingsActive ? styles.navButtonActive : null]}
         >
-          <Ionicons
-            name={settingsActive ? 'settings' : 'settings-outline'}
-            size={22}
-            color={settingsActive ? colors.buttonText : colors.textMuted}
+          <MaterialCommunityIcons
+            name={settingsActive ? 'cog' : 'cog-outline'}
+            size={26}
+            color={settingsActive ? PALETTE.primaryDark : PALETTE.lightBg}
           />
           <Text style={[styles.navLabel, settingsActive ? styles.navLabelActive : null]}>
             Configurações
@@ -60,45 +61,46 @@ export function BottomDock({ active, onPressHome, onPressSettings }: BottomDockP
 function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
   return StyleSheet.create({
     wrapper: {
-      paddingHorizontal: 24,
+      paddingHorizontal: 20,
       paddingTop: 8,
       backgroundColor: 'transparent',
     },
     container: {
-      height: 64,
-      borderRadius: 32,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      backgroundColor: colors.surface,
+      height: 70,
+      borderRadius: 35,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
+      backgroundColor: PALETTE.primaryDark,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-around',
-      paddingHorizontal: 8,
+      paddingHorizontal: 12,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      elevation: 4,
+      shadowOpacity: 0.25,
+      shadowRadius: 10,
+      elevation: 6,
     },
     navButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-      borderRadius: 24,
+      gap: 10,
+      paddingVertical: 12,
+      paddingHorizontal: 22,
+      borderRadius: 26,
     },
     navButtonActive: {
-      backgroundColor: colors.dockActive,
+      backgroundColor: PALETTE.secondaryLight,
     },
     navLabel: {
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: '600',
-      color: colors.textMuted,
+      color: PALETTE.lightBg,
+      letterSpacing: 0.2,
     },
     navLabelActive: {
-      color: colors.buttonText,
-      fontWeight: '700',
+      color: PALETTE.primaryDark,
+      fontWeight: '800',
     },
   });
 }

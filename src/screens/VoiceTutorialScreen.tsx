@@ -6,11 +6,12 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { AppHeader } from '../components/AppHeader';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
 import type { RootStackParamList } from '../types/auth';
 
@@ -23,15 +24,13 @@ type CommandBadgeProps = {
 
 export function VoiceTutorialScreen({ navigation }: Props) {
   const { colors, themeName } = useAppTheme();
-  const isDark = themeName === 'obsidian-dark';
   const { isListening, currentTranscript, toggleListening } = useVoiceCommand();
-  const styles = createStyles(colors, isDark);
+  const styles = createStyles(colors);
 
   function CommandBadge({ command, description }: CommandBadgeProps) {
     return (
       <View style={styles.badgeWrapper}>
         <View style={styles.speechBubble}>
-          <Ionicons name="mic" size={13} color={colors.accent} style={{ marginRight: 4 }} />
           <Text style={styles.badgeText}>"{command}"</Text>
         </View>
         {description ? <Text style={styles.badgeDesc}>{description}</Text> : null}
@@ -40,20 +39,19 @@ export function VoiceTutorialScreen({ navigation }: Props) {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      {/* Header Fixo */}
-      <View style={styles.headerBar}>
-        <Pressable
-          style={styles.backBtn}
-          onPress={() => navigation.goBack()}
-          hitSlop={12}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-        </Pressable>
+    <View style={styles.safeArea}>
+      <AppHeader
+        title="Comandos de Voz"
+        showBack
+        onPressBack={() => navigation.goBack()}
+        onPressBell={() => navigation.navigate('Notifications')}
+      />
 
+      {/* Barra de Teste Rápido */}
+      <View style={styles.testBar}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>Tutorial de Voz</Text>
-          <Text style={styles.headerSubtitle}>Operação mãos livres no apiário</Text>
+          <Text style={styles.testBarTitle}>Operação Mãos Livres</Text>
+          <Text style={styles.testBarSubtitle}>Fale os comandos naturalmente em campo</Text>
         </View>
 
         <Pressable
@@ -61,13 +59,13 @@ export function VoiceTutorialScreen({ navigation }: Props) {
           onPress={toggleListening}
           hitSlop={8}
         >
-          <Ionicons
-            name={isListening ? 'mic' : 'mic-outline'}
-            size={18}
-            color={isListening ? '#FFFFFF' : colors.accent}
+          <MaterialCommunityIcons
+            name={isListening ? 'microphone' : 'microphone-outline'}
+            size={20}
+            color={isListening ? '#FFFFFF' : PALETTE.primaryDark}
           />
           <Text style={[styles.micTestBtnText, isListening ? { color: '#FFFFFF' } : null]}>
-            {isListening ? 'Ouvindo...' : 'Testar'}
+            {isListening ? 'Ouvindo...' : 'Testar Voz'}
           </Text>
         </Pressable>
       </View>
@@ -76,7 +74,7 @@ export function VoiceTutorialScreen({ navigation }: Props) {
       <ScrollView
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={true}
+        showsVerticalScrollIndicator={false}
       >
         {/* Live Feedback Card */}
         {isListening ? (
@@ -94,9 +92,9 @@ export function VoiceTutorialScreen({ navigation }: Props) {
         {/* Card de Boas-Vindas */}
         <View style={styles.introCard}>
           <View style={styles.introIconWrap}>
-            <MaterialCommunityIcons name="hand-back-left-off" size={28} color={colors.accent} />
+            <MaterialCommunityIcons name="microphone-message" size={32} color={PALETTE.primaryDark} />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, gap: 4 }}>
             <Text style={styles.introTitle}>Trabalhe sem tirar as luvas!</Text>
             <Text style={styles.introBody}>
               O Colmeia Digital foi projetado para permitir que você execute o manejo completo e a navegação no apiário utilizando apenas a voz.
@@ -107,8 +105,8 @@ export function VoiceTutorialScreen({ navigation }: Props) {
         {/* 1. SEÇÃO REVISÃO DE CAIXA */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#05966918' }]}>
-              <Ionicons name="clipboard-outline" size={20} color="#059669" />
+            <View style={styles.sectionIconWrap}>
+              <MaterialCommunityIcons name="clipboard-text-outline" size={24} color={PALETTE.primaryDark} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.sectionTitle}>1. Fazendo uma Revisão</Text>
@@ -117,19 +115,17 @@ export function VoiceTutorialScreen({ navigation }: Props) {
           </View>
 
           <Text style={styles.stepIntro}>
-            Ao abrir a tela de revisão, o microfone é ativado automaticamente. Diga o que observar para marcar os checkboxes:
+            Ao abrir a tela de revisão, o microfone é ativado automaticamente. Diga o que observar para marcar os itens:
           </Text>
 
           <View style={styles.badgesContainer}>
             <CommandBadge command="rainha" description="Marca a presença da rainha" />
-            <CommandBadge command="postura" description="Confirma postura regular" />
             <CommandBadge command="ovos" description="Marca ovos do dia" />
             <CommandBadge command="mel" description="Registra presença de mel" />
             <CommandBadge command="polen" description="Registra reserva de pólen" />
+            <CommandBadge command="cria nova" description="Presença de crias novas de 3 dias" />
             <CommandBadge command="cria aberta" description="Presença de larvas/crias abertas" />
             <CommandBadge command="cria fechada" description="Presença de opérculos/crias fechadas" />
-            <CommandBadge command="realeira" description="Marca presença de realeiras" />
-            <CommandBadge command="zangao" description="Registra presença de zangões" />
             <CommandBadge command="com espaco" description="Espaço suficiente para postura" />
             <CommandBadge command="sem espaco" description="Ninho com superlotação" />
             <CommandBadge command="forca boa" description="Enxame forte e populoso" />
@@ -138,18 +134,16 @@ export function VoiceTutorialScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.tipBox}>
-            <Ionicons name="bulb-outline" size={18} color="#D97706" />
             <Text style={styles.tipText}>
-              <Text style={styles.boldText}>Ditado de Observações:</Text> Diga <Text style={styles.codeText}>"observação [seu texto]"</Text> para preencher o campo de notas e <Text style={styles.codeText}>"indicação [seu texto]"</Text> para registrar ações recomendadas.
+              <Text style={styles.boldText}>Ditado de Anotações:</Text> Diga <Text style={styles.codeText}>"observação [seu texto]"</Text> para preencher o campo de notas e <Text style={styles.codeText}>"o que fazer [seu texto]"</Text> para registrar ações recomendadas.
             </Text>
           </View>
 
           <View style={styles.finishBox}>
             <Text style={styles.finishBoxTitle}>Para salvar a revisão:</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
-              <CommandBadge command="encerrar revisao" />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
               <CommandBadge command="salvar revisao" />
-              <CommandBadge command="concluir" />
+              <CommandBadge command="encerrar revisao" />
             </View>
           </View>
         </View>
@@ -157,8 +151,8 @@ export function VoiceTutorialScreen({ navigation }: Props) {
         {/* 2. SEÇÃO MANEJO TÉCNICO */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#D9770618' }]}>
-              <Ionicons name="construct-outline" size={20} color="#D97706" />
+            <View style={styles.sectionIconWrap}>
+              <MaterialCommunityIcons name="tools" size={24} color={PALETTE.primaryDark} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.sectionTitle}>2. Registrando Manejo Técnico</Text>
@@ -184,7 +178,6 @@ export function VoiceTutorialScreen({ navigation }: Props) {
           </View>
 
           <View style={styles.tipBox}>
-            <Ionicons name="camera-outline" size={18} color="#059669" />
             <Text style={styles.tipText}>
               <Text style={styles.boldText}>Foto do Manejo por Voz:</Text> Diga <Text style={styles.codeText}>"tirar foto"</Text> ou <Text style={styles.codeText}>"abrir camera"</Text> para anexar uma comprovação fotográfica sem encostar na tela.
             </Text>
@@ -192,49 +185,21 @@ export function VoiceTutorialScreen({ navigation }: Props) {
 
           <View style={styles.finishBox}>
             <Text style={styles.finishBoxTitle}>Para salvar o manejo:</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
               <CommandBadge command="salvar manejo" />
               <CommandBadge command="encerrar manejo" />
             </View>
           </View>
         </View>
 
-        {/* 3. SEÇÃO SELEÇÃO DE CAIXAS E APIÁRIOS */}
+        {/* 3. SEÇÃO NAVEGAÇÃO GLOBAL */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#2563EB18' }]}>
-              <Ionicons name="cube-outline" size={20} color="#2563EB" />
+            <View style={styles.sectionIconWrap}>
+              <MaterialCommunityIcons name="compass-outline" size={24} color={PALETTE.primaryDark} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>3. Selecionando Caixas e Apiários</Text>
-              <Text style={styles.sectionSubtitle}>Nas telas de listagem</Text>
-            </View>
-          </View>
-
-          <Text style={styles.stepIntro}>
-            Abra diretamente qualquer caixa ou apiário falando o número ou o nome:
-          </Text>
-
-          <View style={styles.badgesContainer}>
-            <CommandBadge command="caixa 1" description="Abre a Caixa 1 na tela atual" />
-            <CommandBadge command="caixa dois" description="Reconhece números por extenso" />
-            <CommandBadge command="revisar caixa 3" description="Vai direto para nova revisão" />
-            <CommandBadge command="manejar caixa 5" description="Vai direto para novo manejo" />
-            <CommandBadge command="historico caixa 2" description="Abre anotações anteriores" />
-            <CommandBadge command="abrir apiario [nome]" description="Abre a lista de caixas do apiário" />
-            <CommandBadge command="buscar [termo]" description="Filtra a lista em tempo real" />
-            <CommandBadge command="limpar busca" description="Restaura a lista completa" />
-          </View>
-        </View>
-
-        {/* 4. SEÇÃO NAVEGAÇÃO GLOBAL */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#7C3AED18' }]}>
-              <Ionicons name="compass-outline" size={20} color="#7C3AED" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>4. Navegando entre Telas</Text>
+              <Text style={styles.sectionTitle}>3. Navegando entre Telas</Text>
               <Text style={styles.sectionSubtitle}>Funciona em qualquer lugar do aplicativo</Text>
             </View>
           </View>
@@ -253,122 +218,92 @@ export function VoiceTutorialScreen({ navigation }: Props) {
           </View>
         </View>
 
-        {/* 5. SEÇÃO ROLAGEM SEM AS MÃOS */}
+        {/* 4. SEÇÃO ROLAGEM E CONTROLE */}
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeaderRow}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#0D948818' }]}>
-              <Ionicons name="swap-vertical-outline" size={20} color="#0D9488" />
+            <View style={styles.sectionIconWrap}>
+              <MaterialCommunityIcons name="swap-vertical" size={24} color={PALETTE.primaryDark} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>5. Rolagem de Tela</Text>
-              <Text style={styles.sectionSubtitle}>Rolar formulários e relatórios longos</Text>
+              <Text style={styles.sectionTitle}>4. Rolagem e Controle</Text>
+              <Text style={styles.sectionSubtitle}>Comandos auxiliares em formulários</Text>
             </View>
           </View>
 
           <View style={styles.badgesContainer}>
             <CommandBadge command="descer" description="Rola a tela para baixo" />
-            <CommandBadge command="para baixo" description="Rola a tela para baixo" />
             <CommandBadge command="subir" description="Rola a tela para cima" />
-            <CommandBadge command="para cima" description="Rola a tela para cima" />
+            <CommandBadge command="parar escuta" description="Pausa temporariamente o microfone" />
+            <CommandBadge command="ajuda de voz" description="Exibe orientações de voz" />
           </View>
         </View>
 
-        {/* 6. CONTROLE DO MICROFONE */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeaderRow}>
-            <View style={[styles.sectionIconWrap, { backgroundColor: '#EF444418' }]}>
-              <Ionicons name="mic-off-outline" size={20} color="#EF4444" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.sectionTitle}>6. Controle do Microfone</Text>
-              <Text style={styles.sectionSubtitle}>Pausar e gerenciar a escuta</Text>
-            </View>
-          </View>
-
-          <View style={styles.badgesContainer}>
-            <CommandBadge command="parar comando de voz" description="Pausa a escuta de voz" />
-            <CommandBadge command="parar escuta" description="Desativa o microfone" />
-            <CommandBadge command="ajuda de voz" description="Exibe resumo rápido" />
-          </View>
-        </View>
-
-        <View style={{ height: 24 }} />
+        <View style={{ height: 28 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-function createStyles(colors: any, isDark: boolean) {
+function createStyles(colors: any) {
   return StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: PALETTE.lightSurface,
     },
-    headerBar: {
+    testBar: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
       paddingHorizontal: 16,
       paddingVertical: 12,
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.cardBorder,
+      backgroundColor: '#FFFFFF',
+      borderBottomWidth: 1.5,
+      borderBottomColor: PALETTE.secondaryLight,
     },
-    backBtn: {
-      width: 38,
-      height: 38,
-      borderRadius: 10,
-      backgroundColor: colors.surface,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-    },
-    headerTitle: {
+    testBarTitle: {
       fontSize: 16,
       fontWeight: '800',
-      color: colors.textPrimary,
-      letterSpacing: 0.2,
+      color: PALETTE.primaryDark,
     },
-    headerSubtitle: {
-      fontSize: 12,
-      color: colors.textMuted,
+    testBarSubtitle: {
+      fontSize: 13,
+      color: PALETTE.secondaryDark,
       fontWeight: '500',
     },
     micTestBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      backgroundColor: colors.accentSoft,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      backgroundColor: PALETTE.lightSurface,
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: PALETTE.primaryDark,
     },
     micTestBtnActive: {
-      backgroundColor: colors.accent,
-      borderColor: colors.accent,
+      backgroundColor: PALETTE.primaryDark,
+      borderColor: PALETTE.primaryDark,
     },
     micTestBtnText: {
-      fontSize: 12,
+      fontSize: 14,
       fontWeight: '700',
-      color: colors.accent,
+      color: PALETTE.primaryDark,
     },
     scrollContainer: {
       flex: 1,
     },
     scrollContent: {
       padding: 16,
-      gap: 14,
+      gap: 16,
     },
     liveTranscriptCard: {
-      backgroundColor: colors.accentSoft,
-      borderRadius: 14,
-      padding: 14,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      padding: 16,
       borderWidth: 1.5,
-      borderColor: colors.accent,
-      gap: 6,
+      borderColor: PALETTE.vibrantAccent,
+      gap: 8,
     },
     liveTranscriptHeader: {
       flexDirection: 'row',
@@ -376,60 +311,60 @@ function createStyles(colors: any, isDark: boolean) {
       gap: 8,
     },
     liveDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: colors.accent,
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: PALETTE.primaryDark,
     },
     liveTranscriptTitle: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: colors.accent,
+      fontSize: 13,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
       textTransform: 'uppercase',
       letterSpacing: 0.5,
     },
     liveTranscriptText: {
-      fontSize: 14,
-      color: colors.textPrimary,
+      fontSize: 16,
+      color: PALETTE.primaryDark,
       fontStyle: 'italic',
-      fontWeight: '500',
+      fontWeight: '600',
     },
     introCard: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 14,
-      backgroundColor: colors.card,
-      borderRadius: 14,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 18,
+      padding: 18,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
     },
     introIconWrap: {
-      width: 48,
-      height: 48,
-      borderRadius: 14,
-      backgroundColor: colors.accentSoft,
+      width: 52,
+      height: 52,
+      borderRadius: 16,
+      backgroundColor: PALETTE.lightSurface,
       alignItems: 'center',
       justifyContent: 'center',
     },
     introTitle: {
-      fontSize: 15,
+      fontSize: 18,
       fontWeight: '800',
-      color: colors.textPrimary,
-      marginBottom: 2,
+      color: PALETTE.primaryDark,
     },
     introBody: {
-      fontSize: 12.5,
-      lineHeight: 18,
-      color: colors.textMuted,
+      fontSize: 14.5,
+      lineHeight: 21,
+      color: PALETTE.secondaryDark,
+      fontWeight: '500',
     },
     sectionCard: {
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      gap: 12,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 18,
+      padding: 18,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
+      gap: 14,
     },
     sectionHeaderRow: {
       flexDirection: 'row',
@@ -437,29 +372,32 @@ function createStyles(colors: any, isDark: boolean) {
       gap: 12,
     },
     sectionIconWrap: {
-      width: 38,
-      height: 38,
-      borderRadius: 10,
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: PALETTE.lightSurface,
       alignItems: 'center',
       justifyContent: 'center',
     },
     sectionTitle: {
-      fontSize: 15,
+      fontSize: 18,
       fontWeight: '800',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
       letterSpacing: 0.2,
     },
     sectionSubtitle: {
-      fontSize: 12,
-      color: colors.textMuted,
+      fontSize: 13,
+      color: PALETTE.secondaryDark,
+      fontWeight: '600',
     },
     stepIntro: {
-      fontSize: 13,
-      lineHeight: 19,
-      color: colors.textPrimary,
+      fontSize: 15,
+      lineHeight: 22,
+      color: PALETTE.primaryDark,
+      fontWeight: '600',
     },
     badgesContainer: {
-      gap: 8,
+      gap: 10,
     },
     badgeWrapper: {
       flexDirection: 'row',
@@ -468,61 +406,57 @@ function createStyles(colors: any, isDark: boolean) {
       flexWrap: 'wrap',
     },
     speechBubble: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: isDark ? 'rgba(255, 255, 255, 0.07)' : '#F1F5F9',
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      backgroundColor: PALETTE.lightSurface,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryDark,
     },
     badgeText: {
-      fontSize: 13,
-      fontWeight: '700',
-      color: colors.textPrimary,
+      fontSize: 16,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
     },
     badgeDesc: {
       flex: 1,
-      fontSize: 12,
-      color: colors.textMuted,
-      minWidth: 140,
+      fontSize: 14,
+      color: PALETTE.secondaryDark,
+      fontWeight: '600',
+      minWidth: 150,
     },
     tipBox: {
-      flexDirection: 'row',
-      gap: 10,
-      backgroundColor: isDark ? 'rgba(217, 119, 6, 0.1)' : '#FEF3C7',
-      borderRadius: 12,
-      padding: 12,
-      borderWidth: 1,
-      borderColor: isDark ? 'rgba(217, 119, 6, 0.3)' : '#FDE68A',
-      alignItems: 'flex-start',
+      backgroundColor: PALETTE.lightSurface,
+      borderRadius: 14,
+      padding: 14,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
     },
     tipText: {
-      flex: 1,
-      fontSize: 12.5,
-      lineHeight: 18,
-      color: colors.textPrimary,
+      fontSize: 14.5,
+      lineHeight: 21,
+      color: PALETTE.primaryDark,
     },
     boldText: {
-      fontWeight: '700',
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
     },
     codeText: {
-      fontWeight: '700',
-      color: colors.accent,
+      fontWeight: '800',
+      color: PALETTE.secondaryLight,
     },
     finishBox: {
-      backgroundColor: colors.surface,
-      borderRadius: 12,
-      padding: 12,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      gap: 6,
+      backgroundColor: PALETTE.lightSurface,
+      borderRadius: 14,
+      padding: 14,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryDark,
+      gap: 8,
     },
     finishBoxTitle: {
-      fontSize: 12.5,
-      fontWeight: '700',
-      color: colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
     },
   });
 }

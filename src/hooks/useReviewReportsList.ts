@@ -3,6 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Alert } from 'react-native';
 import { deleteRevision, listRevisionReports, archiveRevision } from '../services/reviewReportService';
 import { deleteManejoService, listManejoReports, archiveManejo } from '../services/manejoService';
+import { subscribeToSyncStatus } from '../services/syncService';
 import { useAppTheme } from '../theme/ThemeContext';
 import { ReviewReport } from '../types/reviewReport';
 import { ManejoReport } from '../types/manejo';
@@ -40,25 +41,13 @@ export function useReviewReportsList(routeParams: any) {
   const apiaryId = routeParams?.apiaryId ? Number(routeParams.apiaryId) : undefined;
   const apiaryName = routeParams?.apiaryName;
 
-  const today = useMemo(() => new Date(), []);
-  
   const toIsoDate = useCallback((date: Date): string => {
     return date.toISOString().slice(0, 10);
   }, []);
 
-  const defaultFrom = useMemo(() => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - 7);
-    return toIsoDate(d);
-  }, [today, toIsoDate]);
-
-  const defaultTo = useMemo(() => {
-    return toIsoDate(today);
-  }, [today, toIsoDate]);
-
-  const [fromDate, setFromDate] = useState(defaultFrom);
-  const [toDate, setToDate] = useState(defaultTo);
-  const [quickFilter, setQuickFilter] = useState<'thisMonth' | '7days' | 'all'>('7days');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [quickFilter, setQuickFilter] = useState<'thisMonth' | '7days' | 'all'>('all');
 
   useEffect(() => {
     if (quickFilter === '7days') {
@@ -72,10 +61,8 @@ export function useReviewReportsList(routeParams: any) {
       setFromDate(toIsoDate(firstDay));
       setToDate(toIsoDate(new Date()));
     } else if (quickFilter === 'all') {
-      const date = new Date();
-      date.setDate(date.getDate() - 180);
-      setFromDate(toIsoDate(date));
-      setToDate(toIsoDate(new Date()));
+      setFromDate('');
+      setToDate('');
     }
   }, [quickFilter, toIsoDate]);
 
@@ -101,9 +88,13 @@ export function useReviewReportsList(routeParams: any) {
 
   const loadData = useCallback(async () => {
     try {
+      const queryParams: any = { tipo: 'apiario', apiaryId };
+      if (fromDate) queryParams.fromDate = fromDate;
+      if (toDate) queryParams.toDate = toDate;
+
       const [revData, manData] = await Promise.all([
-        listRevisionReports({ tipo: 'apiario', apiaryId, fromDate, toDate }),
-        listManejoReports({ tipo: 'apiario', apiaryId, fromDate, toDate }),
+        listRevisionReports(queryParams),
+        listManejoReports(queryParams),
       ]);
       setReports(revData);
       setManejos(manData);
@@ -111,6 +102,18 @@ export function useReviewReportsList(routeParams: any) {
       console.error('[useReviewReportsList] Error loading data:', err);
     }
   }, [apiaryId, fromDate, toDate]);
+
+  // Sincronização em tempo real: recarrega a lista automaticamente quando o sync em background concluir
+  useEffect(() => {
+    const unsubscribe = subscribeToSyncStatus((status) => {
+      if (!status.isSyncing) {
+        void loadData();
+      }
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, [loadData]);
 
   useFocusEffect(
     useCallback(() => {

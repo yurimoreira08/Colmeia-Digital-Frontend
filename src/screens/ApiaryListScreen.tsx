@@ -1,5 +1,5 @@
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useCallback, useState } from 'react';
 import {
   Pressable,
@@ -13,11 +13,13 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppHeader } from '../components/AppHeader';
 import { BottomDock } from '../components/BottomDock';
 import { ConfirmModal } from '../components/ConfirmModal';
+import { ExportPdfModal } from '../components/ExportPdfModal';
 import { listAllApiaries, removeApiary } from '../services/apiaryService';
 import { listRevisionReports } from '../services/reviewReportService';
 import { listManejoReports } from '../services/manejoService';
 import { APP_SESSION_START } from '../utils/session';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 import type { RootStackParamList } from '../types/auth';
 import type { Apiary } from '../types/apiary';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
@@ -32,6 +34,7 @@ export function ApiaryListScreen({ navigation }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [pdfApiary, setPdfApiary] = useState<Apiary | null>(null);
 
   async function loadSortedApiaries(): Promise<Apiary[]> {
     const [apiaryData, revData, manData] = await Promise.all([
@@ -200,11 +203,14 @@ export function ApiaryListScreen({ navigation }: Props) {
           </View>
         ) : null}
 
+        {/* Botão ampliado "Cadastrar Novo Apiário" */}
         <Pressable
           style={styles.addButton}
           onPress={() => navigation.navigate('CreateEditApiary')}
+          accessibilityRole="button"
+          accessibilityLabel="Cadastrar Novo Apiário"
         >
-          <Ionicons name="add-circle-outline" size={22} color="#FFFFFF" />
+          <MaterialCommunityIcons name="plus-circle-outline" size={24} color="#FFFFFF" />
           <Text style={styles.addButtonText}>Cadastrar Novo Apiário</Text>
         </Pressable>
 
@@ -213,7 +219,7 @@ export function ApiaryListScreen({ navigation }: Props) {
 
           {apiaries.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Ionicons name="business-outline" size={48} color={colors.textMuted} />
+              <MaterialCommunityIcons name="home-group" size={56} color={PALETTE.secondaryMedium} />
               <Text style={styles.emptyTitle}>Nenhum apiário cadastrado</Text>
               <Text style={styles.emptySubtitle}>Toque no botão acima para cadastrar seu primeiro apiário.</Text>
             </View>
@@ -235,13 +241,34 @@ export function ApiaryListScreen({ navigation }: Props) {
                     <View style={styles.titleArea}>
                       <Text style={styles.apiaryName}>{apiary.name}</Text>
                       <View style={styles.locationRow}>
-                        <Ionicons name="location-outline" size={14} color={colors.textMuted} />
+                        <MaterialCommunityIcons name="map-marker-outline" size={18} color={PALETTE.secondaryMedium} />
                         <Text style={styles.apiaryLocation}>{apiary.location}</Text>
                       </View>
                     </View>
 
-                    <View style={styles.badgeBoxCount}>
-                      <Text style={styles.boxCountText}>{apiary.boxCount} caixas</Text>
+                    <View style={styles.headerRightArea}>
+                      <View style={styles.badgeBoxCount}>
+                        <Text style={styles.boxCountText}>{apiary.boxCount} {apiary.boxCount === 1 ? 'caixa' : 'caixas'}</Text>
+                      </View>
+                      <View style={styles.headerIconActions}>
+                        <Pressable
+                          style={styles.headerIconBtn}
+                          onPress={() => navigation.navigate('CreateEditApiary', { apiaryId: apiary.id })}
+                          hitSlop={8}
+                          accessibilityLabel="Editar apiário"
+                        >
+                          <MaterialCommunityIcons name="pencil-outline" size={18} color={PALETTE.primaryDark} />
+                        </Pressable>
+
+                        <Pressable
+                          style={[styles.headerIconBtn, styles.headerIconBtnDelete]}
+                          onPress={() => setDeleteId(apiary.id)}
+                          hitSlop={8}
+                          accessibilityLabel="Excluir apiário"
+                        >
+                          <MaterialCommunityIcons name="trash-can-outline" size={18} color={PALETTE.dangerRed} />
+                        </Pressable>
+                      </View>
                     </View>
                   </View>
 
@@ -253,7 +280,7 @@ export function ApiaryListScreen({ navigation }: Props) {
 
                   <View style={styles.cardActions}>
                     <Pressable
-                      style={styles.actionBtn}
+                      style={[styles.actionBtn, styles.actionBtnMain]}
                       onPress={() => {
                         navigation.navigate('BoxesList', {
                           apiaryId: apiary.id,
@@ -262,12 +289,12 @@ export function ApiaryListScreen({ navigation }: Props) {
                         });
                       }}
                     >
-                      <Ionicons name="cube-outline" size={16} color={colors.headerBackground} />
-                      <Text style={styles.actionBtnText}>Ver Caixas</Text>
+                      <MaterialCommunityIcons name="cube-outline" size={18} color="#FFFFFF" />
+                      <Text style={styles.actionBtnTextMain}>Ver Caixas</Text>
                     </Pressable>
 
                     <Pressable
-                      style={styles.actionBtn}
+                      style={[styles.actionBtn, styles.actionBtnHighlight]}
                       onPress={() => {
                         navigation.navigate('BoxesList', {
                           apiaryId: apiary.id,
@@ -277,23 +304,17 @@ export function ApiaryListScreen({ navigation }: Props) {
                         });
                       }}
                     >
-                      <Ionicons name="add-circle-outline" size={16} color={colors.accent} />
-                      <Text style={[styles.actionBtnText, { color: colors.accent }]}>+ Caixa</Text>
+                      <MaterialCommunityIcons name="plus-circle-outline" size={18} color={PALETTE.primaryDark} />
+                      <Text style={[styles.actionBtnText, styles.actionBtnTextHighlight]}>+ Caixa</Text>
                     </Pressable>
 
                     <Pressable
-                      style={styles.actionBtn}
-                      onPress={() => navigation.navigate('CreateEditApiary', { apiaryId: apiary.id })}
+                      style={[styles.actionBtn, styles.actionBtnPdf]}
+                      onPress={() => setPdfApiary(apiary)}
+                      accessibilityLabel="Exportar relatório em PDF de todas as caixas"
                     >
-                      <Ionicons name="pencil-outline" size={16} color={colors.textMuted} />
-                      <Text style={[styles.actionBtnText, { color: colors.textMuted }]}>Editar</Text>
-                    </Pressable>
-
-                    <Pressable
-                      style={styles.actionBtn}
-                      onPress={() => setDeleteId(apiary.id)}
-                    >
-                      <Ionicons name="trash-outline" size={16} color={colors.error} />
+                      <MaterialCommunityIcons name="file-pdf-box" size={20} color="#DC2626" />
+                      <Text style={styles.actionBtnPdfText}>PDF</Text>
                     </Pressable>
                   </View>
                 </Pressable>
@@ -302,6 +323,16 @@ export function ApiaryListScreen({ navigation }: Props) {
           )}
         </View>
       </ScrollView>
+
+      <ExportPdfModal
+        visible={Boolean(pdfApiary)}
+        onClose={() => setPdfApiary(null)}
+        targetTitle={pdfApiary?.name || 'Apiário'}
+        targetSubtitle={`${pdfApiary?.boxCount || 0} caixas • Todas as atividades`}
+        apiaryId={pdfApiary?.id}
+        apiaryName={pdfApiary?.name}
+        apiaryLocation={pdfApiary?.location}
+      />
 
       <ConfirmModal
         visible={Boolean(deleteId)}
@@ -330,84 +361,90 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     scrollContent: {
       padding: 16,
-      paddingBottom: 100,
+      paddingBottom: 110,
     },
     errorBox: {
       backgroundColor: '#FFEBEE',
       borderLeftWidth: 4,
-      borderLeftColor: colors.error,
-      padding: 12,
-      borderRadius: 4,
+      borderLeftColor: PALETTE.dangerRed,
+      padding: 14,
+      borderRadius: 10,
       marginBottom: 16,
     },
     errorText: {
-      color: colors.error,
+      color: PALETTE.dangerRed,
       fontSize: 14,
+      fontWeight: '600',
     },
     addButton: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: colors.accent,
-      paddingVertical: 14,
-      paddingHorizontal: 20,
-      borderRadius: 12,
+      backgroundColor: PALETTE.primaryDark,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
+      paddingVertical: 18,
+      paddingHorizontal: 24,
+      borderRadius: 16,
       marginBottom: 20,
-      elevation: 2,
+      elevation: 4,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      gap: 10,
     },
     addButtonText: {
-      color: colors.buttonText,
-      fontSize: 16,
-      fontWeight: 'bold',
-      marginLeft: 8,
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: '800',
+      letterSpacing: 0.3,
     },
     listSection: {
       flex: 1,
     },
     sectionTitle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: colors.textPrimary,
-      marginBottom: 12,
+      fontSize: 18,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
+      marginBottom: 14,
+      letterSpacing: 0.2,
     },
     emptyCard: {
-      backgroundColor: colors.card,
-      padding: 32,
-      borderRadius: 12,
+      backgroundColor: '#FFFFFF',
+      padding: 40,
+      borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      borderWidth: 2,
+      borderColor: PALETTE.lightBg,
       borderStyle: 'dashed',
     },
     emptyTitle: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: colors.textPrimary,
-      marginTop: 12,
+      fontSize: 18,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
+      marginTop: 14,
     },
     emptySubtitle: {
-      fontSize: 14,
-      color: colors.textMuted,
+      fontSize: 15,
+      color: PALETTE.secondaryMedium,
       textAlign: 'center',
-      marginTop: 4,
+      marginTop: 6,
+      lineHeight: 22,
     },
     apiaryCard: {
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      marginBottom: 12,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      elevation: 1,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 18,
+      padding: 20,
+      marginBottom: 16,
+      borderWidth: 1.5,
+      borderColor: PALETTE.lightBg,
+      elevation: 3,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
     },
     cardHeader: {
       flexDirection: 'row',
@@ -417,64 +454,115 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     titleArea: {
       flex: 1,
-      marginRight: 8,
+      marginRight: 10,
     },
     apiaryName: {
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: colors.textPrimary,
-      marginBottom: 4,
+      fontSize: 20,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
+      marginBottom: 6,
+      letterSpacing: 0.2,
     },
     locationRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: 4,
     },
     apiaryLocation: {
-      fontSize: 13,
-      color: colors.textMuted,
-      marginLeft: 4,
+      fontSize: 15,
+      color: PALETTE.secondaryMedium,
+      fontWeight: '500',
+    },
+    headerRightArea: {
+      alignItems: 'flex-end',
+      gap: 6,
     },
     badgeBoxCount: {
-      backgroundColor: colors.surface,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
+      backgroundColor: PALETTE.lightBg,
+      paddingHorizontal: 12,
+      paddingVertical: 5,
       borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
     },
     boxCountText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: colors.textPrimary,
+      fontSize: 13,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
+    },
+    headerIconActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    headerIconBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+      backgroundColor: PALETTE.lightBg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerIconBtnDelete: {
+      backgroundColor: '#FEE2E2',
     },
     apiaryDesc: {
       fontSize: 14,
-      color: colors.textMuted,
+      color: PALETTE.primaryDark,
+      marginTop: 6,
       marginBottom: 12,
       lineHeight: 20,
+      fontWeight: '400',
     },
     cardActions: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'flex-end',
       borderTopWidth: 1,
-      borderTopColor: colors.divider,
+      borderTopColor: PALETTE.lightBg,
       paddingTop: 12,
       gap: 8,
     },
     actionBtn: {
+      flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: 6,
-      paddingHorizontal: 10,
-      borderRadius: 6,
-      backgroundColor: colors.surface,
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 10,
+      paddingHorizontal: 8,
+      borderRadius: 10,
+      backgroundColor: PALETTE.lightBg,
+    },
+    actionBtnMain: {
+      flex: 1.2,
+      backgroundColor: PALETTE.primaryDark,
+    },
+    actionBtnTextMain: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: '#FFFFFF',
+    },
+    actionBtnHighlight: {
+      flex: 1,
+      backgroundColor: PALETTE.vibrantAccent,
     },
     actionBtnText: {
       fontSize: 13,
-      fontWeight: '600',
-      color: colors.textPrimary,
-      marginLeft: 4,
+      fontWeight: '700',
+      color: PALETTE.primaryDark,
+    },
+    actionBtnTextHighlight: {
+      color: PALETTE.primaryDark,
+      fontWeight: '800',
+    },
+    actionBtnPdf: {
+      flex: 0.9,
+      backgroundColor: '#FEF2F2',
+      borderWidth: 1,
+      borderColor: '#FCA5A5',
+    },
+    actionBtnPdfText: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: '#DC2626',
     },
   });
 }

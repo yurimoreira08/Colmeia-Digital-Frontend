@@ -1,6 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useState, useRef } from 'react';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   Image,
   KeyboardAvoidingView,
@@ -22,6 +22,7 @@ import { markBoxModifiedInSession } from '../services/sessionStore';
 import { AppHeader } from '../components/AppHeader';
 import { BottomDock } from '../components/BottomDock';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 import type { RootStackParamList } from '../types/auth';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
 import { FloatingScrollButtons } from '../components/FloatingScrollButtons';
@@ -106,6 +107,7 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
   const [indication, setIndication] = useState('');
   const [tempObservation, setTempObservation] = useState('');
   const [tempIndication, setTempIndication] = useState('');
+  const isFilled = Object.keys(selectedOptions).length > 0 || observation.trim().length > 0 || indication.trim().length > 0;
   const [activeVoiceField, setActiveVoiceFieldState] = useState<'obs' | 'act' | null>(null);
   const activeVoiceFieldRef = useRef<'obs' | 'act' | null>(null);
   function setActiveVoiceField(field: 'obs' | 'act' | null) {
@@ -471,7 +473,7 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
       {isListening && (currentTranscript || activeVoiceField) ? (
         <Animated.View style={styles.floatingTranscript}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, marginBottom: currentTranscript ? 4 : 0 }}>
-             <Ionicons name="mic" size={16} color={colors.textPrimary} />
+             <MaterialCommunityIcons name="microphone" size={16} color={colors.textPrimary} />
              <Text style={[styles.floatingTranscriptText, { opacity: 0.8 }]}>
                 {activeVoiceField === 'obs' ? 'Ouvindo Observação...' : activeVoiceField === 'act' ? 'Ouvindo O Que Fazer...' : 'Ouvindo comandos...'}
              </Text>
@@ -500,12 +502,12 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
           {/* Header Hero da Caixa e Apiário */}
           <View style={styles.heroCard}>
             <View style={styles.heroIconBadge}>
-              <Ionicons name="cube" size={24} color="#059669" />
+              <MaterialCommunityIcons name="cube-outline" size={26} color={PALETTE.primaryDark} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <Text style={styles.heroBoxTitle}>{route.params.boxName}</Text>
               <View style={styles.heroApiaryRow}>
-                <Ionicons name="business-outline" size={13} color={colors.textMuted} />
+                <MaterialCommunityIcons name="beehive-outline" size={15} color={PALETTE.secondaryDark} />
                 <Text style={styles.heroApiaryText}>{route.params.apiaryName}</Text>
               </View>
             </View>
@@ -527,7 +529,11 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
             }}
           >
             <View style={[styles.voiceIconWrap, isListening ? styles.voiceIconWrapActive : null]}>
-              <Ionicons name={isListening ? "mic" : "mic-outline"} size={24} color={isListening ? "#FFFFFF" : "#059669"} />
+              <MaterialCommunityIcons
+                name={isListening ? "microphone" : "microphone-outline"}
+                size={26}
+                color={isListening ? "#FFFFFF" : PALETTE.primaryDark}
+              />
             </View>
             <View style={styles.voiceTextWrap}>
               <Text style={styles.voiceTitle}>{isListening ? 'Ouvindo seus comandos...' : 'Comando por Voz'}</Text>
@@ -624,8 +630,8 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
             <View style={styles.strengthContainer}>
               {[
                 { id: 'forca-fraca', label: 'Fraca', activeBg: '#DC2626' },
-                { id: 'forca-media', label: 'Média', activeBg: '#D97706' },
-                { id: 'forca-boa', label: 'Boa', activeBg: '#059669' },
+                { id: 'forca-media', label: 'Média', activeBg: PALETTE.secondaryLight },
+                { id: 'forca-boa', label: 'Boa', activeBg: PALETTE.primaryDark },
               ].map((strength) => {
                 const active = !!selectedOptions[strength.id];
                 return (
@@ -665,7 +671,7 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
           >
             <Text style={styles.sectionHeader}>ANOTAÇÕES DE CAMPO</Text>
             
-            {/* Observações */}
+            {/* Observações - SEM ÍCONE ANTES DO TÍTULO */}
             <View
               style={styles.textAreaCard}
               onLayout={(e) => {
@@ -673,13 +679,10 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
               }}
             >
               <View style={styles.fieldHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="create-outline" size={18} color="#059669" />
-                  <Text style={styles.fieldLabel}>Observações</Text>
-                </View>
+                <Text style={styles.fieldLabel}>Observações</Text>
                 {activeVoiceField === 'obs' && isListening ? (
                   <View style={styles.voiceFieldBadge}>
-                    <Ionicons name="mic" size={12} color="#059669" />
+                    <MaterialCommunityIcons name="microphone" size={14} color={PALETTE.primaryDark} />
                     <Text style={styles.voiceFieldBadgeText}>Ouvindo...</Text>
                   </View>
                 ) : null}
@@ -701,7 +704,7 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
               ) : null}
             </View>
 
-            {/* O Que Fazer */}
+            {/* O Que Fazer - SEM ÍCONE ANTES DO TÍTULO */}
             <View
               style={styles.textAreaCard}
               onLayout={(e) => {
@@ -709,14 +712,11 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
               }}
             >
               <View style={styles.fieldHeader}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="bulb-outline" size={18} color={colors.warmAccent} />
-                  <Text style={styles.fieldLabel}>O que fazer</Text>
-                </View>
+                <Text style={styles.fieldLabel}>O que fazer</Text>
                 {activeVoiceField === 'act' && isListening ? (
                   <View style={styles.voiceFieldBadge}>
-                    <Ionicons name="mic" size={12} color={colors.warmAccent} />
-                    <Text style={[styles.voiceFieldBadgeText, { color: colors.warmAccent }]}>Ouvindo...</Text>
+                    <MaterialCommunityIcons name="microphone" size={14} color={PALETTE.primaryDark} />
+                    <Text style={styles.voiceFieldBadgeText}>Ouvindo...</Text>
                   </View>
                 ) : null}
               </View>
@@ -743,12 +743,19 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
             <Pressable 
               style={({ pressed }) => [
                 styles.primaryAction,
+                isFilled ? styles.primaryActionFilled : null,
                 pressed ? { transform: [{ scale: 0.985 }] } : null,
               ]} 
               onPress={handleFinishRevision}
             >
-              <Ionicons name="checkmark-circle" size={24} color="#FFFFFF" />
-              <Text style={styles.primaryActionText}>Salvar Revisão</Text>
+              <MaterialCommunityIcons
+                name="check-circle"
+                size={26}
+                color={isFilled ? PALETTE.primaryDark : '#FFFFFF'}
+              />
+              <Text style={[styles.primaryActionText, isFilled ? styles.primaryActionTextFilled : null]}>
+                Salvar Revisão
+              </Text>
             </Pressable>
           </View>
         </ScrollView>
@@ -757,7 +764,7 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
       <FloatingScrollButtons
         scrollRef={scrollViewRef}
         currentY={scrollY}
-        bottomOffset={isKeyboardVisible ? keyboardHeight + 16 : 110}
+        bottomOffset={isKeyboardVisible ? keyboardHeight + 16 : 170}
       />
 
       {!isKeyboardVisible && (
@@ -796,14 +803,14 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
   return StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: PALETTE.lightSurface,
     },
     floatingTranscript: {
       position: 'absolute',
       top: 100,
       left: 18,
       right: 18,
-      backgroundColor: colors.accent,
+      backgroundColor: PALETTE.primaryDark,
       paddingHorizontal: 14,
       paddingVertical: 10,
       borderRadius: 14,
@@ -815,14 +822,14 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       shadowRadius: 5,
     },
     floatingTranscriptText: {
-      color: colors.textPrimary,
+      color: '#FFFFFF',
       fontSize: 14,
       fontWeight: '600',
       fontStyle: 'italic',
       textAlign: 'center',
     },
     content: {
-      paddingHorizontal: 18,
+      paddingHorizontal: 16,
       paddingTop: 14,
       paddingBottom: 130,
       gap: 16,
@@ -832,46 +839,46 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       alignItems: 'center',
       gap: 12,
       padding: 16,
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderRadius: 18,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.04,
+      shadowOpacity: 0.05,
       shadowRadius: 6,
-      elevation: 1,
+      elevation: 2,
     },
     heroIconBadge: {
-      width: 46,
-      height: 46,
+      width: 48,
+      height: 48,
       borderRadius: 14,
-      backgroundColor: '#ECFDF5',
+      backgroundColor: PALETTE.lightSurface,
       alignItems: 'center',
       justifyContent: 'center',
     },
     heroBoxTitle: {
-      fontSize: 17,
+      fontSize: 18,
       fontWeight: '800',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
     },
     heroApiaryRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: 5,
     },
     heroApiaryText: {
-      fontSize: 13,
-      color: colors.textMuted,
-      fontWeight: '500',
+      fontSize: 13.5,
+      color: PALETTE.secondaryDark,
+      fontWeight: '600',
     },
     activeRevisionBadge: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      backgroundColor: '#ECFDF5',
+      backgroundColor: PALETTE.vibrantAccent,
       borderWidth: 1,
-      borderColor: '#A7F3D0',
+      borderColor: PALETTE.secondaryLight,
       paddingHorizontal: 10,
       paddingVertical: 5,
       borderRadius: 10,
@@ -880,42 +887,42 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       width: 8,
       height: 8,
       borderRadius: 4,
-      backgroundColor: '#059669',
+      backgroundColor: PALETTE.primaryDark,
     },
     activeRevisionBadgeText: {
-      fontSize: 11.5,
-      fontWeight: '700',
-      color: '#059669',
+      fontSize: 12,
+      fontWeight: '800',
+      color: PALETTE.primaryDark,
     },
     voiceCard: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
       padding: 14,
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.03,
+      shadowOpacity: 0.04,
       shadowRadius: 5,
       elevation: 1,
     },
     voiceCardActive: {
-      backgroundColor: '#ECFDF5',
-      borderColor: '#059669',
+      backgroundColor: PALETTE.lightSurface,
+      borderColor: PALETTE.primaryDark,
     },
     voiceIconWrap: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
-      backgroundColor: '#ECFDF5',
+      width: 46,
+      height: 46,
+      borderRadius: 14,
+      backgroundColor: PALETTE.lightSurface,
       alignItems: 'center',
       justifyContent: 'center',
     },
     voiceIconWrapActive: {
-      backgroundColor: '#059669',
+      backgroundColor: PALETTE.primaryDark,
     },
     voiceTextWrap: {
       flex: 1,
@@ -924,14 +931,14 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     voiceTitle: {
       fontSize: 15,
       fontWeight: '700',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
     },
     voiceSubtitle: {
-      fontSize: 12,
-      color: colors.textMuted,
+      fontSize: 12.5,
+      color: PALETTE.secondaryDark,
     },
     recordingPill: {
-      backgroundColor: '#059669',
+      backgroundColor: PALETTE.primaryDark,
       paddingHorizontal: 8,
       paddingVertical: 3,
       borderRadius: 6,
@@ -945,9 +952,9 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       gap: 10,
     },
     sectionHeader: {
-      fontSize: 13,
+      fontSize: 13.5,
       fontWeight: '800',
-      color: colors.textMuted,
+      color: PALETTE.primaryDark,
       letterSpacing: 0.8,
       marginLeft: 4,
     },
@@ -958,16 +965,16 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     itemCard: {
       width: '48.3%',
-      minHeight: 76,
+      minHeight: 82,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 18,
+      paddingVertical: 20,
       paddingHorizontal: 12,
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderRadius: 18,
       borderWidth: 2,
-      borderColor: colors.cardBorder,
+      borderColor: PALETTE.secondaryDark,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.05,
@@ -975,14 +982,14 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       elevation: 2,
     },
     itemCardActive: {
-      backgroundColor: '#059669',
-      borderColor: '#047857',
+      backgroundColor: PALETTE.primaryDark,
+      borderColor: PALETTE.secondaryLight,
     },
     itemCardText: {
       fontSize: 18,
       fontWeight: '700',
       textAlign: 'center',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
     },
     itemCardTextActive: {
       color: '#FFFFFF',
@@ -994,15 +1001,15 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     strengthPill: {
       flex: 1,
-      minHeight: 68,
+      minHeight: 72,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 16,
+      paddingVertical: 18,
       borderRadius: 18,
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderWidth: 2,
-      borderColor: colors.cardBorder,
+      borderColor: PALETTE.secondaryDark,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.04,
@@ -1012,13 +1019,13 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     strengthText: {
       fontSize: 18,
       fontWeight: '800',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
     },
     textAreaCard: {
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderRadius: 18,
       borderWidth: 1.5,
-      borderColor: colors.cardBorder,
+      borderColor: PALETTE.secondaryLight,
       padding: 16,
       gap: 10,
       marginBottom: 6,
@@ -1029,15 +1036,15 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       justifyContent: 'space-between',
     },
     fieldLabel: {
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: '800',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
     },
     voiceFieldBadge: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      backgroundColor: '#ECFDF5',
+      backgroundColor: PALETTE.lightSurface,
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 8,
@@ -1045,26 +1052,26 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     voiceFieldBadgeText: {
       fontSize: 12,
       fontWeight: '700',
-      color: '#059669',
+      color: PALETTE.primaryDark,
     },
     textArea: {
-      minHeight: 95,
-      borderRadius: 12,
-      backgroundColor: colors.surface,
+      minHeight: 110,
+      borderRadius: 14,
+      backgroundColor: PALETTE.lightSurface,
       borderWidth: 1.5,
-      borderColor: colors.cardBorder,
+      borderColor: PALETTE.secondaryDark,
       paddingHorizontal: 14,
       paddingVertical: 12,
       fontSize: 17,
       fontWeight: '600',
       lineHeight: 24,
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
       textAlignVertical: 'top',
     },
     voicePreview: {
       fontSize: 15,
       fontWeight: '600',
-      color: '#059669',
+      color: PALETTE.secondaryDark,
       fontStyle: 'italic',
       paddingHorizontal: 2,
     },
@@ -1077,20 +1084,28 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 10,
-      paddingVertical: 16,
+      minHeight: 58,
+      paddingVertical: 18,
       borderRadius: 16,
-      backgroundColor: '#059669',
-      shadowColor: '#059669',
+      backgroundColor: PALETTE.primaryDark,
+      shadowColor: PALETTE.primaryDark,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.25,
       shadowRadius: 8,
       elevation: 4,
     },
+    primaryActionFilled: {
+      backgroundColor: PALETTE.vibrantAccent,
+      shadowColor: PALETTE.vibrantAccent,
+    },
     primaryActionText: {
-      fontSize: 16,
+      fontSize: 18,
       fontWeight: '800',
       color: '#FFFFFF',
       letterSpacing: 0.3,
+    },
+    primaryActionTextFilled: {
+      color: PALETTE.primaryDark,
     },
   });
 }

@@ -1,4 +1,4 @@
-import { apiRequest, checkServerConnection } from './apiClient';
+import { apiRequest, checkServerConnection, getCachedToken } from './apiClient';
 import { uploadImageToServer } from './storageService';
 import {
   getLocalDb,
@@ -7,7 +7,6 @@ import {
   updateRecordSyncStatus,
   getLocalConfigValue,
   setLocalConfigValue,
-  forceAllRecordsUnsynced,
   clearLocalDatabase,
   hasUnsyncedRecords,
   replaceApiariesLocal,
@@ -15,6 +14,7 @@ import {
   replaceReviewReportsLocal,
   replaceManejosLocal,
   replaceNotificationsLocal,
+  applyRemoteDataPull,
 } from './localDbService';
 
 export interface SyncStatus {
@@ -22,6 +22,14 @@ export interface SyncStatus {
   lastSyncTime: string | null;
   unsyncedCount: number;
   lastError: string | null;
+}
+
+export interface SyncResult {
+  success: boolean;
+  syncedCount: number;
+  pendingCount: number;
+  errors: string[];
+  lastSyncTime: string | null;
 }
 
 let isSyncing = false;
@@ -93,14 +101,43 @@ function isNotFoundError(err: any): boolean {
   return err?.status === 404 || err?.message?.includes('404') || err?.message?.includes('não encontrado');
 }
 
-export async function syncOfflineData(): Promise<void> {
+export async function syncOfflineData(): Promise<SyncResult> {
   checkAndResetSyncLock();
-  if (isSyncing) return;
+  if (isSyncing) {
+    const pendingCount = await getUnsyncedCount();
+    return {
+      success: !lastError,
+      syncedCount: 0,
+      pendingCount,
+      errors: lastError ? [lastError] : [],
+      lastSyncTime,
+    };
+  }
 
   const online = await isAppOnline();
   if (!online) {
     console.log('[Sync] Dispositivo offline. Sincronização adiada.');
-    return;
+    const pendingCount = await getUnsyncedCount();
+    return {
+      success: true,
+      syncedCount: 0,
+      pendingCount,
+      errors: [],
+      lastSyncTime,
+    };
+  }
+
+  // Só prossegue com a sincronização se houver token válido de autenticação
+  const token = await getCachedToken();
+  if (!token) {
+    console.log('[Sync] Nenhum usuário autenticado com token válido. Sincronização cancelada.');
+    return {
+      success: true,
+      syncedCount: 0,
+      pendingCount: 0,
+      errors: ['No auth token'],
+      lastSyncTime,
+    };
   }
 
   isSyncing = true;
@@ -110,6 +147,7 @@ export async function syncOfflineData(): Promise<void> {
 
   console.log('[Sync] Iniciando sincronização do Colmeia Digital...');
   const syncErrors: string[] = [];
+  let syncedCount = 0;
 
   try {
     const db = await getLocalDb();
@@ -127,39 +165,16 @@ export async function syncOfflineData(): Promise<void> {
     const lastSyncedUserIdStr = await getLocalConfigValue('last_synced_user_id');
     const lastSyncedUserId = lastSyncedUserIdStr ? Number(lastSyncedUserIdStr) : null;
 
+    // ISOLAMENTO RIGOROSO DE MULTI-TENANCY:
+    // Se houve troca de usuário, NUNCA empurre os dados pendentes do usuário anterior para o novo!
+    // Limpa imediatamente o banco local para evitar vazamento ou contaminação entre contas.
     if (currentUserId && lastSyncedUserId && currentUserId !== lastSyncedUserId) {
-      const hasPending = await hasUnsyncedRecords();
-      if (hasPending) {
-        console.warn('[Sync] Troca de usuário com dados pendentes. Mantendo dados para sync.');
-      } else {
-        console.log('[Sync] Novo usuário autenticado. Resetando cache local...');
-        await clearLocalDatabase();
-        await setLocalConfigValue('multitenancy_migrated', 'false');
-      }
+      console.log('[Sync] Troca de usuário detectada durante sync. Resetando banco local para isolamento estrito...');
+      await clearLocalDatabase();
     }
 
     if (currentUserId) {
       await setLocalConfigValue('last_synced_user_id', String(currentUserId));
-    }
-
-    const migrated = await getLocalConfigValue('multitenancy_migrated');
-    if (migrated !== 'true') {
-      try {
-        const remoteApiaries = await apiRequest('/apiaries', 'GET');
-        const localApiaries = await db.getAllAsync('SELECT id FROM apiaries;');
-
-        if (Array.isArray(remoteApiaries) && remoteApiaries.length === 0 && localApiaries.length > 0) {
-          console.log('[Sync] Conta sem dados na nuvem, preservando locais para upload...');
-          await forceAllRecordsUnsynced();
-        }
-        await setLocalConfigValue('multitenancy_migrated', 'true');
-      } catch (err) {
-        if (isAuthError(err)) {
-          console.warn('[Sync] Sessão expirada durante checagem multi-tenant. Abortando sync.');
-          return;
-        }
-        console.error('[Sync] Falha na migração multi-tenant:', err);
-      }
     }
 
     // 1. PUSH - DELEÇÕES OFFLINE
@@ -180,11 +195,13 @@ export async function syncOfflineData(): Promise<void> {
           await apiRequest(endpoint, 'DELETE');
         }
         successfulDeletionIds.push(del.id);
+        syncedCount++;
       } catch (err: any) {
         if (isAuthError(err)) {
           console.warn('[Sync] Não autorizado (401). Pausando sincronização.');
           lastError = 'Sessão expirada. Faça login novamente.';
-          return;
+          const pendingCount = await getUnsyncedCount();
+          return { success: false, syncedCount, pendingCount, errors: [lastError], lastSyncTime };
         }
         if (isForbiddenError(err) || isNotFoundError(err)) {
           // Descarte seguro: item já excluído ou sem permissão
@@ -219,11 +236,13 @@ export async function syncOfflineData(): Promise<void> {
         } else {
           await db.runAsync('UPDATE apiaries SET synced = 1, is_new = 0 WHERE id = ?;', [a.id]);
         }
+        syncedCount++;
       } catch (err: any) {
         if (isAuthError(err)) {
           console.warn('[Sync] 401 ao enviar apiários. Pausando sync.');
           lastError = 'Sessão expirada.';
-          return;
+          const pendingCount = await getUnsyncedCount();
+          return { success: false, syncedCount, pendingCount, errors: [lastError], lastSyncTime };
         }
         if (isForbiddenError(err)) {
           await db.runAsync('UPDATE apiaries SET synced = 1, is_new = 0 WHERE id = ?;', [a.id]);
@@ -254,9 +273,13 @@ export async function syncOfflineData(): Promise<void> {
           const res = await apiRequest('/boxes', 'POST', payload);
           if (res && res.id) {
             await updateRecordSyncStatus('boxes', b.id, res.id, true);
+            if (b.archived) {
+              await apiRequest(`/boxes/${res.id}/archive`, 'POST');
+            }
           } else {
             await db.runAsync('UPDATE boxes SET synced = 1, is_new = 0 WHERE id = ?;', [b.id]);
           }
+          syncedCount++;
         } else {
           await apiRequest(`/boxes/${b.id}/rename`, 'PUT', { name: b.name });
           if (b.archived) {
@@ -265,12 +288,14 @@ export async function syncOfflineData(): Promise<void> {
             await apiRequest(`/boxes/${b.id}/unarchive`, 'POST');
           }
           await updateRecordSyncStatus('boxes', b.id, b.id, false);
+          syncedCount++;
         }
       } catch (err: any) {
         if (isAuthError(err)) {
           console.warn('[Sync] 401 ao enviar caixas. Pausando sync.');
           lastError = 'Sessão expirada.';
-          return;
+          const pendingCount = await getUnsyncedCount();
+          return { success: false, syncedCount, pendingCount, errors: [lastError], lastSyncTime };
         }
         if (isForbiddenError(err)) {
           await db.runAsync('UPDATE boxes SET synced = 1, is_new = 0 WHERE id = ?;', [b.id]);
@@ -280,13 +305,23 @@ export async function syncOfflineData(): Promise<void> {
       }
     }
 
-    // 4. PUSH - REVIEWS (INSPEÇÕES)
+    // 4. PUSH - REVIEWS (REVISÕES)
     const unsyncedRevisions = await getUnsyncedRecords('review_reports');
     for (const r of unsyncedRevisions) {
       if (r.apiary_id && failedApiaryLocalIds.has(r.apiary_id)) {
         continue;
       }
       try {
+        // Re-consulta chaves estrangeiras atualizadas
+        const freshRev = await db.getFirstAsync<{ caixa_id: number; apiary_id: number; caixa_name: string; apiary_name: string }>(
+          'SELECT caixa_id, apiary_id, caixa_name, apiary_name FROM review_reports WHERE id = ?;',
+          [r.id]
+        );
+        const targetCaixaId = freshRev?.caixa_id ?? r.caixa_id;
+        const targetApiaryId = freshRev?.apiary_id ?? r.apiary_id;
+        const targetCaixaName = freshRev?.caixa_name ?? r.caixa_name;
+        const targetApiaryName = freshRev?.apiary_name ?? r.apiary_name;
+
         let checkedOptions: string[] = [];
         try {
           checkedOptions = JSON.parse(r.checked_options);
@@ -297,10 +332,10 @@ export async function syncOfflineData(): Promise<void> {
         const payload = {
           id: r.is_new ? undefined : r.id,
           clientUuid: r.client_uuid,
-          caixaId: r.caixa_id,
-          caixaName: r.caixa_name,
-          apiaryId: r.apiary_id,
-          apiaryName: r.apiary_name,
+          caixaId: targetCaixaId,
+          caixaName: targetCaixaName,
+          apiaryId: targetApiaryId,
+          apiaryName: targetApiaryName,
           tipo: 'apiario',
           checkedOptions,
           observacoes: r.observacoes,
@@ -309,7 +344,11 @@ export async function syncOfflineData(): Promise<void> {
 
         if (r.is_new) {
           const res = await apiRequest('/revisions', 'POST', payload);
+          if (r.archived && res?.id) {
+            await apiRequest(`/revisions/${res.id}/archive`, 'POST');
+          }
           await updateRecordSyncStatus('review_reports', r.id, res?.id || r.id, true);
+          syncedCount++;
         } else {
           await apiRequest(`/revisions/${r.id}`, 'PUT', payload);
           if (r.archived) {
@@ -318,17 +357,19 @@ export async function syncOfflineData(): Promise<void> {
             await apiRequest(`/revisions/${r.id}/unarchive`, 'POST');
           }
           await updateRecordSyncStatus('review_reports', r.id, r.id, false);
+          syncedCount++;
         }
       } catch (err: any) {
         if (isAuthError(err)) {
-          console.warn('[Sync] 401 ao enviar inspeções. Pausando sync.');
+          console.warn('[Sync] 401 ao enviar revisões. Pausando sync.');
           lastError = 'Sessão expirada.';
-          return;
+          const pendingCount = await getUnsyncedCount();
+          return { success: false, syncedCount, pendingCount, errors: [lastError], lastSyncTime };
         }
         if (isForbiddenError(err)) {
           await db.runAsync('UPDATE review_reports SET synced = 1, is_new = 0 WHERE id = ?;', [r.id]);
         } else {
-          syncErrors.push(`Inspeção: ${err.message || err}`);
+          syncErrors.push(`Revisão: ${err.message || err}`);
         }
       }
     }
@@ -340,6 +381,17 @@ export async function syncOfflineData(): Promise<void> {
         continue;
       }
       try {
+        // Re-consulta chaves estrangeiras atualizadas
+        const freshManejo = await db.getFirstAsync<{ caixa_id: number; apiary_id: number; revisao_id: number | null; caixa_name: string; apiary_name: string }>(
+          'SELECT caixa_id, apiary_id, revisao_id, caixa_name, apiary_name FROM manejos WHERE id = ?;',
+          [m.id]
+        );
+        const targetCaixaId = freshManejo?.caixa_id ?? m.caixa_id;
+        const targetApiaryId = freshManejo?.apiary_id ?? m.apiary_id;
+        const targetRevisaoId = freshManejo?.revisao_id ?? m.revisao_id;
+        const targetCaixaName = freshManejo?.caixa_name ?? m.caixa_name;
+        const targetApiaryName = freshManejo?.apiary_name ?? m.apiary_name;
+
         let checkedOptions: string[] = [];
         try {
           checkedOptions = JSON.parse(m.checked_options);
@@ -347,29 +399,38 @@ export async function syncOfflineData(): Promise<void> {
           checkedOptions = [];
         }
 
-        // Se houver foto local, faz o upload para o Supabase Storage
+        // Se houver foto local, faz o upload para o Supabase Storage com proteção de integridade
         let photoUriToSend = m.photo_uri;
+        let photoUploadFailed = false;
         if (photoUriToSend && !photoUriToSend.startsWith('http://') && !photoUriToSend.startsWith('https://')) {
           try {
             const uploadedUrl = await uploadImageToServer(photoUriToSend, 'manejos');
             if (uploadedUrl) {
               photoUriToSend = uploadedUrl;
               await db.runAsync('UPDATE manejos SET photo_uri = ? WHERE id = ?;', [uploadedUrl, m.id]);
+            } else {
+              photoUploadFailed = true;
             }
           } catch (uploadErr) {
-            console.warn('[Sync] Falha no upload da foto do manejo para o Supabase Storage (mantendo envio de dados):', uploadErr);
+            console.warn('[Sync] Falha no upload da foto do manejo para o Supabase Storage:', uploadErr);
+            photoUploadFailed = true;
           }
+        }
+
+        if (photoUploadFailed) {
+          syncErrors.push(`Manejo da caixa "${targetCaixaName}": Falha ao subir foto para nuvem. O envio foi adiado para manter a integridade da foto.`);
+          continue;
         }
 
         const payload = {
           id: m.is_new ? undefined : m.id,
           clientUuid: m.client_uuid,
-          caixaId: m.caixa_id,
-          caixaName: m.caixa_name,
-          apiaryId: m.apiary_id,
-          apiaryName: m.apiary_name,
+          caixaId: targetCaixaId,
+          caixaName: targetCaixaName,
+          apiaryId: targetApiaryId,
+          apiaryName: targetApiaryName,
           tipo: 'apiario',
-          revisaoId: m.revisao_id,
+          revisaoId: targetRevisaoId,
           checkedOptions,
           observacoes: m.observacoes,
           indicacoes: m.indicacoes,
@@ -378,7 +439,11 @@ export async function syncOfflineData(): Promise<void> {
 
         if (m.is_new) {
           const res = await apiRequest('/manejos', 'POST', payload);
+          if (m.archived && res?.id) {
+            await apiRequest(`/manejos/${res.id}/archive`, 'POST');
+          }
           await updateRecordSyncStatus('manejos', m.id, res?.id || m.id, true);
+          syncedCount++;
         } else {
           await apiRequest(`/manejos/${m.id}`, 'PUT', payload);
           if (m.archived) {
@@ -387,12 +452,14 @@ export async function syncOfflineData(): Promise<void> {
             await apiRequest(`/manejos/${m.id}/unarchive`, 'POST');
           }
           await updateRecordSyncStatus('manejos', m.id, m.id, false);
+          syncedCount++;
         }
       } catch (err: any) {
         if (isAuthError(err)) {
           console.warn('[Sync] 401 ao enviar manejos. Pausando sync.');
           lastError = 'Sessão expirada.';
-          return;
+          const pendingCount = await getUnsyncedCount();
+          return { success: false, syncedCount, pendingCount, errors: [lastError], lastSyncTime };
         }
         if (isForbiddenError(err)) {
           await db.runAsync('UPDATE manejos SET synced = 1, is_new = 0 WHERE id = ?;', [m.id]);
@@ -410,9 +477,11 @@ export async function syncOfflineData(): Promise<void> {
           await apiRequest(`/notifications/${n.id}/read`, 'PUT');
         }
         await updateRecordSyncStatus('notifications', n.id, n.id, false);
+        syncedCount++;
       } catch (err: any) {
         if (isAuthError(err)) {
-          return;
+          const pendingCount = await getUnsyncedCount();
+          return { success: false, syncedCount, pendingCount, errors: ['Sessão expirada.'], lastSyncTime };
         }
         if (isForbiddenError(err) || isNotFoundError(err)) {
           await updateRecordSyncStatus('notifications', n.id, n.id, false);
@@ -420,7 +489,7 @@ export async function syncOfflineData(): Promise<void> {
       }
     }
 
-    // 7. PULL (DOWNLOAD) NÃO DESTRUTIVO DA NUVEM
+    // 7. PULL (DOWNLOAD) NÃO DESTRUTIVO E ATÔMICO DA NUVEM
     console.log('[Sync] Baixando dados atualizados do servidor...');
     const [
       remoteApiaries,
@@ -436,22 +505,34 @@ export async function syncOfflineData(): Promise<void> {
       apiRequest('/notifications', 'GET'),
     ]);
 
-    if (Array.isArray(remoteApiaries)) await replaceApiariesLocal(remoteApiaries);
-    if (Array.isArray(remoteBoxes)) await replaceBoxesLocal(remoteBoxes);
-    if (Array.isArray(remoteRevisions)) await replaceReviewReportsLocal(remoteRevisions);
-    if (Array.isArray(remoteManejos)) await replaceManejosLocal(remoteManejos);
-    if (Array.isArray(remoteNotifs)) await replaceNotificationsLocal(remoteNotifs);
+    await applyRemoteDataPull({
+      apiaries: remoteApiaries,
+      boxes: remoteBoxes,
+      revisions: remoteRevisions,
+      manejos: remoteManejos,
+      notifications: remoteNotifs,
+    });
 
     lastSyncTime = new Date().toISOString();
     console.log('[Sync] Sincronização do Colmeia Digital concluída com sucesso!');
   } catch (err: any) {
     console.error('[Sync] Falha durante a sincronização:', err);
     lastError = err?.message || 'Erro durante a sincronização.';
+    syncErrors.push(lastError!);
   } finally {
     isSyncing = false;
     syncingStartedAt = null;
     notifyListeners();
   }
+
+  const pendingCount = await getUnsyncedCount();
+  return {
+    success: syncErrors.length === 0,
+    syncedCount,
+    pendingCount,
+    errors: syncErrors,
+    lastSyncTime,
+  };
 }
 
 export function triggerSyncBackground(): void {

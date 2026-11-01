@@ -3,6 +3,7 @@ import {
   Alert,
   Animated,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -14,7 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { resetPassword } from '../services/authService';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -34,10 +35,27 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
   const [secureConfirmText, setSecureConfirmText] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
 
+  const scrollViewRef = useRef<ScrollView | null>(null);
   const logoAnim = useRef(new Animated.Value(0)).current;
   const formAnim = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      () => setIsKeyboardVisible(true)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setIsKeyboardVisible(false)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     Animated.parallel([
@@ -118,15 +136,25 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
     }
   }
 
+  const scrollToField = (y = 100) => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y, animated: true });
+    }, 100);
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 10 : 0}
         style={styles.keyboardContainer}
       >
         <ScrollView
-          contentContainerStyle={styles.container}
+          ref={scrollViewRef}
+          contentContainerStyle={[
+            styles.container,
+            isKeyboardVisible ? styles.containerKeyboard : null,
+          ]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
           bounces={false}
@@ -141,12 +169,13 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
             accessibilityRole="button"
             accessibilityLabel="Voltar"
           >
-            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.textPrimary} />
           </Pressable>
 
           <Animated.View
             style={[
               styles.logoWrap,
+              isKeyboardVisible ? styles.logoWrapCompact : null,
               {
                 opacity: logoAnim,
                 transform: [
@@ -160,12 +189,18 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
               },
             ]}
           >
-            <Image source={require('../../assets/applogo.png')} style={styles.logo} resizeMode="contain" />
+            <Image
+              source={require('../../assets/logo-colmeiadigital-semfundo.png')}
+              style={[styles.logo, isKeyboardVisible ? styles.logoCompact : null]}
+              resizeMode="contain"
+            />
             <Text style={styles.brandHeader}>NOVA SENHA</Text>
             <Text style={styles.title}>Redefinir Senha</Text>
-            <Text style={styles.subtitle}>
-              Código enviado para: <Text style={styles.emailHighlight}>{email}</Text>
-            </Text>
+            {!isKeyboardVisible && (
+              <Text style={styles.subtitle}>
+                Código enviado para: <Text style={styles.emailHighlight}>{email}</Text>
+              </Text>
+            )}
           </Animated.View>
 
           <Animated.View
@@ -194,6 +229,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
                   setCode(text.replace(/[^0-9]/g, '').slice(0, 6));
                   if (error) setError(null);
                 }}
+                onFocus={() => scrollToField(40)}
                 keyboardType="number-pad"
                 maxLength={6}
                 placeholder="000000"
@@ -213,6 +249,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
                     setNewPassword(text);
                     if (error) setError(null);
                   }}
+                  onFocus={() => scrollToField(120)}
                   secureTextEntry={secureText}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -224,7 +261,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
                   style={[styles.visibilityButton, !secureText ? styles.visibilityButtonActive : null]}
                   onPress={() => setSecureText((prev) => !prev)}
                 >
-                  <Ionicons
+                  <MaterialCommunityIcons
                     name={secureText ? 'eye-outline' : 'eye-off-outline'}
                     size={20}
                     color={secureText ? colors.accent : colors.buttonText}
@@ -244,6 +281,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
                     setConfirmPassword(text);
                     if (error) setError(null);
                   }}
+                  onFocus={() => scrollToField(180)}
                   secureTextEntry={secureConfirmText}
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -255,7 +293,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
                   style={[styles.visibilityButton, !secureConfirmText ? styles.visibilityButtonActive : null]}
                   onPress={() => setSecureConfirmText((prev) => !prev)}
                 >
-                  <Ionicons
+                  <MaterialCommunityIcons
                     name={secureConfirmText ? 'eye-outline' : 'eye-off-outline'}
                     size={20}
                     color={secureConfirmText ? colors.accent : colors.buttonText}
@@ -282,7 +320,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
 
             {/* Dica de verificação de spam */}
             <View style={styles.spamTip}>
-              <Ionicons name="information-circle-outline" size={16} color={colors.textMuted} />
+              <MaterialCommunityIcons name="information-outline" size={16} color={colors.textMuted} />
               <Text style={styles.spamTipText}>
                 Não recebeu o código? Verifique sua caixa de spam ou lixo eletrônico.
               </Text>
@@ -318,6 +356,10 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       paddingTop: 16,
       paddingBottom: 90,
       overflow: 'hidden',
+    },
+    containerKeyboard: {
+      paddingTop: 8,
+      paddingBottom: 160,
     },
     backButton: {
       alignSelf: 'flex-start',
@@ -355,10 +397,18 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       alignItems: 'center',
       marginBottom: 16,
     },
+    logoWrapCompact: {
+      marginBottom: 6,
+    },
     logo: {
       width: 90,
       height: 90,
       marginBottom: 6,
+    },
+    logoCompact: {
+      width: 46,
+      height: 46,
+      marginBottom: 2,
     },
     brandHeader: {
       fontSize: 13,
@@ -501,7 +551,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     spamTipText: {
       fontSize: 12,
-      color: colors.textMuted,
+      color: '#7798AB',
       textAlign: 'center',
       flex: 1,
       lineHeight: 16,

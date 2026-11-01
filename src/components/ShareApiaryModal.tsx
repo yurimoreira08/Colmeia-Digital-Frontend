@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, View, Text, Pressable, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
 import { useAppTheme } from '../theme/ThemeContext';
 import { apiRequest } from '../services/apiClient';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { ConfirmModal } from './ConfirmModal';
 
 interface ShareApiaryModalProps {
@@ -15,21 +15,29 @@ interface ShareApiaryModalProps {
 export function ShareApiaryModal({ visible, apiaryId, apiaryName, onClose }: ShareApiaryModalProps) {
   const { colors } = useAppTheme();
   const [role, setRole] = useState<'reader' | 'editor'>('reader');
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
 
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
   async function handleShare() {
-    if (!username.trim()) {
-      setError('Por favor, informe o nome de usuário.');
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
+      setError('Por favor, informe o e-mail do usuário.');
+      return;
+    }
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setError('Por favor, informe um endereço de e-mail válido.');
       return;
     }
     setLoading(true);
     setError(null);
     try {
       await apiRequest(`/apiaries/${apiaryId}/share`, 'POST', {
-        username: username.trim(),
+        email: trimmedEmail,
+        username: trimmedEmail,
         role,
       });
 
@@ -50,7 +58,7 @@ export function ShareApiaryModal({ visible, apiaryId, apiaryName, onClose }: Sha
           <Text style={[styles.subtitle, { color: colors.textMuted }]}>{apiaryName}</Text>
 
           <View style={styles.section}>
-            <Text style={[styles.label, { color: colors.textPrimary }]}>Convidar Usuário (Nome Completo):</Text>
+            <Text style={[styles.label, { color: colors.textPrimary }]}>E-mail do Usuário:</Text>
             <TextInput
               style={[
                 styles.input,
@@ -60,14 +68,16 @@ export function ShareApiaryModal({ visible, apiaryId, apiaryName, onClose }: Sha
                   backgroundColor: colors.background,
                 },
               ]}
-              value={username}
+              value={email}
               onChangeText={(txt) => {
-                setUsername(txt);
+                setEmail(txt);
                 setError(null);
               }}
-              placeholder="Nome do usuário..."
+              placeholder="exemplo@email.com"
               placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
+              autoCapitalize="none"
+              keyboardType="email-address"
+              autoCorrect={false}
             />
             {error ? <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text> : null}
           </View>
@@ -84,7 +94,7 @@ export function ShareApiaryModal({ visible, apiaryId, apiaryName, onClose }: Sha
                 ]}
                 onPress={() => setRole('reader')}
               >
-                <Ionicons name="eye-outline" size={20} color={colors.textPrimary} />
+                <MaterialCommunityIcons name="eye-outline" size={20} color={colors.textPrimary} />
                 <Text style={[styles.roleText, { color: colors.textPrimary }]}>Leitor</Text>
                 <Text style={styles.roleSubtext}>Apenas visualização</Text>
               </Pressable>
@@ -97,7 +107,7 @@ export function ShareApiaryModal({ visible, apiaryId, apiaryName, onClose }: Sha
                 ]}
                 onPress={() => setRole('editor')}
               >
-                <Ionicons name="create-outline" size={20} color={colors.textPrimary} />
+                <MaterialCommunityIcons name="pencil-outline" size={20} color={colors.textPrimary} />
                 <Text style={[styles.roleText, { color: colors.textPrimary }]}>Editor</Text>
                 <Text style={styles.roleSubtext}>Cadastrar manejos</Text>
               </Pressable>
@@ -125,12 +135,12 @@ export function ShareApiaryModal({ visible, apiaryId, apiaryName, onClose }: Sha
       <ConfirmModal
         visible={successModalVisible}
         title="Convite Enviado"
-        message={`Convite enviado com sucesso para "${username.trim()}"!`}
+        message={`Convite enviado com sucesso para "${email.trim().toLowerCase()}"!`}
         confirmLabel="OK"
         hideCancel
         onConfirm={() => {
           setSuccessModalVisible(false);
-          setUsername('');
+          setEmail('');
           onClose();
         }}
       />

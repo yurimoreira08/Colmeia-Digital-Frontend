@@ -7,6 +7,8 @@ export type User = {
   email: string;
   passwordHash: string;
   photo?: string | null;
+  terms_accepted_at?: string | null;
+  terms_version?: string | null;
   termsAcceptedAt?: string;
   termsAcceptedVersion?: string;
   createdAt: string;
@@ -21,6 +23,7 @@ export type Session = {
 
 export type RootStackParamList = {
   Splash: undefined;
+  Terms: undefined;
   TermsOfUse: undefined;
   Login: undefined;
   Register: undefined;
@@ -44,6 +47,7 @@ export type RootStackParamList = {
         mode?: "revision" | "manejo";
         isSoltas?: boolean;
         role?: 'owner' | 'editor' | 'reader';
+        openAddBox?: boolean;
       }
     | undefined;
   BoxRevision: {

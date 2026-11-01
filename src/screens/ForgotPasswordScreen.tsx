@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { forgotPassword } from '../services/authService';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -28,6 +28,7 @@ export function ForgotPasswordScreen({ navigation, route }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const logoAnim = useRef(new Animated.Value(0)).current;
   const formAnim = useRef(new Animated.Value(0)).current;
@@ -80,12 +81,13 @@ export function ForgotPasswordScreen({ navigation, route }: Props) {
       setInfoMessage(null);
 
       const response = await forgotPassword(trimmed);
+      setEmailSent(true);
       setInfoMessage(response.message || 'Código enviado com sucesso!');
 
       // Pequeno delay para exibir mensagem antes da transição
       setTimeout(() => {
         navigation.navigate('ResetPassword', { email: trimmed });
-      }, 1000);
+      }, 1200);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Falha ao solicitar recuperação.';
       setError(message);
@@ -117,7 +119,7 @@ export function ForgotPasswordScreen({ navigation, route }: Props) {
             accessibilityRole="button"
             accessibilityLabel="Voltar"
           >
-            <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
+            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.textPrimary} />
           </Pressable>
 
           <Animated.View
@@ -136,7 +138,7 @@ export function ForgotPasswordScreen({ navigation, route }: Props) {
               },
             ]}
           >
-            <Image source={require('../../assets/applogo.png')} style={styles.logo} resizeMode="contain" />
+            <Image source={require('../../assets/logo-colmeiadigital-semfundo.png')} style={styles.logo} resizeMode="contain" />
             <Text style={styles.brandHeader}>RECUPERAR ACESSO</Text>
             <Text style={styles.title}>Esqueceu sua senha?</Text>
             <Text style={styles.subtitle}>
@@ -168,6 +170,7 @@ export function ForgotPasswordScreen({ navigation, route }: Props) {
                 onChangeText={(text) => {
                   setEmail(text);
                   if (error) setError(null);
+                  if (emailSent) setEmailSent(false);
                 }}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -195,13 +198,15 @@ export function ForgotPasswordScreen({ navigation, route }: Props) {
               </Pressable>
             </Animated.View>
 
-            {/* Dica de verificação de spam */}
-            <View style={styles.spamTip}>
-              <Ionicons name="information-circle-outline" size={16} color={colors.textMuted} />
-              <Text style={styles.spamTipText}>
-                Não recebeu o código? Verifique sua caixa de spam ou lixo eletrônico.
-              </Text>
-            </View>
+            {/* Dica de verificação de spam (exibida apenas após o envio) */}
+            {emailSent ? (
+              <View style={styles.spamTip}>
+                <MaterialCommunityIcons name="information-outline" size={15} color="#7798AB" />
+                <Text style={styles.spamTipText}>
+                  Não recebeu o e-mail? Verifique sua caixa de spam ou lixo eletrônico.
+                </Text>
+              </View>
+            ) : null}
 
             <Pressable
               style={styles.linkButton}
@@ -379,7 +384,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     spamTipText: {
       fontSize: 12,
-      color: colors.textMuted,
+      color: '#7798AB',
       textAlign: 'center',
       flex: 1,
       lineHeight: 16,

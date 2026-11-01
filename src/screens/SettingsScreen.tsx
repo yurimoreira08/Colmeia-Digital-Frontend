@@ -1,8 +1,7 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Switch, Text, View, TextInput, ActivityIndicator, Alert, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { AppHeader } from '../components/AppHeader';
@@ -11,10 +10,10 @@ import { ConfirmModal } from '../components/ConfirmModal';
 import { useTestDataMode } from '../config/TestDataModeContext';
 import { logout, getCurrentUser } from '../services/authService';
 import { useAppTheme } from '../theme/ThemeContext';
+import { PALETTE } from '../theme/themes';
 import type { RootStackParamList, User } from '../types/auth';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
 import { hasUnsyncedRecords, getLocalConfigValue } from '../services/localDbService';
-
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
@@ -102,18 +101,18 @@ export function SettingsScreen({ navigation }: Props) {
     navigation.replace('Login');
   }
 
-
-
-
-
-
   async function handleToggleTestData(nextValue: boolean): Promise<void> {
     try {
       await setTestDataEnabled(nextValue);
     } catch {
-      // State rollback is handled by the context.
+      // rollback handled by context
     }
   }
+
+  // Filtrar apenas Claro e Escuro (remover Verde Floresta)
+  const availableThemeOptions = options.filter(
+    (opt) => opt.id === 'claro' || opt.id === 'escuro'
+  );
 
   useFocusEffect(
     useEffectVoiceCommands({
@@ -136,7 +135,6 @@ export function SettingsScreen({ navigation }: Props) {
             navigation.goBack();
             return;
           }
-
           navigation.replace('Home');
         }}
         onPressBell={() => navigation.navigate('Notifications')}
@@ -146,9 +144,7 @@ export function SettingsScreen({ navigation }: Props) {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.glowTop} />
-        
-        {/* 1. Hero Card de Perfil */}
+        {/* 1. Hero Card de Perfil AUMENTADO */}
         <Animated.View
           style={[
             styles.profileCard,
@@ -170,11 +166,11 @@ export function SettingsScreen({ navigation }: Props) {
               <Image source={{ uri: profilePhoto }} style={styles.profileAvatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
-                <Ionicons name="person" size={40} color={colors.accent} />
+                <MaterialCommunityIcons name="account" size={48} color={PALETTE.primaryDark} />
               </View>
             )}
             <View style={styles.zoomBadge}>
-              <Ionicons name="search" size={12} color="#FFFFFF" />
+              <MaterialCommunityIcons name="magnify" size={13} color="#FFFFFF" />
             </View>
           </Pressable>
 
@@ -186,162 +182,111 @@ export function SettingsScreen({ navigation }: Props) {
               style={styles.editProfileBtn} 
               onPress={() => navigation.navigate('EditProfile')}
             >
-              <Ionicons name="pencil" size={14} color={colors.buttonText} />
+              <MaterialCommunityIcons name="pencil" size={16} color="#FFFFFF" />
               <Text style={styles.editProfileBtnText}>Editar Perfil</Text>
             </Pressable>
           </View>
         </Animated.View>
 
-        {/* 2. Seção Aparência */}
-        <Text style={styles.sectionHeader}>APARÊNCIA</Text>
+        {/* 2. CARD UNIFICADO: Aparência + Sistema & Ajuda + Sair da Conta */}
         <Animated.View
           style={[
-            styles.sectionCard,
+            styles.unifiedCard,
             {
               opacity: panelAnim,
               transform: [
                 {
                   translateY: panelAnim.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [20, 0],
+                    outputRange: [22, 0],
                   }),
                 },
               ],
             },
           ]}
         >
-          <View style={styles.sectionCardHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: colors.accentSoft }]}>
-              <Ionicons name="color-palette-outline" size={20} color={colors.accent} />
-            </View>
-            <View style={{ flex: 1 }}>
+          {/* Item 1: Tema Visual (Aparência) */}
+          <View style={styles.themeSectionWrap}>
+            <View style={styles.settingRow}>
+              <View style={styles.iconCircle}>
+                <MaterialCommunityIcons name="palette-outline" size={22} color={PALETTE.primaryDark} />
+              </View>
               <Text style={styles.settingTitle}>Tema Visual</Text>
-              <Text style={styles.settingSubtitle}>Personalize o esquema de cores do app</Text>
+            </View>
+
+            <View style={styles.themeChipsContainer}>
+              {availableThemeOptions.map((option) => {
+                const selected = option.id === themeName;
+                return (
+                  <Pressable
+                    key={option.id}
+                    style={[styles.themePill, selected ? styles.themePillActive : null]}
+                    onPress={() => setThemeName(option.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Selecionar tema ${option.label}`}
+                  >
+                    <MaterialCommunityIcons 
+                      name={option.id === 'escuro' ? 'weather-night' : 'weather-sunny'} 
+                      size={18} 
+                      color={selected ? '#FFFFFF' : PALETTE.primaryDark} 
+                    />
+                    <Text style={[styles.themePillText, selected ? styles.themePillTextActive : null]}>
+                      {option.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
 
-          <View style={styles.themeChipsContainer}>
-            {options.map((option) => {
-              const selected = option.id === themeName;
-              return (
-                <Pressable
-                  key={option.id}
-                  style={[styles.themePill, selected ? styles.themePillActive : null]}
-                  onPress={() => setThemeName(option.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Selecionar tema ${option.label}`}
-                >
-                  <Ionicons 
-                    name={
-                      option.id === 'obsidian-dark' 
-                        ? 'moon-outline' 
-                        : option.id === 'verde-floresta' 
-                        ? 'leaf-outline' 
-                        : 'color-palette-outline'
-                    } 
-                    size={15} 
-                    color={selected ? colors.buttonText : colors.textPrimary} 
-                  />
-                  <Text style={[styles.themePillText, selected ? styles.themePillTextActive : null]}>
-                    {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Animated.View>
+          <View style={styles.rowDivider} />
 
-        {/* 3. Seção Sistema & Informações */}
-        <Text style={styles.sectionHeader}>SISTEMA & AJUDA</Text>
-        <Animated.View
-          style={[
-            styles.sectionCard,
-            {
-              opacity: panelAnim,
-              transform: [
-                {
-                  translateY: panelAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [24, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
-          {/* Tutorial de Comandos de Voz */}
+          {/* Item 2: Tutorial de Comandos de Voz (SEM SUBTÍTULO) */}
           <Pressable 
             style={styles.settingRow} 
             onPress={() => navigation.navigate('VoiceTutorial')}
           >
-            <View style={[styles.iconCircle, { backgroundColor: '#D9770618' }]}>
-              <Ionicons name="mic" size={20} color="#D97706" />
+            <View style={styles.iconCircle}>
+              <MaterialCommunityIcons name="microphone" size={22} color={PALETTE.primaryDark} />
             </View>
-            <View style={{ flex: 1 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={styles.settingTitle}>Tutorial de Comandos de Voz</Text>
-                <View style={[styles.handsFreeBadge, { backgroundColor: colors.accentSoft }]}>
-                  <Text style={[styles.handsFreeBadgeText, { color: colors.accent }]}>Mãos Livres</Text>
-                </View>
-              </View>
-              <Text style={styles.settingSubtitle}>Aprenda a operar o app sem as mãos no apiário</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            <Text style={styles.settingTitle}>Tutorial de Comandos de Voz</Text>
+            <MaterialCommunityIcons name="chevron-right" size={24} color={PALETTE.secondaryDark} style={{ marginLeft: 'auto' }} />
           </Pressable>
 
           <View style={styles.rowDivider} />
 
-          {/* Sobre o App */}
+          {/* Item 3: Sobre o Colmeia Digital (SEM SUBTÍTULO) */}
           <Pressable 
             style={styles.settingRow} 
             onPress={() => navigation.navigate('AboutApp')}
           >
-            <View style={[styles.iconCircle, { backgroundColor: '#6366F118' }]}>
-              <Ionicons name="information-circle-outline" size={20} color="#6366F1" />
+            <View style={styles.iconCircle}>
+              <MaterialCommunityIcons name="information-outline" size={22} color={PALETTE.primaryDark} />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.settingTitle}>Sobre o Colmeia Digital</Text>
-              <Text style={styles.settingSubtitle}>Versão, arquitetura e notas do sistema</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+            <Text style={styles.settingTitle}>Sobre o Colmeia Digital</Text>
+            <MaterialCommunityIcons name="chevron-right" size={24} color={PALETTE.secondaryDark} style={{ marginLeft: 'auto' }} />
           </Pressable>
-        </Animated.View>
 
-        {/* 4. Zona de Saída (Logout) */}
-        <Animated.View
-          style={[
-            styles.logoutContainer,
-            {
-              opacity: panelAnim,
-              transform: [
-                {
-                  translateY: panelAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [28, 0],
-                  }),
-                },
-              ],
-            },
-          ]}
-        >
+          <View style={styles.rowDivider} />
+
+          {/* Item 4: Sair da Conta (SEM SUBTÍTULO) */}
           <Pressable 
-            style={({ pressed }) => [
-              styles.logoutCard,
-              pressed ? styles.logoutCardPressed : null,
-            ]} 
+            style={styles.settingRow} 
             onPress={handleLogoutPrompt}
           >
-            <View style={styles.logoutIconCircle}>
-              <Ionicons name="log-out-outline" size={20} color="#DC2626" />
+            <View style={[styles.iconCircle, styles.logoutIconCircle]}>
+              <MaterialCommunityIcons name="logout" size={22} color={PALETTE.danger} />
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.logoutTitle}>Sair da Conta</Text>
-              <Text style={styles.logoutSubtitle}>Desconectar seu usuário deste aparelho</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#EF4444" />
+            <Text style={[styles.settingTitle, { color: PALETTE.danger }]}>Sair da Conta</Text>
+            <MaterialCommunityIcons name="chevron-right" size={24} color={PALETTE.danger} style={{ marginLeft: 'auto' }} />
           </Pressable>
         </Animated.View>
       </ScrollView>
+
+      {/* RODAPÉ FROM BOILES FIXADO NA BASE */}
+      <View style={styles.footerWrap}>
+        <Text style={styles.footerBrand}>FROM BOILES</Text>
+      </View>
 
       <BottomDock
         active="settings"
@@ -349,54 +294,49 @@ export function SettingsScreen({ navigation }: Props) {
         onPressSettings={() => undefined}
       />
 
+      {/* Modal de Confirmação de Logout */}
       <ConfirmModal
         visible={logoutModalVisible}
         title="Sair da Conta"
         message={
           hasUnsyncedData
-            ? 'Você possui registros pendentes de sincronização. Ao sair agora, esses dados locais podem ser perdidos. Deseja realmente sair da sua conta?'
-            : 'Tem certeza de que deseja encerrar sua sessão e sair da conta?'
+            ? 'Atenção: Existem anotações ou registros ainda não sincronizados com a nuvem neste aparelho. Se você sair agora sem conexão, esses dados podem demorar para atualizar. Deseja sair mesmo assim?'
+            : 'Tem certeza que deseja desconectar de sua conta neste aparelho?'
         }
-        confirmLabel="Sair da Conta"
+        confirmLabel="Sim, Sair"
         cancelLabel="Cancelar"
         isDestructive={true}
+        onConfirm={() => void executeLogout()}
         onCancel={() => setLogoutModalVisible(false)}
-        onConfirm={executeLogout}
       />
 
+      {/* Modal de Zoom do Avatar */}
       {isZoomed && (
-        <Pressable 
-          style={StyleSheet.absoluteFillObject} 
-          onPress={handleZoomOut}
-        >
-          <Animated.View 
-            style={[
-              styles.zoomBackdrop, 
-              {
-                opacity: zoomAnim
-              }
-            ]} 
-          />
-          <View style={styles.zoomContainer}>
+        <Animated.View style={[styles.zoomBackdrop, { opacity: zoomAnim }]}>
+          <Pressable style={styles.zoomContainer} onPress={handleZoomOut}>
             <Animated.View
               style={[
                 styles.zoomCard,
                 {
                   transform: [
-                    { scale: zoomAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }
+                    {
+                      scale: zoomAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.3, 1],
+                      }),
+                    },
                   ],
-                  opacity: zoomAnim
-                }
+                },
               ]}
             >
               {profilePhoto ? (
-                <Image source={{ uri: profilePhoto }} style={styles.zoomedImage} resizeMode="contain" />
+                <Image source={{ uri: profilePhoto }} style={styles.zoomedImage} resizeMode="cover" />
               ) : (
-                <Ionicons name="person-circle-outline" size={200} color={colors.textPrimary} />
+                <MaterialCommunityIcons name="account" size={140} color={PALETTE.primaryDark} />
               )}
             </Animated.View>
-          </View>
-        </Pressable>
+          </Pressable>
+        </Animated.View>
       )}
     </View>
   );
@@ -491,65 +431,47 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
   return StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: PALETTE.lightSurface,
     },
     content: {
       paddingTop: 16,
-      paddingHorizontal: 18,
-      paddingBottom: 32,
-    },
-    glowTop: {
-      position: 'absolute',
-      top: 0,
-      right: -36,
-      width: 140,
-      height: 140,
-      borderRadius: 70,
-      backgroundColor: colors.glowA,
-      opacity: 0.24,
-    },
-    sectionHeader: {
-      fontSize: 12,
-      fontWeight: '800',
-      color: colors.textMuted,
-      letterSpacing: 1.2,
-      marginTop: 20,
-      marginBottom: 8,
-      marginLeft: 4,
+      paddingHorizontal: 16,
+      paddingBottom: 24,
+      gap: 16,
     },
     profileCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      padding: 18,
-      backgroundColor: colors.card,
+      padding: 20,
+      backgroundColor: '#FFFFFF',
       borderRadius: 20,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.06,
       shadowRadius: 10,
       elevation: 2,
-      gap: 16,
+      gap: 18,
     },
     avatarWrap: {
       position: 'relative',
     },
     profileAvatar: {
-      width: 74,
-      height: 74,
-      borderRadius: 37,
-      backgroundColor: colors.surface,
-      borderWidth: 2,
-      borderColor: colors.accent,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: PALETTE.lightSurface,
+      borderWidth: 2.5,
+      borderColor: PALETTE.primaryDark,
     },
     avatarPlaceholder: {
-      width: 74,
-      height: 74,
-      borderRadius: 37,
-      backgroundColor: colors.accentSoft,
-      borderWidth: 2,
-      borderColor: colors.accent,
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: PALETTE.lightSurface,
+      borderWidth: 2.5,
+      borderColor: PALETTE.primaryDark,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -557,168 +479,137 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       position: 'absolute',
       bottom: 0,
       right: 0,
-      backgroundColor: colors.accent,
-      width: 22,
-      height: 22,
-      borderRadius: 11,
+      backgroundColor: PALETTE.primaryDark,
+      width: 26,
+      height: 26,
+      borderRadius: 13,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1.5,
-      borderColor: colors.surface,
+      borderWidth: 2,
+      borderColor: '#FFFFFF',
     },
     profileDetails: {
       flex: 1,
-      gap: 4,
+      gap: 5,
     },
     profileName: {
-      fontSize: 18,
+      fontSize: 20,
       fontWeight: '800',
-      color: colors.textPrimary,
+      color: PALETTE.primaryDark,
       letterSpacing: 0.2,
     },
     profileEmail: {
-      fontSize: 13,
-      color: colors.textMuted,
+      fontSize: 15,
+      color: PALETTE.secondaryDark,
+      fontWeight: '600',
     },
     editProfileBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
       alignSelf: 'flex-start',
-      backgroundColor: colors.accent,
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 10,
-      marginTop: 6,
+      backgroundColor: PALETTE.primaryDark,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 12,
+      marginTop: 4,
     },
     editProfileBtnText: {
-      fontSize: 12,
-      color: colors.buttonText,
+      fontSize: 14,
+      color: '#FFFFFF',
       fontWeight: '700',
     },
-    sectionCard: {
-      backgroundColor: colors.card,
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      padding: 16,
+
+    // Card unificado
+    unifiedCard: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 20,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryLight,
+      padding: 18,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      elevation: 1,
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+      gap: 14,
     },
-    sectionCardHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
+    themeSectionWrap: {
       gap: 12,
-      marginBottom: 14,
-    },
-    iconCircle: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    settingTitle: {
-      fontSize: 15,
-      fontWeight: '700',
-      color: colors.textPrimary,
-    },
-    settingSubtitle: {
-      fontSize: 12,
-      color: colors.textMuted,
-      marginTop: 2,
-    },
-    themeChipsContainer: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 10,
-    },
-    themePill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.cardBorder,
-      backgroundColor: colors.surface,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-    },
-    themePillActive: {
-      backgroundColor: colors.accent,
-      borderColor: colors.accent,
-    },
-    themePillText: {
-      fontSize: 13,
-      color: colors.textPrimary,
-      fontWeight: '600',
-    },
-    themePillTextActive: {
-      color: colors.buttonText,
-      fontWeight: '700',
     },
     settingRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
+      gap: 14,
+      paddingVertical: 4,
     },
-    rowDivider: {
-      height: 1,
-      backgroundColor: colors.cardBorder,
-      marginVertical: 12,
-    },
-    handsFreeBadge: {
-      paddingHorizontal: 7,
-      paddingVertical: 2,
-      borderRadius: 6,
-    },
-    handsFreeBadgeText: {
-      fontSize: 10,
-      fontWeight: '800',
-    },
-    logoutContainer: {
-      marginTop: 24,
-    },
-    logoutCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      backgroundColor: colors.card,
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: '#FCA5A5',
-      padding: 16,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.04,
-      shadowRadius: 6,
-      elevation: 1,
-    },
-    logoutCardPressed: {
-      backgroundColor: '#FEF2F2',
-      transform: [{ scale: 0.99 }],
-    },
-    logoutIconCircle: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: '#FEE2E2',
+    iconCircle: {
+      width: 44,
+      height: 44,
+      borderRadius: 14,
+      backgroundColor: PALETTE.lightSurface,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    logoutTitle: {
-      fontSize: 15,
+    logoutIconCircle: {
+      backgroundColor: '#FEE2E2',
+    },
+    settingTitle: {
+      fontSize: 16.5,
       fontWeight: '700',
-      color: '#DC2626',
+      color: PALETTE.primaryDark,
     },
-    logoutSubtitle: {
-      fontSize: 12,
-      color: colors.textMuted,
-      marginTop: 2,
+    themeChipsContainer: {
+      flexDirection: 'row',
+      gap: 10,
+      paddingLeft: 58,
     },
+    themePill: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: PALETTE.secondaryDark,
+      backgroundColor: PALETTE.lightSurface,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+    },
+    themePillActive: {
+      backgroundColor: PALETTE.primaryDark,
+      borderColor: PALETTE.primaryDark,
+    },
+    themePillText: {
+      fontSize: 14.5,
+      color: PALETTE.primaryDark,
+      fontWeight: '600',
+    },
+    themePillTextActive: {
+      color: '#FFFFFF',
+      fontWeight: '800',
+    },
+    rowDivider: {
+      height: 1,
+      backgroundColor: PALETTE.lightSurface,
+      marginVertical: 4,
+    },
+
+    // Rodapé FROM BOILES fixado na base
+    footerWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      backgroundColor: PALETTE.lightSurface,
+    },
+    footerBrand: {
+      fontSize: 11,
+      fontWeight: '800',
+      color: PALETTE.secondaryDark,
+      letterSpacing: 2,
+    },
+
     zoomBackdrop: {
       ...StyleSheet.absoluteFillObject,
       backgroundColor: 'rgba(0, 0, 0, 0.85)',
@@ -736,8 +627,8 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       borderRadius: 140,
       overflow: 'hidden',
       borderWidth: 3,
-      borderColor: colors.accent,
-      backgroundColor: colors.background,
+      borderColor: PALETTE.primaryDark,
+      backgroundColor: '#FFFFFF',
       justifyContent: 'center',
       alignItems: 'center',
       shadowColor: '#000',
@@ -752,4 +643,3 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
   });
 }
-
