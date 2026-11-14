@@ -117,6 +117,8 @@ export async function syncOfflineData(): Promise<SyncResult> {
   const online = await isAppOnline();
   if (!online) {
     console.log('[Sync] Dispositivo offline. Sincronização adiada.');
+    // A mutação que pediu este sync criou uma pendência: o indicador do cabeçalho precisa saber.
+    notifyListeners();
     const pendingCount = await getUnsyncedCount();
     return {
       success: true,
@@ -131,6 +133,7 @@ export async function syncOfflineData(): Promise<SyncResult> {
   const token = await getCachedToken();
   if (!token) {
     console.log('[Sync] Nenhum usuário autenticado com token válido. Sincronização cancelada.');
+    notifyListeners();
     return {
       success: true,
       syncedCount: 0,
