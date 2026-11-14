@@ -18,6 +18,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { register } from '../services/authService';
 import { useAppTheme } from '../theme/ThemeContext';
 import type { RootStackParamList } from '../types/auth';
+import { validateNewPassword } from '../utils/passwordPolicy';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
@@ -69,6 +70,12 @@ export function RegisterScreen({ navigation }: Props) {
   }
 
   async function handleRegister(): Promise<void> {
+    const passwordError = validateNewPassword(password);
+    if (passwordError) {
+      setError(passwordError);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -165,7 +172,7 @@ export function RegisterScreen({ navigation }: Props) {
                 secureTextEntry={secureText}
                 autoCapitalize="none"
                 autoCorrect={false}
-                placeholder="Senha de acesso..."
+                placeholder="Senha (mínimo 8 caracteres)..."
                 placeholderTextColor={colors.textMuted}
               />
               <Pressable

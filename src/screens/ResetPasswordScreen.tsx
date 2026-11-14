@@ -20,6 +20,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { resetPassword } from '../services/authService';
 import { useAppTheme } from '../theme/ThemeContext';
 import type { RootStackParamList } from '../types/auth';
+import { validateNewPassword } from '../utils/passwordPolicy';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ResetPassword'>;
 
@@ -98,8 +99,9 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
       return;
     }
 
-    if (!newPassword || newPassword.trim().length < 4) {
-      setError('A nova senha deve ter pelo menos 4 caracteres.');
+    const passwordError = validateNewPassword(newPassword);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -115,7 +117,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
       const response = await resetPassword({
         email,
         code: trimmedCode,
-        newPassword: newPassword.trim(),
+        newPassword,
       });
 
       Alert.alert(
@@ -253,7 +255,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
                   secureTextEntry={secureText}
                   autoCapitalize="none"
                   autoCorrect={false}
-                  placeholder="Mínimo 4 caracteres..."
+                  placeholder="Mínimo 8 caracteres..."
                   placeholderTextColor={colors.textMuted}
                   editable={!loading}
                 />
