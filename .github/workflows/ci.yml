@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  qualidade:
+    name: Tipos, lint e testes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx eslint .
+      - run: npx jest --ci
+      - name: Auditoria de dependências (informativa)
+        # As vulnerabilidades restantes vêm do Expo SDK 54 e das ferramentas de
+        # build; só saem com atualização do SDK (ver item S11 do relatório).
+        # Por isso o passo não bloqueia o CI, mas o resultado fica no log.
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high
