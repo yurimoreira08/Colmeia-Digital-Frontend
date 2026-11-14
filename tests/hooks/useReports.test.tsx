@@ -225,6 +225,15 @@ describe('edição e exclusão', () => {
     expect(result.current.editingReport).toBeNull();
   });
 
+  it('a edição segue as mesmas regras da revisão nova: ovos marca a rainha', async () => {
+    const { result } = await renderReports();
+    await act(async () => result.current.handleOpenEditReport({ ...mockRevision, checkedOptions: [] } as unknown as ReviewReport));
+
+    await act(async () => result.current.toggleEditOption('ovos'));
+
+    expect(result.current.editChecked).toEqual({ ovos: true, rainha: true });
+  });
+
   it('edita o manejo: tarefas, detalhes e nome do "outro"', async () => {
     const { result } = await renderReports();
     await act(async () => result.current.handleOpenEditManejo(mockManejo as unknown as ManejoReport));

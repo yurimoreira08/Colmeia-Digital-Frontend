@@ -7,20 +7,10 @@ import { deleteRevision, updateRevision } from '../services/reviewReportService'
 import type { ManejoReport } from '../types/manejo';
 import type { ReviewReport } from '../types/reviewReport';
 import { MANEJO_OPTION_LABELS } from '../utils/reportMetrics';
+import { applyOptionSelection } from '../utils/revisionOptions';
 
 /** Tarefa de manejo no formulário de edição (inativa = desmarcada). */
 export type EditableManejoTask = { id: string; obs: string; ind: string; active: boolean; customName?: string };
-
-/** Ao marcar a chave, desmarca estes itens na edição da revisão. */
-const EDIT_EXCLUSIVE_WITH: Record<string, string[]> = {
-  caixa: ['nucleo'],
-  nucleo: ['caixa'],
-  'com-espaco': ['sem-espaco'],
-  'sem-espaco': ['com-espaco'],
-  'forca-fraca': ['forca-media', 'forca-boa'],
-  'forca-media': ['forca-fraca', 'forca-boa'],
-  'forca-boa': ['forca-fraca', 'forca-media'],
-};
 
 /**
  * Edição e exclusão de revisões e manejos a partir dos relatórios.
@@ -69,11 +59,8 @@ export function useReportEditing(reloadData: () => Promise<void>) {
   }
 
   const toggleEditOption = useCallback((id: string) => {
-    setEditChecked((prev) => {
-      const next = { ...prev, [id]: !prev[id] };
-      if (next[id]) for (const other of EDIT_EXCLUSIVE_WITH[id] ?? []) next[other] = false;
-      return next;
-    });
+    // Mesmas regras da revisão nova (exclusões e ovos implica rainha).
+    setEditChecked((prev) => applyOptionSelection(prev, id, !prev[id]));
   }, []);
 
   function handleOpenEditManejo(report: ManejoReport) {

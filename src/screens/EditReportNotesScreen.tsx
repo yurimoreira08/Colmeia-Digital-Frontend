@@ -18,6 +18,7 @@ import { useAppTheme } from "../theme/ThemeContext";
 import { updateRevision } from "../services/reviewReportService";
 import { markBoxModifiedInSession } from "../services/sessionStore";
 import type { RootStackParamList } from "../types/auth";
+import { applyOptionSelection } from "../utils/revisionOptions";
 
 type Props = NativeStackScreenProps<RootStackParamList, "EditReportNotes">;
 
@@ -56,30 +57,9 @@ export function EditReportNotesScreen({ navigation, route }: Props) {
     return obj;
   });
 
+  // Mesmas regras da revisão nova (exclusões e ovos implica rainha).
   const toggleOption = useCallback((id: string) => {
-    setCheckedOptions((prev) => {
-      const nextObj = { ...prev, [id]: !prev[id] };
-      
-      if (nextObj[id]) {
-        if (id === "caixa") nextObj["nucleo"] = false;
-        if (id === "nucleo") nextObj["caixa"] = false;
-        if (id === "com-espaco") nextObj["sem-espaco"] = false;
-        if (id === "sem-espaco") nextObj["com-espaco"] = false;
-        if (id === "forca-fraca") {
-          nextObj["forca-media"] = false;
-          nextObj["forca-boa"] = false;
-        }
-        if (id === "forca-media") {
-          nextObj["forca-fraca"] = false;
-          nextObj["forca-boa"] = false;
-        }
-        if (id === "forca-boa") {
-          nextObj["forca-fraca"] = false;
-          nextObj["forca-media"] = false;
-        }
-      }
-      return nextObj;
-    });
+    setCheckedOptions((prev) => applyOptionSelection(prev, id, !prev[id]));
   }, []);
 
   async function handleSave() {
