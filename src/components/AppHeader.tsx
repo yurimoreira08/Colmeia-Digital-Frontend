@@ -7,6 +7,7 @@ import { getUnreadNotificationsCount } from '../services/notificationsService';
 import { useAppTheme } from '../theme/ThemeContext';
 import { useTestDataMode } from '../config/TestDataModeContext';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
+import { SyncStatusButton } from './SyncStatusButton';
 
 type AppHeaderProps = {
   title: string;
@@ -15,6 +16,8 @@ type AppHeaderProps = {
   onPressBell?: () => void;
   showNotificationIcon?: boolean;
   showMic?: boolean;
+  /** Mostra o estado do sync (pendências, falha, sincronizando). Todas as telas com AppHeader são de usuário logado. */
+  showSyncStatus?: boolean;
   rightElement?: React.ReactNode;
 };
 
@@ -25,6 +28,7 @@ export function AppHeader({
   onPressBell,
   showNotificationIcon = false,
   showMic = false,
+  showSyncStatus = true,
   rightElement,
 }: AppHeaderProps) {
   const { colors } = useAppTheme();
@@ -108,6 +112,8 @@ export function AppHeader({
       </View>
 
       <View style={styles.rightArea}>
+        {showSyncStatus ? <SyncStatusButton /> : null}
+
         {showMic ? (
           <Pressable
             accessibilityRole="button"
