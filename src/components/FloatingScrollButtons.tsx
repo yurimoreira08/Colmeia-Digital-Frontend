@@ -55,6 +55,8 @@ export function FloatingScrollButtons({ scrollRef, bottomOffset = 16, currentY =
   return (
     <View style={[styles.container, { bottom: bottomOffset }]}>
       <Pressable 
+        accessibilityRole="button"
+        accessibilityLabel="Rolar para cima"
         style={[
           styles.button, 
           { 
@@ -68,6 +70,8 @@ export function FloatingScrollButtons({ scrollRef, bottomOffset = 16, currentY =
         <MaterialCommunityIcons name="chevron-up" size={28} color={colors.buttonText} />
       </Pressable>
       <Pressable 
+        accessibilityRole="button"
+        accessibilityLabel="Rolar para baixo"
         style={[
           styles.button, 
           { 

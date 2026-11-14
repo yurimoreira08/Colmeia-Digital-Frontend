@@ -107,7 +107,7 @@ export function ExportPdfModal({
                 <Text style={styles.caption}>{targetSubtitle}</Text>
               ) : null}
             </View>
-            <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Fechar" onPress={onClose} hitSlop={10} style={styles.closeBtn}>
               <MaterialCommunityIcons name="close" size={22} color={PALETTE.secondaryDark} />
             </Pressable>
           </View>
@@ -117,6 +117,8 @@ export function ExportPdfModal({
             <Text style={styles.sectionLabel}>Selecione o Período de Tempo:</Text>
             <View style={styles.periodGrid}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: period === '7days' }}
                 style={[styles.periodChip, period === '7days' ? styles.periodChipActive : null]}
                 onPress={() => setPeriod('7days')}
               >
@@ -131,6 +133,8 @@ export function ExportPdfModal({
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: period === '30days' }}
                 style={[styles.periodChip, period === '30days' ? styles.periodChipActive : null]}
                 onPress={() => setPeriod('30days')}
               >
@@ -145,6 +149,8 @@ export function ExportPdfModal({
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: period === 'thisMonth' }}
                 style={[styles.periodChip, period === 'thisMonth' ? styles.periodChipActive : null]}
                 onPress={() => setPeriod('thisMonth')}
               >
@@ -159,6 +165,8 @@ export function ExportPdfModal({
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: period === '3months' }}
                 style={[styles.periodChip, period === '3months' ? styles.periodChipActive : null]}
                 onPress={() => setPeriod('3months')}
               >
@@ -173,6 +181,8 @@ export function ExportPdfModal({
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: period === 'all' }}
                 style={[styles.periodChip, period === 'all' ? styles.periodChipActive : null, { minWidth: '100%' }]}
                 onPress={() => setPeriod('all')}
               >
@@ -193,6 +203,8 @@ export function ExportPdfModal({
             <Text style={styles.sectionLabel}>Tipo de Atividade:</Text>
             <View style={styles.typeRow}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: typeFilter === 'all' }}
                 style={[styles.typeBtn, typeFilter === 'all' ? styles.typeBtnActive : null]}
                 onPress={() => setTypeFilter('all')}
               >
@@ -201,6 +213,8 @@ export function ExportPdfModal({
                 </Text>
               </Pressable>
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: typeFilter === 'revisoes' }}
                 style={[styles.typeBtn, typeFilter === 'revisoes' ? styles.typeBtnActive : null]}
                 onPress={() => setTypeFilter('revisoes')}
               >
@@ -209,6 +223,8 @@ export function ExportPdfModal({
                 </Text>
               </Pressable>
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: typeFilter === 'manejos' }}
                 style={[styles.typeBtn, typeFilter === 'manejos' ? styles.typeBtnActive : null]}
                 onPress={() => setTypeFilter('manejos')}
               >
@@ -221,11 +237,12 @@ export function ExportPdfModal({
 
           {/* Botões de Ação */}
           <View style={styles.actionsRow}>
-            <Pressable style={styles.cancelBtn} onPress={onClose} disabled={loading}>
+            <Pressable accessibilityRole="button" style={styles.cancelBtn} onPress={onClose} disabled={loading}>
               <Text style={styles.cancelBtnText}>Cancelar</Text>
             </Pressable>
 
             <Pressable
+              accessibilityRole="button"
               style={[styles.confirmBtn, loading ? styles.confirmBtnDisabled : null]}
               onPress={handleGeneratePdf}
               disabled={loading}

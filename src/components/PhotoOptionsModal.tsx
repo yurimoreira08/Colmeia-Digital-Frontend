@@ -31,7 +31,7 @@ export function PhotoOptionsModal({
       animationType="slide"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
+      <Pressable accessible={false} accessibilityRole="none" style={styles.overlay} onPress={onClose}>
         <View style={styles.sheet} onStartShouldSetResponder={() => true}>
           <View style={styles.dragIndicator} />
           
@@ -39,6 +39,7 @@ export function PhotoOptionsModal({
           
           <View style={styles.optionsContainer}>
             <Pressable
+              accessibilityRole="button"
               style={styles.optionButton}
               onPress={() => {
                 onClose();
@@ -52,6 +53,7 @@ export function PhotoOptionsModal({
             </Pressable>
 
             <Pressable
+              accessibilityRole="button"
               style={styles.optionButton}
               onPress={() => {
                 onClose();
@@ -66,6 +68,7 @@ export function PhotoOptionsModal({
 
             {hasPhoto && onRemovePhoto ? (
               <Pressable
+                accessibilityRole="button"
                 style={styles.optionButton}
                 onPress={() => {
                   onClose();
@@ -80,7 +83,7 @@ export function PhotoOptionsModal({
             ) : null}
           </View>
 
-          <Pressable style={styles.cancelButton} onPress={onClose}>
+          <Pressable accessibilityRole="button" style={styles.cancelButton} onPress={onClose}>
             <Text style={styles.cancelButtonText}>Cancelar</Text>
           </Pressable>
         </View>

@@ -156,6 +156,7 @@ export function ReportCard({
                   {/* Botões de Ação: PDF, Editar e Excluir */}
                   <View style={styles.actionButtonsRow}>
                     <Pressable
+                      accessibilityRole="button"
                       style={[styles.actionCircleBtn, styles.actionCircleBtnPdf]}
                       onPress={() => {
                         if (onExportPdf) {
@@ -172,6 +173,7 @@ export function ReportCard({
 
                     {onEdit && (
                       <Pressable
+                        accessibilityRole="button"
                         style={styles.actionCircleBtn}
                         onPress={() => onEdit(item)}
                         hitSlop={8}
@@ -182,6 +184,7 @@ export function ReportCard({
                     )}
                     {onDelete && (
                       <Pressable
+                        accessibilityRole="button"
                         style={[styles.actionCircleBtn, styles.actionCircleBtnDelete]}
                         onPress={() => onDelete(item)}
                         hitSlop={8}

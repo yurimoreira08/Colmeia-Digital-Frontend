@@ -13,11 +13,11 @@ export function ActionButtonsBar({ onArchive, onDownload, isArchived }: ActionBu
   return (
     <View style={styles.container}>
       {onDownload && (
-        <Pressable style={styles.button} onPress={onDownload} hitSlop={8}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Baixar PDF" style={styles.button} onPress={onDownload} hitSlop={8}>
           <MaterialCommunityIcons name="download-outline" size={20} color={PALETTE.primaryDark} />
         </Pressable>
       )}
-      <Pressable style={styles.button} onPress={onArchive} hitSlop={8}>
+      <Pressable accessibilityRole="button" accessibilityLabel={isArchived ? 'Desarquivar' : 'Arquivar'} style={styles.button} onPress={onArchive} hitSlop={8}>
         <MaterialCommunityIcons
           name={isArchived ? 'package-up' : 'archive-arrow-down-outline'}
           size={20}

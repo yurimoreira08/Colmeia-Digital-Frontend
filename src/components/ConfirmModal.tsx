@@ -37,12 +37,13 @@ export function ConfirmModal({
 
           <View style={styles.actions}>
             {!hideCancel && (
-              <Pressable style={styles.cancelButton} onPress={onCancel}>
+              <Pressable accessibilityRole="button" style={styles.cancelButton} onPress={onCancel}>
                 <Text style={styles.cancelText}>{cancelLabel}</Text>
               </Pressable>
             )}
 
             <Pressable
+              accessibilityRole="button"
               style={[styles.confirmButton, isDestructive && styles.confirmDestructive]}
               onPress={onConfirm}
             >

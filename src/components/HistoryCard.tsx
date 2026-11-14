@@ -70,6 +70,7 @@ export function HistoryCard({
 
   return (
     <Pressable
+      accessibilityRole="button"
       style={styles.card}
       onPress={handlePressCard}
       onLongPress={() => {
@@ -101,12 +102,12 @@ export function HistoryCard({
         {!selectionMode && (
           <View style={styles.actionsContainer}>
             {onEdit && (
-              <Pressable style={styles.iconBtn} onPress={() => onEdit(item)} hitSlop={8}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Editar registro" style={styles.iconBtn} onPress={() => onEdit(item)} hitSlop={8}>
                 <MaterialCommunityIcons name="pencil" size={20} color={colors.textPrimary} />
               </Pressable>
             )}
             {onDelete && (
-              <Pressable style={styles.iconBtn} onPress={() => onDelete(item)} hitSlop={8}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Excluir registro" style={styles.iconBtn} onPress={() => onDelete(item)} hitSlop={8}>
                 <MaterialCommunityIcons name="trash-can-outline" size={20} color={colors.error} />
               </Pressable>
             )}

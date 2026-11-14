@@ -38,6 +38,8 @@ export function RevisionOptionSection({ sectionId, title, options, selected, onT
           const activeColor = STRENGTH_ACTIVE_COLOR[option.id];
           return (
             <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: active }}
               key={option.id}
               style={
                 isStrength
