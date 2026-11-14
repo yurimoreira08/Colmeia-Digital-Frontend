@@ -1,7 +1,6 @@
-import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiRequest, checkServerConnection, updateCachedUserId, updateCachedToken, getCachedToken } from './apiClient';
-import { initializeLocalDb, getLocalConfigValue, setLocalConfigValue, clearLocalDatabase, hasUnsyncedRecords } from './localDbService';
+import { initializeLocalDb, getLocalConfigValue, setLocalConfigValue, clearLocalDatabase } from './localDbService';
 import { clearSessionStore } from './sessionStore';
 import { secureSet, secureDelete } from './secureStorage';
 import type { User } from '../types/auth';
