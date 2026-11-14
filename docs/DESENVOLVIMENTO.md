@@ -54,6 +54,6 @@ Antes de qualquer commit, tudo precisa passar, parando no primeiro erro:
 npm run typecheck && npm test && npm run lint
 ```
 
-O lint precisa ter 0 erros; os avisos do código antigo são tolerados. Em mudanças de dependências ou de configuração, rode também `npx expo-doctor`. Hoje ele acusa 2 problemas antigos (ícone `.jpeg` e pacotes do Expo um patch atrás), registrados como F11 e F12 no relatório.
+O lint precisa ter 0 erros; os avisos do código antigo são tolerados. Em mudanças de dependências ou de configuração, rode também `npx expo-doctor`. Ele precisa passar em todas as verificações. Os ícones do `app.json` são PNG (o teste `tests/config/appConfig.test.ts` confere).
 
 O CI (`.github/workflows/ci.yml`, GitHub Actions) roda `npm ci` com npm 11.6.1, tsc, eslint e jest. O `npm audit` roda mas não bloqueia, por causa das vulnerabilidades do Expo SDK 54.

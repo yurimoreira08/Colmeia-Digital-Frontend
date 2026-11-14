@@ -86,7 +86,7 @@ export function AppSplashScreen({ navigation }: Props) {
     <View style={styles.container}>
       <Animated.View style={[styles.centerArea, { opacity: fadeIn }]}> 
         <Animated.View style={{ transform: [{ scale: logoPulse }] }}>
-          <Image source={require('../../assets/logo-colmeiadigital.jpeg')} style={styles.logo} resizeMode="contain" />
+          <Image source={require('../../assets/logo-colmeiadigital.png')} style={styles.logo} resizeMode="contain" />
         </Animated.View>
         <Text style={styles.appTitle}>COLMEIA DIGITAL</Text>
         <Text style={styles.appSubtitle}>Sistema de Gestão e Monitoramento de Apiários</Text>
