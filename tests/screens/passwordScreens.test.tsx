@@ -12,6 +12,10 @@ import { ResetPasswordScreen } from '../../src/screens/ResetPasswordScreen';
 import { register, resetPassword } from '../../src/services/authService';
 import type { RootStackParamList } from '../../src/types/auth';
 
+// O primeiro render carrega e transforma o React Native inteiro: com cache frio
+// (CI ou clone novo) passa dos 5 s padrão do Jest.
+jest.setTimeout(30_000);
+
 jest.mock('../../src/services/authService', () => ({
   register: jest.fn(async () => ({ id: 1 })),
   resetPassword: jest.fn(async () => ({ success: true, message: 'ok' })),
