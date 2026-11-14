@@ -260,6 +260,9 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
                   editable={!loading}
                 />
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={secureText ? 'Mostrar senha' : 'Ocultar senha'}
+                  hitSlop={8}
                   style={[styles.visibilityButton, !secureText ? styles.visibilityButtonActive : null]}
                   onPress={() => setSecureText((prev) => !prev)}
                 >
@@ -292,6 +295,9 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
                   editable={!loading}
                 />
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={secureConfirmText ? 'Mostrar confirmação da senha' : 'Ocultar confirmação da senha'}
+                  hitSlop={8}
                   style={[styles.visibilityButton, !secureConfirmText ? styles.visibilityButtonActive : null]}
                   onPress={() => setSecureConfirmText((prev) => !prev)}
                 >
@@ -332,6 +338,7 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
             </View>
 
             <Pressable
+              accessibilityRole="button"
               style={styles.linkButton}
               onPress={() => navigation.navigate('ForgotPassword', { initialEmail: email })}
             >

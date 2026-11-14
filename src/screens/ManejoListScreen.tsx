@@ -59,6 +59,7 @@ export function ManejoListScreen({ navigation }: Props) {
               Cadastre um apiário para registrar ações e intervenções de manejo.
             </Text>
             <Pressable
+              accessibilityRole="button"
               style={styles.emptyButton}
               onPress={() => navigation.navigate('CreateEditApiary')}
             >
@@ -93,6 +94,7 @@ export function ManejoListScreen({ navigation }: Props) {
 
             <View style={styles.actionsContainer}>
               <Pressable
+                accessibilityRole="button"
                 style={styles.primaryActionBtn}
                 onPress={() =>
                   navigation.navigate('BoxesList', {
@@ -109,6 +111,7 @@ export function ManejoListScreen({ navigation }: Props) {
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
                 style={styles.secondaryActionBtn}
                 onPress={() =>
                   navigation.navigate('ReviewReportsList', {

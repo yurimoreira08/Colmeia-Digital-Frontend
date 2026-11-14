@@ -168,6 +168,7 @@ export function HomeScreen({ navigation }: Props) {
               }}
             >
               <Pressable
+                accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.moduleCard,
                   pressed ? styles.moduleCardPressed : null,

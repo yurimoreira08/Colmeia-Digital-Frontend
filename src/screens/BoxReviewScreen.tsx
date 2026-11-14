@@ -102,6 +102,7 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
 
           {/* Liga e desliga o comando de voz */}
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.voiceCard,
               isListening ? styles.voiceCardActive : null,
@@ -166,6 +167,7 @@ export function BoxRevisionScreen({ navigation, route }: Props) {
 
           <View style={styles.actionsArea}>
             <Pressable
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.primaryAction,
                 isFilled ? styles.primaryActionFilled : null,

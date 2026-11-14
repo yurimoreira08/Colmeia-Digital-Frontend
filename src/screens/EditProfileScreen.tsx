@@ -146,7 +146,7 @@ export function EditProfileScreen({ navigation }: Props) {
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.avatarContainer}>
-            <Pressable onPress={handlePickImage} style={styles.avatarPressable}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Trocar foto de perfil" onPress={handlePickImage} style={styles.avatarPressable}>
               {photoUri ? (
                 <Image source={{ uri: photoUri }} style={styles.avatar} />
               ) : (
@@ -185,7 +185,7 @@ export function EditProfileScreen({ navigation }: Props) {
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-            <Pressable style={styles.saveButton} onPress={handleSave} disabled={saving}>
+            <Pressable accessibilityRole="button" style={styles.saveButton} onPress={handleSave} disabled={saving}>
               {saving ? (
                 <ActivityIndicator size="small" color={colors.buttonText} />
               ) : (

@@ -172,6 +172,7 @@ export function LoginScreen({ navigation }: Props) {
             </View>
 
             <Pressable
+              accessibilityRole="button"
               style={styles.forgotPasswordRow}
               onPress={() => navigation.navigate('ForgotPassword', { initialEmail: email })}
             >
@@ -182,6 +183,7 @@ export function LoginScreen({ navigation }: Props) {
 
             <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
               <Pressable
+                accessibilityRole="button"
                 style={styles.primaryButton}
                 onPress={handleLogin}
                 disabled={loading}
@@ -198,7 +200,7 @@ export function LoginScreen({ navigation }: Props) {
               <View style={styles.dividerLine} />
             </View>
 
-            <Pressable style={styles.secondaryButton} onPress={() => navigation.navigate('Register')}>
+            <Pressable accessibilityRole="button" style={styles.secondaryButton} onPress={() => navigation.navigate('Register')}>
               <Text style={styles.secondaryButtonText}>Cadastre-se</Text>
             </Pressable>
           </Animated.View>

@@ -227,6 +227,7 @@ export function ApiaryListScreen({ navigation }: Props) {
             apiaries.map((apiary) => {
               return (
                 <Pressable
+                  accessibilityRole="button"
                   key={apiary.id}
                   style={styles.apiaryCard}
                   onPress={() => {
@@ -252,6 +253,7 @@ export function ApiaryListScreen({ navigation }: Props) {
                       </View>
                       <View style={styles.headerIconActions}>
                         <Pressable
+                          accessibilityRole="button"
                           style={styles.headerIconBtn}
                           onPress={() => navigation.navigate('CreateEditApiary', { apiaryId: apiary.id })}
                           hitSlop={8}
@@ -261,6 +263,7 @@ export function ApiaryListScreen({ navigation }: Props) {
                         </Pressable>
 
                         <Pressable
+                          accessibilityRole="button"
                           style={[styles.headerIconBtn, styles.headerIconBtnDelete]}
                           onPress={() => setDeleteId(apiary.id)}
                           hitSlop={8}
@@ -280,6 +283,7 @@ export function ApiaryListScreen({ navigation }: Props) {
 
                   <View style={styles.cardActions}>
                     <Pressable
+                      accessibilityRole="button"
                       style={[styles.actionBtn, styles.actionBtnMain]}
                       onPress={() => {
                         navigation.navigate('BoxesList', {
@@ -294,6 +298,7 @@ export function ApiaryListScreen({ navigation }: Props) {
                     </Pressable>
 
                     <Pressable
+                      accessibilityRole="button"
                       style={[styles.actionBtn, styles.actionBtnHighlight]}
                       onPress={() => {
                         navigation.navigate('BoxesList', {
@@ -309,6 +314,7 @@ export function ApiaryListScreen({ navigation }: Props) {
                     </Pressable>
 
                     <Pressable
+                      accessibilityRole="button"
                       style={[styles.actionBtn, styles.actionBtnPdf]}
                       onPress={() => setPdfApiary(apiary)}
                       accessibilityLabel="Exportar relatório em PDF de todas as caixas"

@@ -186,6 +186,7 @@ export function ForgotPasswordScreen({ navigation, route }: Props) {
 
             <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
               <Pressable
+                accessibilityRole="button"
                 style={styles.primaryButton}
                 onPress={handleSendCode}
                 disabled={loading}
@@ -209,6 +210,7 @@ export function ForgotPasswordScreen({ navigation, route }: Props) {
             ) : null}
 
             <Pressable
+              accessibilityRole="button"
               style={styles.linkButton}
               onPress={() => navigation.navigate('ResetPassword', { email: email.trim() })}
             >

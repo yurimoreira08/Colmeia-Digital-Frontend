@@ -55,6 +55,7 @@ export function VoiceTutorialScreen({ navigation }: Props) {
         </View>
 
         <Pressable
+          accessibilityRole="button"
           style={[styles.micTestBtn, isListening ? styles.micTestBtnActive : null]}
           onPress={toggleListening}
           hitSlop={8}

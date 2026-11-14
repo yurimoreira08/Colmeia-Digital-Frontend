@@ -107,6 +107,8 @@ export function EditReportNotesScreen({ navigation, route }: Props) {
               const active = !!checkedOptions[option.id];
               return (
                 <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: active }}
                   key={option.id}
                   style={[
                     styles.optionCard,
@@ -149,7 +151,7 @@ export function EditReportNotesScreen({ navigation, route }: Props) {
             placeholderTextColor={colors.textMuted}
           />
 
-          <Pressable style={styles.saveBtn} onPress={handleSave}>
+          <Pressable accessibilityRole="button" style={styles.saveBtn} onPress={handleSave}>
             <Text style={styles.saveBtnText}>Salvar Alterações</Text>
           </Pressable>
         </ScrollView>

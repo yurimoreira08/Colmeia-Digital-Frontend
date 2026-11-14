@@ -77,6 +77,7 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
         onPressBell={() => navigation.navigate('Notifications')}
         rightElement={
           <Pressable
+            accessibilityRole="button"
             style={{
               paddingHorizontal: 10,
               paddingVertical: 6,
@@ -107,6 +108,8 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
             {/* Navegação em Abas Segmentadas */}
             <View style={styles.segmentedContainer}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: filter === 'revisoes' }}
                 style={[styles.segmentBtn, filter === 'revisoes' ? styles.segmentBtnActiveRevisao : null]}
                 onPress={() => setFilter('revisoes')}
               >
@@ -121,6 +124,8 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: filter === 'manejos' }}
                 style={[styles.segmentBtn, filter === 'manejos' ? styles.segmentBtnActiveManejo : null]}
                 onPress={() => setFilter('manejos')}
               >
@@ -138,6 +143,8 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
             {/* Filtros Rápidos (Chips) */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterChipsRow}>
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: quickFilter === '7days' }}
                 style={[styles.filterChip, quickFilter === '7days' ? styles.filterChipActive : null]}
                 onPress={() => setQuickFilter('7days')}
               >
@@ -152,6 +159,8 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: quickFilter === 'thisMonth' }}
                 style={[styles.filterChip, quickFilter === 'thisMonth' ? styles.filterChipActive : null]}
                 onPress={() => setQuickFilter('thisMonth')}
               >
@@ -166,6 +175,8 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: quickFilter === 'apiary' }}
                 style={[styles.filterChip, quickFilter === 'apiary' ? styles.filterChipActive : null]}
                 onPress={() => setQuickFilter('apiary')}
               >
@@ -180,6 +191,8 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: quickFilter === 'all' }}
                 style={[styles.filterChip, quickFilter === 'all' ? styles.filterChipActive : null]}
                 onPress={() => setQuickFilter('all')}
               >
@@ -205,7 +218,7 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
                 onChangeText={setSearchTerm}
               />
               {searchTerm ? (
-                <Pressable onPress={() => setSearchTerm('')} hitSlop={10}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Limpar busca" onPress={() => setSearchTerm('')} hitSlop={10}>
                   <MaterialCommunityIcons name="close-circle" size={20} color={PALETTE.secondaryDark} />
                 </Pressable>
               ) : null}
@@ -218,6 +231,8 @@ export function ReportsScreen({ navigation, route }: { navigation: any; route: a
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pickerItemRow}>
                   {apiaries.map((apiary) => (
                     <Pressable
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: selectedApiaryId === apiary.id }}
                       key={apiary.id}
                       style={[styles.pickerItemButton, selectedApiaryId === apiary.id ? styles.pickerItemButtonActive : null]}
                       onPress={() => setSelectedApiaryId(apiary.id === selectedApiaryId ? null : apiary.id)}

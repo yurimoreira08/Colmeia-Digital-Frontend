@@ -128,6 +128,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
 
               {section.role !== 'reader' ? (
                 <Pressable
+                  accessibilityRole="button"
                   style={styles.sectionAddBtn}
                   onPress={() => handleOpenAddBox(section.apiaryId, section.apiaryName)}
                 >
@@ -176,6 +177,9 @@ export function BoxesListScreen({ navigation, route }: Props) {
 
                       <View style={styles.headerButtons}>
                         <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Ver histórico da caixa"
+                          hitSlop={8}
                           style={styles.iconBtn}
                           onPress={() => handleOpenAnnotations(box)}
                         >
@@ -184,12 +188,18 @@ export function BoxesListScreen({ navigation, route }: Props) {
                         {section.role !== 'reader' && (
                           <>
                             <Pressable
+                              accessibilityRole="button"
+                              accessibilityLabel="Renomear caixa"
+                              hitSlop={8}
                               style={styles.iconBtn}
                               onPress={() => handleOpenRename(box)}
                             >
                               <MaterialCommunityIcons name="pencil-outline" size={20} color={PALETTE.secondaryDark} />
                             </Pressable>
                             <Pressable
+                              accessibilityRole="button"
+                              accessibilityLabel="Excluir caixa"
+                              hitSlop={8}
                               style={styles.iconBtn}
                               onPress={() => setDeleteBoxId(box.rawId)}
                             >
@@ -202,6 +212,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
 
                     <View style={styles.cardBottomActions}>
                       <Pressable
+                        accessibilityRole="button"
                         style={[styles.mainActionBtn, { backgroundColor: PALETTE.primaryDark }]}
                         onPress={() => {
                           navigation.navigate('BoxRevision', {
@@ -218,6 +229,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                       </Pressable>
 
                       <Pressable
+                        accessibilityRole="button"
                         style={[styles.mainActionBtn, { backgroundColor: PALETTE.secondaryLight }]}
                         onPress={() => {
                           navigation.navigate('BoxManejo', {
@@ -259,12 +271,14 @@ export function BoxesListScreen({ navigation, route }: Props) {
             />
             <View style={styles.modalActions}>
               <Pressable
+                accessibilityRole="button"
                 style={[styles.modalBtn, styles.cancelBtn]}
                 onPress={() => setRenameVisible(false)}
               >
                 <Text style={styles.cancelBtnText}>Cancelar</Text>
               </Pressable>
               <Pressable
+                accessibilityRole="button"
                 style={[styles.modalBtn, styles.saveBtn]}
                 onPress={handleSaveRename}
               >
@@ -281,7 +295,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
           <View style={[styles.modalContent, { maxHeight: '80%', width: '92%' }]}>
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalTitle}>Histórico • {selectedBoxForAnnotations?.name}</Text>
-              <Pressable onPress={() => setAnnotationsModalVisible(false)}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Fechar histórico" hitSlop={8} onPress={() => setAnnotationsModalVisible(false)}>
                 <MaterialCommunityIcons name="close" size={24} color={colors.textPrimary} />
               </Pressable>
             </View>
@@ -291,6 +305,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                 .filter((r) => r.caixaId === selectedBoxForAnnotations?.rawId)
                 .map((rev) => (
                   <Pressable
+                    accessibilityRole="button"
                     key={`rev-${rev.id}`}
                     style={styles.historyItem}
                     onPress={() => {
@@ -314,6 +329,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
                 .filter((m) => m.caixaId === selectedBoxForAnnotations?.rawId)
                 .map((man) => (
                   <Pressable
+                    accessibilityRole="button"
                     key={`man-${man.id}`}
                     style={styles.historyItem}
                     onPress={() => {
@@ -346,6 +362,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
 
             <View style={{ flexDirection: 'row', gap: 8, marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.cardBorder }}>
               <Pressable
+                accessibilityRole="button"
                 style={[styles.mainActionBtn, { flex: 1, backgroundColor: PALETTE.primaryDark, paddingVertical: 10 }]}
                 onPress={() => {
                   setAnnotationsModalVisible(false);
@@ -362,6 +379,7 @@ export function BoxesListScreen({ navigation, route }: Props) {
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
                 style={[styles.mainActionBtn, { flex: 1, backgroundColor: PALETTE.secondaryLight, paddingVertical: 10 }]}
                 onPress={() => {
                   setAnnotationsModalVisible(false);
@@ -404,12 +422,14 @@ export function BoxesListScreen({ navigation, route }: Props) {
             />
             <View style={styles.modalActions}>
               <Pressable
+                accessibilityRole="button"
                 style={[styles.modalBtn, styles.cancelBtn]}
                 onPress={() => setAddBoxVisible(false)}
               >
                 <Text style={styles.cancelBtnText}>Cancelar</Text>
               </Pressable>
               <Pressable
+                accessibilityRole="button"
                 style={[styles.modalBtn, styles.saveBtn]}
                 onPress={handleSaveAddBox}
                 disabled={addingBox}

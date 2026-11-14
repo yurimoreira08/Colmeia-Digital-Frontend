@@ -181,6 +181,8 @@ export function EditManejoNotesScreen({ navigation, route }: Props) {
               const active = tasks[id].active;
               return (
                 <Pressable
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: active }}
                   key={id}
                   style={[
                     styles.optionCard,
@@ -249,7 +251,7 @@ export function EditManejoNotesScreen({ navigation, route }: Props) {
 
           <Text style={styles.sectionTitle}>Geral e Foto</Text>
 
-          <Pressable style={styles.photoButton} onPress={handleTakePhoto}>
+          <Pressable accessibilityRole="button" style={styles.photoButton} onPress={handleTakePhoto}>
             <MaterialCommunityIcons name="camera" size={20} color={colors.textPrimary} />
             <Text style={{ color: colors.textPrimary }}>
               {photoUri ? "Alterar Foto" : "Tirar Foto"}
@@ -260,6 +262,9 @@ export function EditManejoNotesScreen({ navigation, route }: Props) {
             <View style={styles.photoContainer}>
               <Image source={{ uri: photoUri }} style={styles.photoPreview} />
               <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Remover foto"
+                hitSlop={8}
                 style={styles.removePhoto}
                 onPress={() => setPhotoUri(undefined)}
               >
@@ -288,7 +293,7 @@ export function EditManejoNotesScreen({ navigation, route }: Props) {
             placeholderTextColor={colors.textMuted}
           />
 
-          <Pressable style={styles.saveBtn} onPress={handleSave}>
+          <Pressable accessibilityRole="button" style={styles.saveBtn} onPress={handleSave}>
             <Text style={styles.saveBtnText}>Salvar Alterações</Text>
           </Pressable>
         </ScrollView>

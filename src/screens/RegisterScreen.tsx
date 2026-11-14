@@ -206,11 +206,12 @@ export function RegisterScreen({ navigation }: Props) {
               </Pressable>
             </Animated.View>
 
-            <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+            <Pressable accessibilityRole="button" style={styles.backButton} onPress={() => navigation.goBack()}>
               <Text style={styles.backButtonText}>Já possui uma conta? Entrar</Text>
             </Pressable>
 
             <Pressable
+              accessibilityRole="button"
               style={styles.forgotPasswordButton}
               onPress={() => navigation.navigate('ForgotPassword', { initialEmail: email })}
             >

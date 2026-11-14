@@ -68,6 +68,7 @@ export function RevisionListScreen({ navigation }: Props) {
               Cadastre um apiário para registrar as avaliações técnicas e revisões periódicas.
             </Text>
             <Pressable
+              accessibilityRole="button"
               style={styles.emptyButton}
               onPress={() => navigation.navigate('CreateEditApiary')}
             >
@@ -102,6 +103,7 @@ export function RevisionListScreen({ navigation }: Props) {
 
             <View style={styles.actionsContainer}>
               <Pressable
+                accessibilityRole="button"
                 style={styles.primaryActionBtn}
                 onPress={() =>
                   navigation.navigate('BoxesList', {
@@ -117,6 +119,7 @@ export function RevisionListScreen({ navigation }: Props) {
               </Pressable>
 
               <Pressable
+                accessibilityRole="button"
                 style={styles.secondaryActionBtn}
                 onPress={() =>
                   navigation.navigate('ReviewReportsList', {

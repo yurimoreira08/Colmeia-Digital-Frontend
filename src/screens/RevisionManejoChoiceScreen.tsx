@@ -54,6 +54,7 @@ export function RevisionManejoChoiceScreen({ navigation }: Props) {
         <Text style={styles.instructionText}>Selecione o tipo de registro operacional:</Text>
 
         <Pressable
+          accessibilityRole="button"
           style={styles.choiceCard}
           onPress={() => navigation.navigate('RevisionList')}
         >
@@ -68,6 +69,7 @@ export function RevisionManejoChoiceScreen({ navigation }: Props) {
         </Pressable>
 
         <Pressable
+          accessibilityRole="button"
           style={styles.choiceCard}
           onPress={() => navigation.navigate('ManejoList')}
         >

@@ -79,6 +79,7 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
         onPressBell={() => navigation.navigate('Notifications')}
         rightElement={
           <Pressable
+            accessibilityRole="button"
             style={{
               paddingHorizontal: 10,
               paddingVertical: 6,
@@ -105,6 +106,8 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
         {/* Navegação em Abas Segmentadas */}
         <View style={styles.segmentedContainer}>
           <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: activeTab === 'revisoes' }}
             style={[styles.segmentBtn, activeTab === 'revisoes' ? styles.segmentBtnActiveRevisao : null]}
             onPress={() => setActiveTab('revisoes')}
           >
@@ -118,6 +121,8 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
             </Text>
           </Pressable>
           <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: activeTab === 'manejos' }}
             style={[styles.segmentBtn, activeTab === 'manejos' ? styles.segmentBtnActiveManejo : null]}
             onPress={() => setActiveTab('manejos')}
           >
@@ -135,6 +140,8 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
         {/* Filtro Rápido de Tempo */}
         <View style={styles.filterRow}>
           <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: quickFilter === 'thisMonth' }}
             style={[styles.filterPill, quickFilter === 'thisMonth' ? styles.filterPillActive : null]}
             onPress={() => setQuickFilter('thisMonth')}
           >
@@ -149,6 +156,8 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
           </Pressable>
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: quickFilter === '7days' }}
             style={[styles.filterPill, quickFilter === '7days' ? styles.filterPillActive : null]}
             onPress={() => setQuickFilter('7days')}
           >
@@ -163,6 +172,8 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
           </Pressable>
 
           <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ selected: quickFilter === 'all' }}
             style={[styles.filterPill, quickFilter === 'all' ? styles.filterPillActive : null]}
             onPress={() => setQuickFilter('all')}
           >
@@ -188,7 +199,7 @@ export function ReviewReportsListScreen({ navigation, route }: { navigation: any
             onChangeText={setSearchTerm}
           />
           {searchTerm ? (
-            <Pressable onPress={() => setSearchTerm('')} hitSlop={10}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Limpar busca" onPress={() => setSearchTerm('')} hitSlop={10}>
               <MaterialCommunityIcons name="close-circle" size={20} color={PALETTE.secondaryDark} />
             </Pressable>
           ) : null}

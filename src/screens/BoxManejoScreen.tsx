@@ -153,6 +153,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
 
           {/* Botão de Comando de Voz */}
           <Pressable
+            accessibilityRole="button"
             style={({ pressed }) => [
               styles.voiceCard,
               isListening ? styles.voiceCardActive : null,
@@ -197,6 +198,8 @@ export function BoxManejoScreen({ navigation, route }: Props) {
                     onLayout={(e) => onLayoutTask(option.id, e)}
                   >
                     <Pressable
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: active }}
                       style={[styles.optionCard, active ? styles.optionCardActive : null]}
                       onPress={() => toggleOption(option.id)}
                     >
@@ -323,6 +326,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
                         </View>
 
                         <Pressable
+                          accessibilityRole="button"
                           style={styles.concluirTaskBtn}
                           onPress={() => {
                             Keyboard.dismiss();
@@ -351,14 +355,14 @@ export function BoxManejoScreen({ navigation, route }: Props) {
             <View style={styles.fieldHeader}>
               <Text style={styles.fieldLabel}>Foto do Manejo (opcional)</Text>
             </View>
-            <Pressable style={styles.photoButton} onPress={handleTakePhoto}>
+            <Pressable accessibilityRole="button" style={styles.photoButton} onPress={handleTakePhoto}>
               <MaterialCommunityIcons name="camera-outline" size={24} color={PALETTE.primaryDark} />
               <Text style={styles.photoButtonText}>{photoUri ? 'Trocar Foto' : 'Tirar Foto do Manejo'}</Text>
             </Pressable>
             {photoUri ? (
               <View style={styles.photoPreviewContainer}>
                 <Image source={{ uri: photoUri }} style={styles.photoPreview} resizeMode="cover" />
-                <Pressable style={styles.removePhotoBtn} onPress={() => setPhotoUri(null)}>
+                <Pressable accessibilityRole="button" accessibilityLabel="Remover foto" hitSlop={8} style={styles.removePhotoBtn} onPress={() => setPhotoUri(null)}>
                   <MaterialCommunityIcons name="close-circle" size={24} color={PALETTE.danger} />
                 </Pressable>
               </View>
@@ -368,6 +372,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
           {/* Botão de Finalização */}
           <View style={styles.actionsArea}>
             <Pressable 
+              accessibilityRole="button"
               style={({ pressed }) => [
                 styles.primaryAction,
                 isFilled ? styles.primaryActionFilled : null,

@@ -277,6 +277,7 @@ export function TermsScreen({ navigation }: Props) {
         </Pressable>
 
         <Pressable
+          accessibilityRole="button"
           style={[
             styles.continueButton,
             accepted && !submitting ? styles.continueButtonActive : styles.continueButtonDisabled,

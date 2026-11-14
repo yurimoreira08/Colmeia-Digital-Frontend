@@ -161,7 +161,7 @@ export function SettingsScreen({ navigation }: Props) {
             },
           ]}
         >
-          <Pressable onPress={handleZoomIn} style={styles.avatarWrap}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Ampliar foto de perfil" onPress={handleZoomIn} style={styles.avatarWrap}>
             {profilePhoto ? (
               <Image source={{ uri: profilePhoto }} style={styles.profileAvatar} />
             ) : (
@@ -179,6 +179,7 @@ export function SettingsScreen({ navigation }: Props) {
             <Text style={styles.profileEmail} numberOfLines={1}>{user?.email || ''}</Text>
             
             <Pressable 
+              accessibilityRole="button"
               style={styles.editProfileBtn} 
               onPress={() => navigation.navigate('EditProfile')}
             >
@@ -243,6 +244,7 @@ export function SettingsScreen({ navigation }: Props) {
 
           {/* Item 2: Tutorial de Comandos de Voz (SEM SUBTÍTULO) */}
           <Pressable 
+            accessibilityRole="button"
             style={styles.settingRow} 
             onPress={() => navigation.navigate('VoiceTutorial')}
           >
@@ -257,6 +259,7 @@ export function SettingsScreen({ navigation }: Props) {
 
           {/* Item 3: Sobre o Colmeia Digital (SEM SUBTÍTULO) */}
           <Pressable 
+            accessibilityRole="button"
             style={styles.settingRow} 
             onPress={() => navigation.navigate('AboutApp')}
           >
@@ -271,6 +274,7 @@ export function SettingsScreen({ navigation }: Props) {
 
           {/* Item 4: Sair da Conta (SEM SUBTÍTULO) */}
           <Pressable 
+            accessibilityRole="button"
             style={styles.settingRow} 
             onPress={handleLogoutPrompt}
           >
@@ -313,7 +317,7 @@ export function SettingsScreen({ navigation }: Props) {
       {/* Modal de Zoom do Avatar */}
       {isZoomed && (
         <Animated.View style={[styles.zoomBackdrop, { opacity: zoomAnim }]}>
-          <Pressable style={styles.zoomContainer} onPress={handleZoomOut}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Fechar foto ampliada" style={styles.zoomContainer} onPress={handleZoomOut}>
             <Animated.View
               style={[
                 styles.zoomCard,
