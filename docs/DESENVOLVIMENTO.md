@@ -8,7 +8,7 @@ Convenções de código e de testes. A arquitetura está em [ARQUITETURA.md](ARQ
 - A lógica de dados fica em hooks e services, não no JSX. Toda mutação grava no SQLite com `synced = 0` e chama `triggerSyncBackground()`.
 - Mudança de contrato com a API precisa ser feita junto no backend (`src/types/mobile-models.ts` de lá).
 - Mexeu no schema do SQLite? Adicione uma migração idempotente em `initializeLocalDb` (`services/localDb/schema.ts`): os usuários já têm dados no aparelho.
-- Botões e ícones clicáveis precisam de `accessibilityRole`, `accessibilityLabel` e área de toque de pelo menos 44–48 dp.
+- Botões e ícones clicáveis precisam de `accessibilityRole` (`checkbox` com `accessibilityState={{ checked }}` para itens marcáveis; `button` com `accessibilityState={{ selected }}` para abas e filtros), de `accessibilityLabel` quando só têm ícone e de área de toque de pelo menos 48 dp (use `hitSlop` se o desenho for menor). O teste `tests/a11y/touchables.test.ts` falha se faltar papel ou rótulo.
 - Não registre no log o token, o `currentUser` nem dados pessoais.
 - Mudou fluxo, tela, comando ou configuração de build? Atualize o README e os `docs/` na mesma entrega.
 
