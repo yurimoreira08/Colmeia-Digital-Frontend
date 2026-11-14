@@ -108,7 +108,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     instructionText: {
       fontSize: 14,
       fontWeight: '700',
-      color: PALETTE.secondaryMedium,
+      color: PALETTE.mutedText,
       textTransform: 'uppercase',
       letterSpacing: 0.8,
       marginBottom: 4,

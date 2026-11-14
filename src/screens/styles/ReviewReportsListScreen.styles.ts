@@ -53,7 +53,7 @@ export function createStyles(colors: AppThemeColors) {
     },
     segmentBtn: {
       flex: 1,
-      height: 48,
+      minHeight: 48,
       borderRadius: 12,
       flexDirection: 'row',
       alignItems: 'center',
@@ -97,7 +97,7 @@ export function createStyles(colors: AppThemeColors) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
-      height: 46,
+      minHeight: 46,
       borderRadius: 12,
       backgroundColor: '#FFFFFF',
       borderWidth: 1.5,

@@ -12,6 +12,7 @@ import {
   VOICE_OPTIONS,
   type RevisionSelection,
 } from '../utils/revisionOptions';
+import { hapticError, hapticSelection, hapticSuccess } from '../utils/haptics';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
 import { appendSentence, containsWholeWord, formatDictation, normalizeText } from '../voice/voiceText';
 
@@ -105,10 +106,13 @@ export function useBoxRevision(params: RevisionParams) {
     }, 60);
   }, []);
 
+  // Toque e voz vibram igual: o apicultor sente que o item foi marcado.
   const toggleOption = useCallback((id: string) => {
+    hapticSelection();
     setSelectedOptions((prev) => applyOptionSelection(prev, id, !prev[id]));
   }, []);
   const setOptionState = useCallback((id: string, checked: boolean) => {
+    hapticSelection();
     setSelectedOptions((prev) => applyOptionSelection(prev, id, checked));
   }, []);
 
@@ -142,9 +146,11 @@ export function useBoxRevision(params: RevisionParams) {
       indicacoes: ind,
     }).then(() => {
       markBoxModifiedInSession(params.boxId, 'revisao');
+      hapticSuccess();
       stopListening();
       setSuccessModal(true);
     }).catch((err) => {
+      hapticError();
       setErrorModal(err?.message || 'Não foi possível salvar a revisão. Tente novamente.');
     });
   }, [params, stopListening]);

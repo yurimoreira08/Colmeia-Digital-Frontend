@@ -191,7 +191,7 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Digite o nome do seu apiário...."
-            placeholderTextColor={PALETTE.secondaryMedium}
+            placeholderTextColor={PALETTE.mutedText}
             value={name}
             onChangeText={setName}
           />
@@ -199,7 +199,7 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Digite o local do seu apiário..."
-            placeholderTextColor={PALETTE.secondaryMedium}
+            placeholderTextColor={PALETTE.mutedText}
             value={location}
             onChangeText={setLocation}
           />
@@ -207,7 +207,7 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
           <TextInput
             style={styles.input}
             placeholder="Digite a quantidade de caixas do seu apiário..."
-            placeholderTextColor={PALETTE.secondaryMedium}
+            placeholderTextColor={PALETTE.mutedText}
             keyboardType="number-pad"
             value={boxCount}
             onChangeText={setBoxCount}
@@ -216,7 +216,7 @@ export function CreateEditApiaryScreen({ navigation, route }: Props) {
           <TextInput
             style={[styles.input, styles.textArea]}
             placeholder="Digite a descrição do seu apiário (opcional)..."
-            placeholderTextColor={PALETTE.secondaryMedium}
+            placeholderTextColor={PALETTE.mutedText}
             value={description}
             onChangeText={setDescription}
             multiline

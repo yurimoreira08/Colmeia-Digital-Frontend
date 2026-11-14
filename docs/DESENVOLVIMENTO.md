@@ -9,6 +9,10 @@ Convenções de código e de testes. A arquitetura está em [ARQUITETURA.md](ARQ
 - Mudança de contrato com a API precisa ser feita junto no backend (`src/types/mobile-models.ts` de lá).
 - Mexeu no schema do SQLite? Adicione uma migração idempotente em `initializeLocalDb` (`services/localDb/schema.ts`): os usuários já têm dados no aparelho.
 - Botões e ícones clicáveis precisam de `accessibilityRole` (`checkbox` com `accessibilityState={{ checked }}` para itens marcáveis; `button` com `accessibilityState={{ selected }}` para abas e filtros), de `accessibilityLabel` quando só têm ícone e de área de toque de pelo menos 48 dp (use `hitSlop` se o desenho for menor). O teste `tests/a11y/touchables.test.ts` falha se faltar papel ou rótulo.
+  - Cartão tocável com botões dentro: no Android o leitor de tela lê o cartão como um bloco só e não alcança os botões. Se o toque no cartão repete um botão, use `accessible={false}` no cartão (ex.: `ApiaryListScreen`); senão, ofereça as ações em `accessibilityActions` (ex.: `HistoryCard`).
+- **Contraste (WCAG AA):** texto com pelo menos 4,5:1 sobre o fundo; ícones e bordas de controles, 3:1. O app é usado ao sol. Use os tokens do tema (`textMuted`, `accent`, `error`...) ou `PALETTE.mutedText` para texto secundário em fundo claro. `secondaryMedium` e `secondaryLight` não servem como cor de texto em fundo claro (3:1 e 2,6:1). O teste `tests/theme/contrast.test.ts` confere os pares do tema; `src/theme/contrast.ts` calcula o contraste de uma cor nova.
+- **Fonte grande:** o texto acompanha o tamanho de fonte do sistema. Em botões, campos e chips, use `minHeight` em vez de `height`, para o elemento crescer em vez de cortar o texto. Limite com `maxFontSizeMultiplier` só onde a altura é fixa por desenho (rótulos do `BottomDock`, contador do sync).
+- **Vibração:** use `utils/haptics.ts` nas ações de campo: `hapticSelection()` ao marcar um item (toque ou voz), `hapticSuccess()` ao salvar e `hapticError()` quando salvar falha.
 - Não registre no log o token, o `currentUser` nem dados pessoais.
 - Mudou fluxo, tela, comando ou configuração de build? Atualize o README e os `docs/` na mesma entrega.
 

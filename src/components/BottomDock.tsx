@@ -4,6 +4,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme } from '../theme/ThemeContext';
 import { PALETTE } from '../theme/themes';
 
+/**
+ * A barra tem altura fixa: com a fonte do sistema no máximo, os rótulos
+ * cresceriam até sair dela. O resto do app acompanha a fonte do sistema sem limite.
+ */
+const DOCK_MAX_FONT_SCALE = 1.4;
+
 type BottomDockProps = {
   active: 'home' | 'settings' | null;
   onPressHome: () => void;
@@ -32,7 +38,7 @@ export function BottomDock({ active, onPressHome, onPressSettings }: BottomDockP
             size={26}
             color={homeActive ? PALETTE.primaryDark : PALETTE.lightBg}
           />
-          <Text style={[styles.navLabel, homeActive ? styles.navLabelActive : null]}>
+          <Text style={[styles.navLabel, homeActive ? styles.navLabelActive : null]} maxFontSizeMultiplier={DOCK_MAX_FONT_SCALE}>
             Início
           </Text>
         </Pressable>
@@ -49,7 +55,7 @@ export function BottomDock({ active, onPressHome, onPressSettings }: BottomDockP
             size={26}
             color={settingsActive ? PALETTE.primaryDark : PALETTE.lightBg}
           />
-          <Text style={[styles.navLabel, settingsActive ? styles.navLabelActive : null]}>
+          <Text style={[styles.navLabel, settingsActive ? styles.navLabelActive : null]} maxFontSizeMultiplier={DOCK_MAX_FONT_SCALE}>
             Configurações
           </Text>
         </Pressable>

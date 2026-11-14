@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: PALETTE.secondaryMedium,
+    color: PALETTE.mutedText,
     marginTop: 2,
   },
   caption: {

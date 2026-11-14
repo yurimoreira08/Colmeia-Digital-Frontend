@@ -226,8 +226,11 @@ export function ApiaryListScreen({ navigation }: Props) {
           ) : (
             apiaries.map((apiary) => {
               return (
+                // O toque no cartão faz o mesmo que "Ver Caixas". Para o leitor de tela o
+                // cartão não agrupa o conteúdo: assim os botões de dentro ficam acessíveis (F14).
                 <Pressable
-                  accessibilityRole="button"
+                  accessible={false}
+                  accessibilityRole="none"
                   key={apiary.id}
                   style={styles.apiaryCard}
                   onPress={() => {
@@ -434,7 +437,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     emptySubtitle: {
       fontSize: 15,
-      color: PALETTE.secondaryMedium,
+      color: PALETTE.mutedText,
       textAlign: 'center',
       marginTop: 6,
       lineHeight: 22,
@@ -476,7 +479,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     apiaryLocation: {
       fontSize: 15,
-      color: PALETTE.secondaryMedium,
+      color: PALETTE.mutedText,
       fontWeight: '500',
     },
     headerRightArea: {

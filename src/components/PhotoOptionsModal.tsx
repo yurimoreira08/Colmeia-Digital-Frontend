@@ -152,7 +152,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       color: colors.textPrimary,
     },
     cancelButton: {
-      height: 52,
+      minHeight: 52,
       borderRadius: 14,
       borderWidth: 1,
       borderColor: colors.cardBorder,

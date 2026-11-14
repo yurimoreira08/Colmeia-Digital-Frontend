@@ -27,7 +27,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'BoxRevision'>;
 export function BoxRevisionScreen({ navigation, route }: Props) {
   const { colors, themeName } = useAppTheme();
   const styles = createBoxReviewStyles(colors);
-  const placeholderColor = themeName === 'obsidian-dark' ? '#64748B' : '#94A3B8';
+  const placeholderColor = themeName === 'obsidian-dark' ? '#94A3B8' : PALETTE.mutedText;
   const { isKeyboardVisible, keyboardHeight } = useKeyboardVisible();
   const [scrollY, setScrollY] = useState(0);
 

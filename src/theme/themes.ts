@@ -10,6 +10,7 @@ export const PALETTE = {
   dangerRed: '#DC2626',       // Vermelho para lixeira e ações destrutivas (mantido)
   danger: '#DC2626',          // Alias para ações de exclusão / alerta
   white: '#FFFFFF',
+  mutedText: '#526D7E',       // Texto secundário sobre fundos claros: 5:1 (o secondaryMedium dá 3:1)
 };
 
 export type AppThemeName = 'claro' | 'escuro' | 'petroleo-digital' | 'obsidian-dark' | 'verde-floresta';
@@ -68,9 +69,11 @@ export const themes: Record<string, AppThemeColors> = {
     inputBackground: '#FFFFFF',
     inputBorder: PALETTE.secondaryMedium,
     textPrimary: PALETTE.primaryDark,
-    textMuted: PALETTE.secondaryMedium,
+    // Contraste AA (4,5:1) sobre os fundos claros; o secondaryMedium da paleta dava 2,8:1.
+    textMuted: '#526D7E',
     divider: PALETTE.lightBg,
-    error: PALETTE.dangerRed,
+    // dangerRed dava 4,49:1 sobre o fundo; este tom do mesmo vermelho passa de 6:1.
+    error: '#B91C1C',
     dockBackground: PALETTE.primaryDark,
     dockActive: PALETTE.secondaryLight,
     glowA: PALETTE.secondaryLight,
@@ -89,17 +92,20 @@ export const themes: Record<string, AppThemeColors> = {
     headerBackground: '#1E2F3A',
     card: PALETTE.primaryDark,
     cardBorder: '#3D5A6E',
-    accent: PALETTE.secondaryLight,
+    // Acento da paleta: 6,3:1 sobre os cards (o secondaryLight dava 3,9:1).
+    accent: PALETTE.vibrantAccent,
     accentSoft: '#223847',
     warmAccent: PALETTE.vibrantAccent,
     buttonBackground: PALETTE.secondaryLight,
-    buttonText: PALETTE.primaryDark,
+    // Texto quase preto: 6,1:1 sobre o botão (o primaryDark dava 3,9:1).
+    buttonText: '#10212B',
     inputBackground: '#1E2F3A',
     inputBorder: PALETTE.secondaryMedium,
     textPrimary: '#FFFFFF',
     textMuted: PALETTE.lightBg,
     divider: '#3D5A6E',
-    error: PALETTE.dangerRed,
+    // Vermelho claro para fundo escuro: 5,5:1 (o dangerRed dava 2,2:1).
+    error: '#FCA5A5',
     dockBackground: '#1E2F3A',
     dockActive: PALETTE.vibrantAccent,
     glowA: PALETTE.vibrantAccent,

@@ -444,7 +444,7 @@ function createStyles(colors: any) {
     },
     codeText: {
       fontWeight: '800',
-      color: PALETTE.secondaryLight,
+      color: PALETTE.mutedText,
     },
     finishBox: {
       backgroundColor: PALETTE.lightSurface,

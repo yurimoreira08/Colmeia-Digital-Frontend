@@ -31,7 +31,7 @@ export function BoxManejoScreen({ navigation, route }: Props) {
   const hook = useBoxManejo(navigation, route.params);
   const { themeName } = useAppTheme();
   const styles = createStyles(hook.colors);
-  const placeholderColor = themeName === 'obsidian-dark' ? '#64748B' : '#94A3B8';
+  const placeholderColor = themeName === 'obsidian-dark' ? '#94A3B8' : PALETTE.mutedText;
   const { isKeyboardVisible, keyboardHeight } = useKeyboardVisible();
 
   const {

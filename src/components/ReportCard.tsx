@@ -225,7 +225,7 @@ export function ReportCard({
                     <View style={styles.sectionBlock}>
                       <View style={styles.sectionHeaderRow}>
                         <MaterialCommunityIcons name="tools" size={15} color={PALETTE.secondaryLight} />
-                        <Text style={[styles.sectionHeading, { color: PALETTE.secondaryLight }]}>TAREFAS REALIZADAS</Text>
+                        <Text style={[styles.sectionHeading, { color: PALETTE.mutedText }]}>TAREFAS REALIZADAS</Text>
                       </View>
                       <View style={styles.tasksListWrap}>
                         {item.checkedOptions.map((task: any, idx: number) => (
@@ -246,7 +246,7 @@ export function ReportCard({
                             ) : null}
                             {task.ind ? (
                               <View style={[styles.taskDetailBlock, styles.taskActionBlock]}>
-                                <Text style={[styles.taskDetailLabel, { color: PALETTE.secondaryLight }]}>O que fazer:</Text>
+                                <Text style={[styles.taskDetailLabel, { color: PALETTE.mutedText }]}>O que fazer:</Text>
                                 <Text style={[styles.taskDetailText, { color: PALETTE.primaryDark }]}>{task.ind}</Text>
                               </View>
                             ) : null}
@@ -474,7 +474,7 @@ function createStyles(colors: any, themeName: string) {
       color: PALETTE.primaryDark,
     },
     typePillTextManejo: {
-      color: PALETTE.secondaryLight,
+      color: PALETTE.mutedText,
     },
     timeRow: {
       flexDirection: 'row',

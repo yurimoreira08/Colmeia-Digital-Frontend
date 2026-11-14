@@ -68,9 +68,23 @@ export function HistoryCard({
     }
   };
 
+  // No Android, o leitor de tela lê o cartão como um bloco só e não alcança os
+  // botões de dentro (F14). As mesmas ações ficam no menu de ações do leitor.
+  const cardActions: { name: string; label: string; run: () => void }[] = [];
+  if (!selectionMode) {
+    if (onEdit) cardActions.push({ name: 'edit', label: 'Editar registro', run: () => onEdit(item) });
+    if (onDelete) cardActions.push({ name: 'delete', label: 'Excluir registro', run: () => onDelete(item) });
+    if (onArchive) cardActions.push({ name: 'archive', label: item.archived ? 'Desarquivar' : 'Arquivar', run: () => onArchive(item) });
+    if (onDownload) cardActions.push({ name: 'download', label: 'Baixar PDF', run: () => onDownload(item) });
+    if (onLongPress) cardActions.push({ name: 'longpress', label: 'Selecionar vários registros', run: () => onLongPress(item) });
+  }
+
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={selectionMode ? 'checkbox' : 'summary'}
+      accessibilityState={selectionMode ? { checked: !!isSelected } : {}}
+      accessibilityActions={cardActions.map(({ name, label }) => ({ name, label }))}
+      onAccessibilityAction={(event) => cardActions.find((action) => action.name === event.nativeEvent.actionName)?.run()}
       style={styles.card}
       onPress={handlePressCard}
       onLongPress={() => {
@@ -79,7 +93,6 @@ export function HistoryCard({
         }
       }}
       delayLongPress={350}
-      disabled={!selectionMode && !onLongPress}
     >
       {/* Header */}
       <View style={styles.header}>

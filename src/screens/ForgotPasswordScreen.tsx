@@ -244,7 +244,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     backButton: {
       alignSelf: 'flex-start',
       width: 44,
-      height: 44,
+      minHeight: 44,
       borderRadius: 12,
       justifyContent: 'center',
       alignItems: 'center',
@@ -328,7 +328,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     input: {
       width: '100%',
-      height: 52,
+      minHeight: 52,
       borderWidth: 1,
       borderColor: colors.inputBorder,
       borderRadius: 12,
@@ -353,7 +353,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     primaryButton: {
       alignSelf: 'center',
       width: '100%',
-      height: 52,
+      minHeight: 52,
       borderRadius: 12,
       borderWidth: 1,
       borderColor: colors.cardBorder,
@@ -386,7 +386,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     spamTipText: {
       fontSize: 12,
-      color: '#7798AB',
+      color: colors.textMuted,
       textAlign: 'center',
       flex: 1,
       lineHeight: 16,

@@ -54,7 +54,7 @@ export function createStyles(colors: AppThemeColors) {
       fontWeight: '700',
     },
     searchInput: {
-      height: 56,
+      minHeight: 56,
       borderRadius: 14,
       borderWidth: 1.5,
       borderColor: '#7798AB',
@@ -127,7 +127,7 @@ export function createStyles(colors: AppThemeColors) {
     },
     boxApiaryName: {
       fontSize: 13,
-      color: '#7798AB',
+      color: colors.textMuted,
       marginTop: 2,
       fontWeight: '500',
     },
@@ -183,7 +183,7 @@ export function createStyles(colors: AppThemeColors) {
       marginBottom: 14,
     },
     modalInput: {
-      height: 48,
+      minHeight: 48,
       borderRadius: 10,
       borderWidth: 1,
       borderColor: colors.inputBorder,

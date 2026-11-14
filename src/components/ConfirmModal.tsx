@@ -95,7 +95,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     cancelButton: {
       flex: 1,
-      height: 50,
+      minHeight: 50,
       borderRadius: 12,
       borderWidth: 1,
       borderColor: colors.cardBorder,
@@ -110,7 +110,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     confirmButton: {
       flex: 1,
-      height: 50,
+      minHeight: 50,
       borderRadius: 12,
       borderWidth: 1,
       borderColor: colors.cardBorder,

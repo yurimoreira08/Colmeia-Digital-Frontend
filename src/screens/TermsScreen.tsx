@@ -482,7 +482,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 12,
     lineHeight: 17,
-    color: PALETTE.secondaryMedium,
+    color: PALETTE.textMuted,
     fontStyle: 'italic',
   },
   bottomBar: {
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     color: PALETTE.primaryDark,
   },
   continueButton: {
-    height: 54,
+    minHeight: 54,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -553,7 +553,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 11,
     fontWeight: '800',
-    color: PALETTE.secondaryMedium,
+    color: PALETTE.textMuted,
     letterSpacing: 2,
     marginTop: 2,
   },

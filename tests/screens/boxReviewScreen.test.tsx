@@ -10,6 +10,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { BoxRevisionScreen } from '../../src/screens/BoxReviewScreen';
+import * as Haptics from 'expo-haptics';
 import { saveRevision } from '../../src/services/reviewReportService';
 import type { RootStackParamList } from '../../src/types/auth';
 
@@ -20,6 +21,11 @@ let mockVoiceHandler: VoiceHandler | null = null;
 
 jest.mock('../../src/services/reviewReportService', () => ({ saveRevision: jest.fn(async () => ({})) }));
 jest.mock('../../src/services/sessionStore', () => ({ markBoxModifiedInSession: jest.fn() }));
+jest.mock('expo-haptics', () => ({
+  selectionAsync: jest.fn(async () => undefined),
+  notificationAsync: jest.fn(async () => undefined),
+  NotificationFeedbackType: { Success: 'success', Error: 'error' },
+}));
 jest.mock('../../src/voice/VoiceCommandContext', () => ({
   useVoiceCommand: () => ({
     isListening: true,
@@ -183,5 +189,28 @@ describe('falha ao salvar', () => {
     await fireEvent.press(screen.getByText('Salvar Revisão'));
 
     expect(await screen.findByText('Banco ocupado')).toBeTruthy();
+  });
+});
+
+describe('vibração nas ações de campo', () => {
+  it('vibra ao marcar um item (toque ou voz) e ao salvar', async () => {
+    await renderScreen();
+    jest.mocked(Haptics.selectionAsync).mockClear();
+
+    await fireEvent.press(screen.getByText('Mel'));
+    await say('pólen');
+    expect(Haptics.selectionAsync).toHaveBeenCalledTimes(2);
+
+    await saveAndGetPayload();
+    await waitFor(() => expect(Haptics.notificationAsync).toHaveBeenCalledWith('success'));
+  });
+
+  it('vibra diferente quando salvar falha', async () => {
+    jest.mocked(saveRevision).mockRejectedValueOnce(new Error('Banco ocupado'));
+    await renderScreen();
+
+    await fireEvent.press(screen.getByText('Salvar Revisão'));
+
+    await waitFor(() => expect(Haptics.notificationAsync).toHaveBeenCalledWith('error'));
   });
 });

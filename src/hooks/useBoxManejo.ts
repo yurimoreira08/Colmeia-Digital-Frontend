@@ -8,6 +8,7 @@ import { saveManejoService } from '../services/manejoService';
 import { uploadManejoPhoto } from '../services/storageService';
 import { markBoxModifiedInSession } from '../services/sessionStore';
 import type { ManejoTask } from '../types/manejo';
+import { hapticError, hapticSelection, hapticSuccess } from '../utils/haptics';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
 import { containsWholeWord, normalizeText } from '../voice/voiceText';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -187,6 +188,7 @@ export function useBoxManejo(navigation: any, routeParams: any) {
 
 
   const toggleOption = useCallback((id: string) => {
+    hapticSelection();
     const wasCollapsed = collapsedTasksRef.current[id];
     const wasActive = !!latestTasksRef.current[id];
 
@@ -310,9 +312,11 @@ export function useBoxManejo(navigation: any, routeParams: any) {
       });
 
       markBoxModifiedInSession(routeParams.boxId, 'manejo');
+      hapticSuccess();
       setSuccessModal(true);
       void stopListening();
     } catch (err: any) {
+      hapticError();
       setErrorModal(err?.message || 'Não foi possível salvar o manejo. Tente novamente.');
     }
   }, [routeParams, stopListening, photoUri]);

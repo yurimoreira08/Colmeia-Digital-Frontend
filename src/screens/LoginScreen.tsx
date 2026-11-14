@@ -289,7 +289,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     input: {
       width: '100%',
-      height: 54,
+      minHeight: 54,
       borderWidth: 1,
       borderColor: colors.inputBorder,
       borderRadius: 12,
@@ -351,7 +351,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     primaryButton: {
       alignSelf: 'center',
       width: '100%',
-      height: 54,
+      minHeight: 54,
       marginTop: 2,
       borderRadius: 12,
       borderWidth: 1,
@@ -363,7 +363,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     secondaryButton: {
       alignSelf: 'center',
       width: '100%',
-      height: 50,
+      minHeight: 50,
       borderRadius: 12,
       borderWidth: 1,
       borderColor: colors.cardBorder,
