@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { NavigationContext } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getUnreadNotificationsCount } from '../services/notificationsService';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -34,12 +34,9 @@ export function AppHeader({
   const styles = createStyles(colors);
   
   const [unreadCount, setUnreadCount] = useState(0);
-  let navigation: any = null;
-  try {
-    navigation = useNavigation();
-  } catch (e) {
-    // Fallback
-  }
+  // Lê o contexto direto em vez de useNavigation(), que lança erro fora de um
+  // navigator: assim o header também funciona fora da navegação (fica undefined).
+  const navigation = useContext(NavigationContext);
 
   useEffect(() => {
     let active = true;
