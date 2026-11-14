@@ -9,6 +9,7 @@ import { uploadManejoPhoto } from '../services/storageService';
 import { markBoxModifiedInSession } from '../services/sessionStore';
 import type { ManejoTask } from '../types/manejo';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
+import { containsWholeWord, normalizeText } from '../voice/voiceText';
 import { useAppTheme } from '../theme/ThemeContext';
 
 export type ManejoOption = {
@@ -47,27 +48,6 @@ const MANEJO_ALIASES: Record<string, string[]> = {
   'trocar-caixa': ['trocar caixa', 'troca de caixa', 'trocar a caixa'],
   outro: ['outro', 'outro manejo', 'outra atividade'],
 };
-
-function containsWholeWord(text: string, word: string): boolean {
-  let idx = text.indexOf(word);
-  while (idx !== -1) {
-    const before = idx > 0 ? text[idx - 1] : ' ';
-    const after = idx + word.length < text.length ? text[idx + word.length] : ' ';
-    if (/[^a-z0-9]/.test(before) && /[^a-z0-9]/.test(after)) return true;
-    idx = text.indexOf(word, idx + 1);
-  }
-  return false;
-}
-
-function normalizeText(value: string): string {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[!?.,;:]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
 
 export function useBoxManejo(navigation: any, routeParams: any) {
   const { colors } = useAppTheme();
