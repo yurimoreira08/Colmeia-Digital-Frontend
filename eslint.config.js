@@ -11,9 +11,6 @@ module.exports = defineConfig([
       'ios/',
       '.expo/',
       'node_modules/',
-      // Scripts avulsos e sem uso pelo app (item F7 do relatório); serão removidos.
-      'fix-screens.js',
-      'src/check-git-rn.ts',
       'assets/export_assets.html',
     ],
   },
