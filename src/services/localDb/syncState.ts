@@ -95,6 +95,8 @@ export async function clearLocalDatabase(): Promise<void> {
   for (const table of tables) {
     await db.runAsync(`DELETE FROM ${table};`);
   }
+  // Sem dados no aparelho, o próximo download precisa ser completo.
+  await db.runAsync("DELETE FROM app_config WHERE key = 'sync_since';");
 }
 
 export async function clearOfflineDeletions(): Promise<void> {

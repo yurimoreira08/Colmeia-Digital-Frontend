@@ -120,6 +120,15 @@ export async function initializeLocalDb(): Promise<void> {
     await db.execAsync('CREATE UNIQUE INDEX IF NOT EXISTS idx_manejos_client_uuid ON manejos (client_uuid);');
   } catch {}
 
+  // updatedAt do servidor de cada registro: vai como baseUpdatedAt no POST /sync (detecção de conflito, F3).
+  for (const table of ['apiaries', 'boxes', 'review_reports', 'manejos']) {
+    try {
+      await db.execAsync(`ALTER TABLE ${table} ADD COLUMN server_updated_at TEXT;`);
+    } catch {
+      // A coluna já existe.
+    }
+  }
+
   await renumberLegacyPendingIds(db);
 
   // Limpa caixas duplicadas residuais

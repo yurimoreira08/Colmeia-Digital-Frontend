@@ -43,10 +43,14 @@ O `apiClient.ts` também aceita uma URL salva em `app_config.custom_backend_url`
 Este é o ponto mais delicado do app.
 
 - Toda escrita vai primeiro ao SQLite com `synced = 0` (e `is_new = 1` quando criada offline). Exclusões feitas offline vão para `offline_deletions`.
-- `syncService.syncOfflineData()` é disparado pelo `useAutoSync` (em intervalos e quando o app volta ao primeiro plano) e pelo `bootstrapAuth`. A ordem é:
-  1. envia as exclusões pendentes;
-  2. envia apiários → caixas → revisões → manejos (com upload de foto) → notificações lidas;
-  3. baixa tudo e aplica com `replace*Local`, preservando as linhas ainda não sincronizadas.
+- `syncService.syncOfflineData()` é disparado pelo `useAutoSync` (em intervalos e quando o app volta ao primeiro plano) e pelo `bootstrapAuth`. As etapas ficam em `services/sync/`:
+  1. **Envio em lote** (`batchPush.ts`, `POST /sync`): exclusões, apiários, caixas, revisões e manejos pendentes, até 50 de cada por requisição. Filhos de um pai criado offline vão no mesmo lote (o servidor liga os ids negativos) ou na rodada seguinte. A foto do manejo sobe antes e o lote leva só a URL.
+     - Cada item volta com um resultado. `created`/`updated` trocam o id local pelo do servidor. `conflict` (o registro mudou no servidor depois que o aparelho o baixou) mantém a versão do servidor e cria a notificação local "Alteração não aplicada". `rejected` tira o item da fila e força um download completo. `error` deixa o item para a próxima vez.
+     - Para detectar conflito, cada registro guarda em `server_updated_at` o `updatedAt` do servidor, que vai como `baseUpdatedAt`.
+  2. Notificações lidas (`legacy.ts`, uma requisição cada).
+  3. **Download incremental** (`pull.ts`, `GET /sync/changes?since=`): só o que mudou desde o `serverTime` guardado em `app_config.sync_since`, mais as exclusões feitas no servidor (o app apaga também os filhos). O primeiro download, o que vem depois de recusas e o que vem depois de limpar o banco (logout, troca de usuário) são completos e substituem o que está sincronizado, preservando as linhas ainda não enviadas.
+  - Servidor sem as rotas novas (404) ou que recusa o formato do lote (422): `legacy.ts` faz o sync antigo, uma requisição por registro e as listagens completas.
+  - Testes em `tests/services/batchSync.test.ts`.
 - Quando um registro é criado no servidor, `updateRecordSyncStatus` troca o id local pelo id do servidor e re-aponta os filhos (`apiary_id`, `caixa_id`, `revisao_id`).
   - **Ids locais são negativos** (o servidor só gera positivos), então a troca nunca colide com outro registro local pendente. Registros pendentes de versões antigas, com ids positivos, são renumerados uma vez no `initializeLocalDb`. Testes em `tests/services/localIds.test.ts`. Na limpeza de caixas duplicadas fica a do servidor; entre caixas só locais, a mais antiga.
 - Revisões e manejos levam `client_uuid` para que o backend não duplique registros reenviados.
