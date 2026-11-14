@@ -19,7 +19,7 @@
     "android": {
       "package": "com.colmeiadigital.app",
       "versionCode": 2,
-      "allowBackup": true,
+      "allowBackup": false,
       "adaptiveIcon": {
         "backgroundColor": "#2C4251",
         "foregroundImage": "./assets/logo-colmeiadigital.jpeg",
