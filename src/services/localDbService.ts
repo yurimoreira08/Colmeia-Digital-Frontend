@@ -132,62 +132,122 @@ export async function initializeLocalDb(): Promise<void> {
     await db.execAsync('CREATE UNIQUE INDEX IF NOT EXISTS idx_manejos_client_uuid ON manejos (client_uuid);');
   } catch {}
 
+  await renumberLegacyPendingIds(db);
+
   // Limpa caixas duplicadas residuais
   await cleanupDuplicateBoxesLocal();
 }
 
+/**
+ * Ids de registros criados no aparelho.
+ *
+ * Registros criados offline recebem ids **negativos** (o próximo é sempre
+ * menor que o menor id da tabela), e o servidor só gera ids positivos. Assim,
+ * quando o sync troca o id temporário pelo id do servidor, ele nunca colide
+ * com outro registro local ainda não enviado. Esse era o bug F2: o apiário
+ * criado offline sumia e a caixa dele ia parar em outro apiário.
+ * O cálculo fica dentro do próprio INSERT para ser atômico.
+ */
+const NEXT_LOCAL_ID_SQL = (table: string) => `SELECT MIN(COALESCE(MIN(id), 0), 0) - 1 AS id FROM ${table}`;
+
+/** Tabelas com ids temporários e as colunas dos filhos que apontam para elas, na ordem de renumeração. */
+const LOCAL_ID_REFERENCES: { table: string; children: { table: string; column: string }[] }[] = [
+  { table: 'apiaries', children: [{ table: 'boxes', column: 'apiary_id' }, { table: 'review_reports', column: 'apiary_id' }, { table: 'manejos', column: 'apiary_id' }] },
+  { table: 'boxes', children: [{ table: 'review_reports', column: 'caixa_id' }, { table: 'manejos', column: 'caixa_id' }] },
+  { table: 'review_reports', children: [{ table: 'manejos', column: 'revisao_id' }] },
+  { table: 'manejos', children: [] },
+];
+
+/**
+ * Migração local de uma vez: versões antigas do app criavam registros
+ * pendentes com ids temporários positivos, que podem colidir com ids do
+ * servidor. Renumera esses registros (`is_new = 1` e `id > 0`) para ids
+ * negativos e re-aponta os filhos.
+ *
+ * Só filhos também pendentes são re-apontados: um registro que ainda não foi
+ * enviado não pode ter filho que já está no servidor, e assim filhos de um
+ * registro do servidor com o mesmo número nunca são tocados.
+ * Idempotente: na segunda vez não encontra mais ids positivos pendentes.
+ */
+async function renumberLegacyPendingIds(db: SQLite.SQLiteDatabase): Promise<void> {
+  const hasLegacy = await db.getFirstAsync<{ count: number }>(
+    `SELECT (SELECT COUNT(*) FROM apiaries WHERE is_new = 1 AND id > 0)
+          + (SELECT COUNT(*) FROM boxes WHERE is_new = 1 AND id > 0)
+          + (SELECT COUNT(*) FROM review_reports WHERE is_new = 1 AND id > 0)
+          + (SELECT COUNT(*) FROM manejos WHERE is_new = 1 AND id > 0) AS count;`,
+  );
+  if (!hasLegacy?.count) return;
+
+  await db.withTransactionAsync(async () => {
+    for (const { table, children } of LOCAL_ID_REFERENCES) {
+      const pending = await db.getAllAsync<{ id: number }>(`SELECT id FROM ${table} WHERE is_new = 1 AND id > 0 ORDER BY id;`);
+      for (const { id: oldId } of pending) {
+        const next = await db.getFirstAsync<{ id: number }>(`${NEXT_LOCAL_ID_SQL(table)};`);
+        const newId = next?.id ?? -1;
+        for (const child of children) {
+          await db.runAsync(`UPDATE ${child.table} SET ${child.column} = ? WHERE ${child.column} = ? AND is_new = 1;`, [newId, oldId]);
+        }
+        await db.runAsync(`UPDATE ${table} SET id = ? WHERE id = ?;`, [newId, oldId]);
+      }
+    }
+  });
+}
+
+/**
+ * Prioridade da caixa que fica quando há duplicadas (mesmo apiário e mesmo
+ * nome): primeiro a que já está no servidor (id positivo, a mais antiga),
+ * depois a local mais antiga (ids locais são negativos e decrescentes, então
+ * -1 é a primeira criada). Menor valor = maior prioridade.
+ */
+function boxKeepRank(alias: string): string {
+  return `(CASE WHEN ${alias}.id > 0 THEN ${alias}.id ELSE 1000000000000 - ${alias}.id END)`;
+}
+
+/** `candidate` é uma caixa ativa com o mesmo apiário e o mesmo nome (sem diferenciar maiúsculas/espaços) de `other`. */
+function sameActiveBox(candidate: string, other: string): string {
+  return `${candidate}.apiary_id = ${other}.apiary_id
+    AND LOWER(TRIM(${candidate}.name)) = LOWER(TRIM(${other}.name))
+    AND ${candidate}.archived = 0`;
+}
+
+/** Re-aponta registros de `table` que estão numa caixa duplicada para a caixa que fica. */
+function repointToKeptBoxSql(table: 'review_reports' | 'manejos'): string {
+  return `
+    UPDATE ${table}
+    SET caixa_id = (
+      SELECT keep.id FROM boxes keep
+      JOIN boxes current ON current.id = ${table}.caixa_id
+      WHERE ${sameActiveBox('keep', 'current')}
+      ORDER BY ${boxKeepRank('keep')}
+      LIMIT 1
+    )
+    WHERE EXISTS (
+      SELECT 1 FROM boxes current
+      JOIN boxes better ON ${sameActiveBox('better', 'current')}
+      WHERE current.id = ${table}.caixa_id
+        AND ${boxKeepRank('better')} < ${boxKeepRank('current')}
+    );`;
+}
+
+/**
+ * Junta caixas duplicadas no aparelho: revisões e manejos passam para a caixa
+ * que fica (ver boxKeepRank) e as cópias ativas são apagadas.
+ */
 export async function cleanupDuplicateBoxesLocal(): Promise<void> {
   if (Platform.OS === 'web') return;
   try {
     const db = await getLocalDb();
-    // Re-aponta anotações de caixas duplicadas para a caixa principal (menor ID)
     await db.execAsync(`
-      UPDATE review_reports 
-      SET caixa_id = (
-        SELECT MIN(b2.id) 
-        FROM boxes b2 
-        JOIN boxes b1 ON b1.id = review_reports.caixa_id 
-        WHERE b2.apiary_id = b1.apiary_id 
-          AND LOWER(TRIM(b2.name)) = LOWER(TRIM(b1.name)) 
-          AND b2.archived = 0
-      )
-      WHERE EXISTS (
-        SELECT 1 
-        FROM boxes b1 
-        JOIN boxes b2 ON b2.apiary_id = b1.apiary_id 
-          AND LOWER(TRIM(b2.name)) = LOWER(TRIM(b1.name)) 
-          AND b2.id < b1.id 
-          AND b2.archived = 0
-        WHERE b1.id = review_reports.caixa_id
-      );
+      ${repointToKeptBoxSql('review_reports')}
+      ${repointToKeptBoxSql('manejos')}
 
-      UPDATE manejos 
-      SET caixa_id = (
-        SELECT MIN(b2.id) 
-        FROM boxes b2 
-        JOIN boxes b1 ON b1.id = manejos.caixa_id 
-        WHERE b2.apiary_id = b1.apiary_id 
-          AND LOWER(TRIM(b2.name)) = LOWER(TRIM(b1.name)) 
-          AND b2.archived = 0
-      )
-      WHERE EXISTS (
-        SELECT 1 
-        FROM boxes b1 
-        JOIN boxes b2 ON b2.apiary_id = b1.apiary_id 
-          AND LOWER(TRIM(b2.name)) = LOWER(TRIM(b1.name)) 
-          AND b2.id < b1.id 
-          AND b2.archived = 0
-        WHERE b1.id = manejos.caixa_id
-      );
-
-      DELETE FROM boxes 
-      WHERE id NOT IN (
-        SELECT MIN(id) 
-        FROM boxes 
-        WHERE archived = 0 
-        GROUP BY apiary_id, LOWER(TRIM(name))
-      ) 
-      AND archived = 0;
+      DELETE FROM boxes
+      WHERE archived = 0
+        AND EXISTS (
+          SELECT 1 FROM boxes better
+          WHERE ${sameActiveBox('better', 'boxes')}
+            AND ${boxKeepRank('better')} < ${boxKeepRank('boxes')}
+        );
     `);
   } catch (err) {
     console.warn('[cleanupDuplicateBoxesLocal] Erro ao limpar caixas duplicadas:', err);
@@ -349,8 +409,8 @@ export async function insertApiaryLocal(apiary: {
   const db = await getLocalDb();
   const now = getIsoTimestamp();
   const res = await db.runAsync(
-    `INSERT INTO apiaries (name, location, box_count, description, created_at, updated_at, synced, is_new, role)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO apiaries (id, name, location, box_count, description, created_at, updated_at, synced, is_new, role)
+     VALUES ((SELECT MIN(COALESCE(MIN(id), 0), 0) - 1 FROM apiaries), ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       apiary.name,
       apiary.location,
@@ -527,8 +587,8 @@ export async function insertBoxLocal(box: {
   const db = await getLocalDb();
   const now = getIsoTimestamp();
   const res = await db.runAsync(
-    `INSERT INTO boxes (apiary_id, name, position, created_at, updated_at, archived, synced, is_new)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO boxes (id, apiary_id, name, position, created_at, updated_at, archived, synced, is_new)
+     VALUES ((SELECT MIN(COALESCE(MIN(id), 0), 0) - 1 FROM boxes), ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       box.apiary_id,
       box.name,
@@ -742,8 +802,8 @@ export async function insertReviewReportLocal(report: {
   const now = getIsoTimestamp();
   const uuid = report.client_uuid || generateClientUuid();
   const res = await db.runAsync(
-    `INSERT INTO review_reports (client_uuid, caixa_id, caixa_name, apiary_id, apiary_name, tipo, checked_options, observacoes, indicacoes, created_at, archived, synced, is_new)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO review_reports (id, client_uuid, caixa_id, caixa_name, apiary_id, apiary_name, tipo, checked_options, observacoes, indicacoes, created_at, archived, synced, is_new)
+     VALUES ((SELECT MIN(COALESCE(MIN(id), 0), 0) - 1 FROM review_reports), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       uuid,
       report.caixa_id,
@@ -1008,8 +1068,8 @@ export async function insertManejoLocal(manejo: {
   const now = getIsoTimestamp();
   const uuid = manejo.client_uuid || generateClientUuid();
   const res = await db.runAsync(
-    `INSERT INTO manejos (client_uuid, caixa_id, caixa_name, apiary_id, apiary_name, tipo, revisao_id, checked_options, observacoes, indicacoes, photo_uri, created_at, archived, synced, is_new)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
+    `INSERT INTO manejos (id, client_uuid, caixa_id, caixa_name, apiary_id, apiary_name, tipo, revisao_id, checked_options, observacoes, indicacoes, photo_uri, created_at, archived, synced, is_new)
+     VALUES ((SELECT MIN(COALESCE(MIN(id), 0), 0) - 1 FROM manejos), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`,
     [
       uuid,
       manejo.caixa_id,

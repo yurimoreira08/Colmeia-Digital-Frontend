@@ -114,27 +114,5 @@ describe('registro que já existia no servidor', () => {
   });
 });
 
-describe('bug conhecido F2 (relatório): ids locais e do servidor dividem o mesmo espaço', () => {
-  // Corrigir na Fase 3 (sincronizar por client_uuid). Quando for corrigido, este
-  // teste passa a FALHAR: troque test.failing por test.
-  test.failing('não mistura os filhos de outro apiário local que tem o mesmo número do id do servidor', async () => {
-    insertApiary(1, 'Apiário A');
-    insertApiary(2, 'Apiário B (ainda não enviado)');
-    insertBox(10, 1, 'Caixa do A');
-    insertBox(11, 2, 'Caixa do B');
-
-    // O servidor devolve id 2 para o apiário A, mas o id 2 local é o apiário B.
-    await updateRecordSyncStatus('apiaries', 1, 2, true);
-
-    const apiaries = queryMemory<{ id: number; name: string }>('SELECT id, name FROM apiaries');
-    const apiaryA = apiaries.find((row) => row.name === 'Apiário A');
-    const apiaryB = apiaries.find((row) => row.name.startsWith('Apiário B'));
-    const boxOwner = (name: string) => queryMemory<{ apiary_id: number }>('SELECT apiary_id FROM boxes WHERE name = ?', [name])[0]?.apiary_id;
-
-    // Os dois apiários continuam existindo e cada caixa continua no seu.
-    expect(apiaryA).toBeDefined();
-    expect(apiaryB).toBeDefined();
-    expect(boxOwner('Caixa do A')).toBe(apiaryA?.id);
-    expect(boxOwner('Caixa do B')).toBe(apiaryB?.id);
-  });
-});
+// O bug F2 (colisão entre ids locais e do servidor) foi corrigido com ids locais
+// negativos e a migração de registros antigos: ver tests/services/localIds.test.ts.
