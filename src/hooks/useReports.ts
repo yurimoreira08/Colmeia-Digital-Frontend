@@ -1,46 +1,37 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { Alert, ScrollView } from 'react-native';
-import { fetchReportsStats, type ReportsStatsResponse } from '../services/reportsService';
-import { updateRevision, deleteRevision, archiveRevision } from '../services/reviewReportService';
-import { updateManejoService, deleteManejoService, archiveManejo } from '../services/manejoService';
+import type { ReportsStatsResponse } from '../services/reportsService';
+import { archiveRevision } from '../services/reviewReportService';
+import { archiveManejo } from '../services/manejoService';
 import { displayDateToIso, isDisplayDateValid, maskDateInput, isoDateToDisplay } from '../utils/date';
+import {
+  computeGrowthMetrics,
+  isInDateWindow,
+  matchesManejoSearch,
+  matchesRevisionSearch,
+  toBox,
+  toIsoDate,
+} from '../utils/reportMetrics';
 import { useVoiceCommand } from '../voice/VoiceCommandContext';
+import { parseReportsVoiceCommand, type ReportsQuickFilter } from '../voice/reportsVoiceCommands';
 import { useAppTheme } from '../theme/ThemeContext';
 import type { Apiary } from '../types/apiary';
 import type { Box } from '../types/box';
 import type { ReviewReport } from '../types/reviewReport';
 import type { ManejoReport } from '../types/manejo';
 import type { ReportsFilter } from '../types/reports';
-import * as ImagePicker from 'expo-image-picker';
-import { 
-  getLocalApiaries, 
-  getLocalBoxes, 
-  getLocalRevisions, 
-  getLocalManejos 
-} from '../services/localDbService';
+import { getLocalApiaries, getLocalBoxes, getLocalRevisions, getLocalManejos } from '../services/localDbService';
 import { subscribeToSyncStatus } from '../services/syncService';
+import { useReportEditing } from './useReportEditing';
 
-const MANEJO_OPTION_LABELS: Record<string, string> = {
-  alimentacao: 'Alimentação',
-  divisao: 'Divisão',
-  'troca-cera': 'Troca de cera',
-  'troca-rainha': 'Troca de rainha',
-  'colocacao-sobrecaixa': 'Colocação de sobrecaixa',
-  captura: 'Captura',
-  'defesa-predadores': 'Defesa contra predadores',
-  'reducao-alvado': 'Redução de alvado',
-  'numerar-caixas': 'Numerar caixas',
-  'ofertar-agua': 'Ofertar água',
-  'recolher-caixas-vazias': 'Recolher caixas vazias ou abandonadas',
-  'trocar-caixa': 'Caixa trocada',
-  outro: 'Outro',
-};
-
-function toIsoDate(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
+/**
+ * Estado da tela de relatórios: filtros, lista paginada, métricas do período
+ * e comandos de voz. A edição e a exclusão ficam em useReportEditing; os
+ * cálculos, em utils/reportMetrics.
+ *
+ * Lê só o SQLite local e recarrega ao voltar para a tela e ao terminar um sync.
+ */
 export function useReports(routeParams?: any) {
   const { colors } = useAppTheme();
   const { registerScreenCommandHandler } = useVoiceCommand();
@@ -73,7 +64,7 @@ export function useReports(routeParams?: any) {
   const [hasMore, setHasMore] = useState(true);
   
   // Quick Filters states
-  const [quickFilter, setQuickFilter] = useState<'all' | '7days' | 'thisMonth' | 'apiary' | 'box'>(() => {
+  const [quickFilter, setQuickFilter] = useState<ReportsQuickFilter>(() => {
     if (routeParams?.caixaId) return 'box';
     if (routeParams?.apiaryId) return 'apiary';
     return '7days';
@@ -92,31 +83,10 @@ export function useReports(routeParams?: any) {
   }, [routeParams]);
 
   const [error, setError] = useState<string | null>(null);
-  const [isExporting, setIsExporting] = useState<string | null>(null);
-
-  // Modals & edit states
-  const [editingReport, setEditingReport] = useState<ReviewReport | null>(null);
-  const [editObs, setEditObs] = useState('');
-  const [editInd, setEditInd] = useState('');
-  const [editChecked, setEditChecked] = useState<Record<string, boolean>>({});
-
-  const [editingManejo, setEditingManejo] = useState<ManejoReport | null>(null);
-  const [editManejoObs, setEditManejoObs] = useState('');
-  const [editManejoInd, setEditManejoInd] = useState('');
-  const [editManejoTasks, setEditManejoTasks] = useState<
-    Record<string, { id: string; obs: string; ind: string; active: boolean; customName?: string }>
-  >({});
-  const [editManejoPhotoUri, setEditManejoPhotoUri] = useState<string | undefined>();
-
-  // Delete confirmations
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [deleteManejoId, setDeleteManejoId] = useState<number | null>(null);
 
   // Scroll references
   const scrollRef = useRef<ScrollView>(null);
   const [scrollY, setScrollY] = useState(0);
-  const editRevisionScrollRef = useRef<ScrollView>(null);
-  const editManejoScrollRef = useRef<ScrollView>(null);
 
   const dateWindow = useMemo(() => {
     if (!isDisplayDateValid(fromDate) || !isDisplayDateValid(toDate)) return null;
@@ -242,140 +212,23 @@ export function useReports(routeParams?: any) {
 
         if (requestId !== requestCounter.current) return;
 
-        const { fromIso, toIso } = dateWindow;
         const searchPattern = searchTerm.trim().toLowerCase();
+        const filteredApiaries = ownedApiaries.filter((item) => isInDateWindow(item.created_at, dateWindow));
+        const filteredBoxes = allBoxes.filter(isOwned).filter((item) => isInDateWindow(item.created_at, dateWindow));
+        const filteredRevisions = allRevisions.filter(isOwned).filter((item) => matchesRevisionSearch(item, searchPattern));
+        const filteredManejos = allManejos.filter(isOwned).filter((item) => matchesManejoSearch(item, searchPattern));
 
-        const extractDateOnly = (val: string) => val.includes('T') ? val.slice(0, 10) : val;
-        const isInWindow = (dateStr: string) => {
-          const d = extractDateOnly(dateStr);
-          return d >= fromIso && d <= toIso;
-        };
-
-        const filteredApiaries = ownedApiaries.filter((item) => isInWindow(item.created_at));
-        const filteredBoxes = allBoxes.filter(isOwned).filter((item) => isInWindow(item.created_at));
-
-        const filteredRevisions = allRevisions
-          .filter(isOwned)
-          .filter((item) => {
-            if (searchPattern) {
-              const matchApi = (item.apiaryName || '').toLowerCase().includes(searchPattern);
-              const matchBox = (item.caixaName || '').toLowerCase().includes(searchPattern);
-              const matchObs = (item.observacoes || '').toLowerCase().includes(searchPattern);
-              const matchInd = (item.indicacoes || '').toLowerCase().includes(searchPattern);
-              return matchApi || matchBox || matchObs || matchInd;
-            }
-            return true;
-          });
-
-        const filteredManejos = allManejos
-          .filter(isOwned)
-          .filter((item) => {
-            if (searchPattern) {
-              const matchApi = (item.apiaryName || '').toLowerCase().includes(searchPattern);
-              const matchBox = (item.caixaName || '').toLowerCase().includes(searchPattern);
-              const matchObs = (item.observacoes || '').toLowerCase().includes(searchPattern);
-              const matchInd = (item.indicacoes || '').toLowerCase().includes(searchPattern);
-              const matchTasks = (item.checkedOptions || []).some((task: any) => {
-                const label = MANEJO_OPTION_LABELS[task.id] || task.id;
-                return (
-                  label.toLowerCase().includes(searchPattern) ||
-                  (task.obs || '').toLowerCase().includes(searchPattern) ||
-                  (task.ind || '').toLowerCase().includes(searchPattern)
-                );
-              });
-              return matchApi || matchBox || matchObs || matchInd || matchTasks;
-            }
-            return true;
-          });
-
-        const periodDays = (() => {
-          const from = new Date(fromIso);
-          const to = new Date(toIso);
-          const ms = to.getTime() - from.getTime();
-          const days = Math.floor(ms / (1000 * 60 * 60 * 24)) + 1;
-          return Number.isFinite(days) && days > 0 ? days : 1;
-        })();
-
-        const totalApiaries = filteredApiaries.length;
-        const totalBoxes = filteredBoxes.length;
-
-        const midpoint = Math.ceil(periodDays / 2);
-        const sortedApiaries = [...filteredApiaries].sort((a, b) => a.created_at.localeCompare(b.created_at));
-        const sortedBoxes = [...filteredBoxes].sort((a, b) => a.created_at.localeCompare(b.created_at));
-
-        const apiaryBaseline = sortedApiaries.slice(0, Math.max(sortedApiaries.length - midpoint, 0)).length;
-        const boxBaseline = sortedBoxes.slice(0, Math.max(sortedBoxes.length - midpoint, 0)).length;
-
-        const calcGrowth = (current: number, baseline: number) => {
-          if (baseline <= 0) return current > 0 ? 100 : 0;
-          return Number((((current - baseline) / baseline) * 100).toFixed(1));
-        };
-
-        const apiaryGrowthPercent = calcGrowth(totalApiaries, apiaryBaseline);
-        const boxGrowthPercent = calcGrowth(totalBoxes, boxBaseline);
-
-        const locationCount = new Map<string, number>();
-        for (const apiary of filteredApiaries) {
-          const location = (apiary.location || '').trim() || 'Sem local definido';
-          locationCount.set(location, (locationCount.get(location) ?? 0) + 1);
-        }
-        const topLocations = [...locationCount.entries()]
-          .map(([location, total]) => ({ location, total }))
-          .sort((a, b) => b.total - a.total)
-          .slice(0, 5);
-
-        const start = new Date(fromIso);
-        const end = new Date(toIso);
-        const spanMs = end.getTime() - start.getTime();
-        const stepMs = Math.max(Math.floor(spanMs / 4), 1000 * 60 * 60 * 24);
-
-        const labels = ['S1', 'S2', 'S3', 'S4'];
-        const boundaries = [0, 1, 2, 3].map((index) => new Date(start.getTime() + stepMs * (index + 1)));
-
-        let targetDates: string[] = [];
-        if (filter === 'apiarios') {
-          targetDates = filteredApiaries.map((item) => item.created_at.slice(0, 10));
-        } else if (filter === 'caixas') {
-          targetDates = filteredBoxes.map((item) => item.created_at.slice(0, 10));
-        } else if (filter === 'revisoes') {
-          targetDates = filteredRevisions.map((item) => item.createdAt.slice(0, 10));
-        } else if (filter === 'manejos') {
-          targetDates = filteredManejos.map((item) => item.createdAt.slice(0, 10));
-        }
-
-        const barsData = labels.map((label, index) => {
-          const upperBoundary = boundaries[index] ?? end;
-          const total = targetDates.filter((iso) => {
-            const date = new Date(iso);
-            if (Number.isNaN(date.getTime())) return false;
-            if (index === 0) return date >= start && date <= upperBoundary;
-            const lowerBoundary = boundaries[index - 1];
-            return date > lowerBoundary && date <= upperBoundary;
-          }).length;
-          return { label, value: total };
-        });
-
-        setBoxes(allBoxes.filter(isOwned).map((r) => ({
-          id: r.id,
-          apiaryId: r.apiary_id,
-          apiaryName: r.apiary_name || '',
-          name: r.name,
-          position: r.position,
-          createdAt: r.created_at,
-          updatedAt: r.updated_at,
-          archived: !!r.archived,
-        })));
+        setBoxes(allBoxes.filter(isOwned).map(toBox));
         setRevisions(filteredRevisions);
         setManejos(filteredManejos);
-        setMetrics({
-          periodDays,
-          totalApiaries,
-          totalBoxes,
-          apiaryGrowthPercent,
-          boxGrowthPercent,
-          topLocations,
-          barsData,
-        });
+        setMetrics(computeGrowthMetrics({
+          filter,
+          window: dateWindow,
+          apiaries: filteredApiaries,
+          boxes: filteredBoxes,
+          revisions: filteredRevisions,
+          manejos: filteredManejos,
+        }));
       }
     } catch (err) {
       console.error(err);
@@ -412,84 +265,6 @@ export function useReports(routeParams?: any) {
       unsubscribe();
     };
   }, [loadData]);
-
-  useFocusEffect(
-    useCallback(() => {
-      const unsubscribe = registerScreenCommandHandler((transcript) => {
-        const command = transcript
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[!?.,;:]/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
-
-        if (!command) return false;
-
-        // Filtros de Tipo
-        if (command.includes('revisao') || command.includes('revisoes')) {
-          setFilter('revisoes');
-          return true;
-        }
-
-        if (command.includes('manejo') || command.includes('manejos')) {
-          setFilter('manejos');
-          return true;
-        }
-
-        if (command.includes('apiario') || command.includes('apiarios')) {
-          setFilter('apiarios');
-          return true;
-        }
-
-        if (command.includes('caixa') || command.includes('caixas')) {
-          setFilter('caixas');
-          return true;
-        }
-
-        // Filtros Rápidos de Data
-        if (command.includes('7 dias') || command.includes('sete dias') || command.includes('ultima semana')) {
-          setQuickFilter('7days');
-          return true;
-        }
-
-        if (
-          command.includes('este mes') ||
-          command.includes('mes atual') ||
-          command.includes('30 dias') ||
-          command.includes('trinta dias')
-        ) {
-          setQuickFilter('thisMonth');
-          return true;
-        }
-
-        if (command.includes('todo periodo') || command.includes('todas as datas') || command.includes('todo o tempo')) {
-          setQuickFilter('all');
-          return true;
-        }
-
-        // Busca
-        if (command === 'limpar busca' || command === 'limpar pesquisa' || command === 'limpar filtro') {
-          setSearchTerm('');
-          return true;
-        }
-
-        if (command.startsWith('buscar ') || command.startsWith('pesquisar ') || command.startsWith('filtrar por ')) {
-          const query = command.replace(/^(buscar|pesquisar|filtrar por)\s+/, '').trim();
-          if (query) {
-            setSearchTerm(query);
-            return true;
-          }
-        }
-
-        return false;
-      });
-
-      return () => {
-        unsubscribe();
-      };
-    }, [registerScreenCommandHandler])
-  );
 
   const barsData = useMemo(() => {
     if (metrics?.barsData) return metrics.barsData;
@@ -531,211 +306,50 @@ export function useReports(routeParams?: any) {
 
 
 
-  function handleOpenEditReport(report: ReviewReport) {
-    setEditingReport(report);
-    setEditObs(report.observacoes);
-    setEditInd(report.indicacoes);
-    const checkedObj: Record<string, boolean> = {};
-    for (const opt of report.checkedOptions) {
-      checkedObj[opt] = true;
-    }
-    setEditChecked(checkedObj);
-  }
+  const editing = useReportEditing(reloadData);
 
-  async function handleSaveEditReport() {
-    if (!editingReport) return;
-    const checkedIds = Object.entries(editChecked)
-      .filter(([, v]) => v)
-      .map(([k]) => k);
-    await updateRevision(editingReport.id, {
-      observacoes: editObs,
-      indicacoes: editInd,
-      checkedOptions: checkedIds,
-    });
-    setEditingReport(null);
-    await reloadData();
-  }
+  // O tratador de voz é registrado uma vez por foco: lê a edição atual pela ref.
+  const editingRef = useRef(editing);
+  editingRef.current = editing;
 
-  const toggleEditOption = useCallback((id: string) => {
-    setEditChecked((prev) => {
-      const nextObj = { ...prev, [id]: !prev[id] };
-      if (nextObj[id]) {
-        if (id === 'caixa') nextObj['nucleo'] = false;
-        if (id === 'nucleo') nextObj['caixa'] = false;
-        if (id === 'com-espaco') nextObj['sem-espaco'] = false;
-        if (id === 'sem-espaco') nextObj['com-espaco'] = false;
-        if (id === 'forca-fraca') {
-          nextObj['forca-media'] = false;
-          nextObj['forca-boa'] = false;
-        }
-        if (id === 'forca-media') {
-          nextObj['forca-fraca'] = false;
-          nextObj['forca-boa'] = false;
-        }
-        if (id === 'forca-boa') {
-          nextObj['forca-fraca'] = false;
-          nextObj['forca-media'] = false;
-        }
-      }
-      return nextObj;
-    });
-  }, []);
-
-  function handleOpenEditManejo(report: ManejoReport) {
-    setEditingManejo(report);
-    setEditManejoObs(report.observacoes);
-    setEditManejoInd(report.indicacoes);
-    setEditManejoPhotoUri(report.photoUri);
-    const tasksObj: Record<string, { id: string; obs: string; ind: string; active: boolean; customName?: string }> = {};
-    Object.keys(MANEJO_OPTION_LABELS).forEach((id) => {
-      tasksObj[id] = { id, obs: '', ind: '', active: false, customName: '' };
-    });
-    report.checkedOptions.forEach((task) => {
-      tasksObj[task.id] = { ...task, active: true };
-    });
-    setEditManejoTasks(tasksObj);
-  }
-
-  async function handleTakeManejoPhoto() {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Erro', 'Permissão para usar a câmera é necessária!');
-      return;
-    }
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7,
-    });
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setEditManejoPhotoUri(result.assets[0].uri);
-    }
-  }
-
-  async function handleSaveEditManejo() {
-    if (!editingManejo) return;
-    const finalTasks = Object.values(editManejoTasks)
-      .filter((t) => t.active)
-      .map(({ id, obs, ind, customName }) => ({
-        id,
-        obs,
-        ind,
-        ...(id === 'outro' ? { customName } : {}),
-      }));
-
-    await updateManejoService(editingManejo.id, {
-      checkedOptions: finalTasks,
-      observacoes: editManejoObs,
-      indicacoes: editManejoInd,
-      photoUri: editManejoPhotoUri,
-    });
-    setEditingManejo(null);
-    await reloadData();
-  }
-
-  const toggleEditManejoTask = (id: string) => {
-    setEditManejoTasks((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], active: !prev[id].active },
-    }));
-  };
-
-  const updateEditManejoTaskDetail = (id: string, field: 'obs' | 'ind' | 'customName', value: string) => {
-    setEditManejoTasks((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value },
-    }));
-  };
-
-  function handleDeleteReport(id: number) {
-    setDeleteId(id);
-  }
-
-  function handleDeleteManejo(id: number) {
-    setDeleteManejoId(id);
-  }
-
-  async function confirmDeleteReport() {
-    if (deleteId) {
-      await deleteRevision(deleteId);
-      setDeleteId(null);
-      await reloadData();
-    }
-  }
-
-  async function confirmDeleteManejo() {
-    if (deleteManejoId) {
-      await deleteManejoService(deleteManejoId);
-      setDeleteManejoId(null);
-      await reloadData();
-    }
-  }
-
-  // Voice commands setup
   useFocusEffect(
     useCallback(() => {
       const unsubscribe = registerScreenCommandHandler((transcript) => {
-        const command = transcript
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[!?.,;:]/g, ' ')
-          .replace(/\s+/g, ' ')
-          .trim();
+        const action = parseReportsVoiceCommand(transcript);
+        if (!action) return false;
 
-        if (!command) return false;
-
-        if (command.includes('observacoes') || command.includes('o que fazer')) {
-          if (editingReport) editRevisionScrollRef.current?.scrollToEnd({ animated: true });
-          if (editingManejo) editManejoScrollRef.current?.scrollToEnd({ animated: true });
-          return true;
+        switch (action.type) {
+          case 'scrollEditorToNotes':
+            editingRef.current.scrollEditorToNotes();
+            break;
+          case 'closeEditors':
+            editingRef.current.closeEditors();
+            break;
+          case 'setFilter':
+            setFilter(action.filter);
+            break;
+          case 'reload':
+            void reloadData();
+            break;
+          case 'setLastDays': {
+            const end = new Date();
+            const start = new Date(end);
+            start.setDate(start.getDate() - action.days);
+            setFromDate(isoDateToDisplay(toIsoDate(start)));
+            setToDate(isoDateToDisplay(toIsoDate(end)));
+            break;
+          }
+          case 'setQuickFilter':
+            setQuickFilter(action.quickFilter);
+            break;
+          case 'setSearch':
+            setSearchTerm(action.term);
+            break;
         }
-
-        if (command.includes('encerrar')) {
-          setEditingReport(null);
-          setEditingManejo(null);
-          return true;
-        }
-
-        if (command.includes('filtro revisao') || command.includes('mostrar revisoes')) {
-          setFilter('revisoes');
-          return true;
-        }
-
-        if (command.includes('filtro manejo') || command.includes('mostrar manejos')) {
-          setFilter('manejos');
-          return true;
-        }
-
-        if (command.includes('atualizar dados') || command.includes('recarregar relatorios')) {
-          void reloadData();
-          return true;
-        }
-
-        if (command.includes('ultimos 7 dias')) {
-          const end = new Date();
-          const start = new Date(end);
-          start.setDate(start.getDate() - 7);
-          setFromDate(isoDateToDisplay(toIsoDate(start)));
-          setToDate(isoDateToDisplay(toIsoDate(end)));
-          return true;
-        }
-
-        if (command.includes('ultimos 30 dias') || command.includes('ultimo mes')) {
-          const end = new Date();
-          const start = new Date(end);
-          start.setDate(start.getDate() - 30);
-          setFromDate(isoDateToDisplay(toIsoDate(start)));
-          setToDate(isoDateToDisplay(toIsoDate(end)));
-          return true;
-        }
-
-        return false;
+        return true;
       });
-
-      return () => {
-        unsubscribe();
-      };
-    }, [dateWindow, filter, apiaries, boxes, revisions, manejos, registerScreenCommandHandler, reloadData])
+      return unsubscribe;
+    }, [registerScreenCommandHandler, reloadData])
   );
 
   return {
@@ -770,47 +384,12 @@ export function useReports(routeParams?: any) {
     chartTitle,
     error,
     setError,
-    editingReport,
-    setEditingReport,
-    editObs,
-    setEditObs,
-    editInd,
-    setEditInd,
-    editChecked,
-    setEditChecked,
-    editingManejo,
-    setEditingManejo,
-    editManejoObs,
-    setEditManejoObs,
-    editManejoInd,
-    setEditManejoInd,
-    editManejoTasks,
-    setEditManejoTasks,
-    editManejoPhotoUri,
-    setEditManejoPhotoUri,
-    deleteId,
-    setDeleteId,
-    deleteManejoId,
-    setDeleteManejoId,
+    ...editing,
     scrollRef,
     scrollY,
     setScrollY,
-    editRevisionScrollRef,
-    editManejoScrollRef,
     reloadData,
     handleArchiveSingle,
-    handleOpenEditReport,
-    handleSaveEditReport,
-    toggleEditOption,
-    handleOpenEditManejo,
-    handleTakeManejoPhoto,
-    handleSaveEditManejo,
-    toggleEditManejoTask,
-    updateEditManejoTaskDetail,
-    handleDeleteReport,
-    confirmDeleteReport,
-    handleDeleteManejo,
-    confirmDeleteManejo,
     maskDateInput,
     getRoleForApiary: useCallback((apiaryId?: number | null) => {
       if (!apiaryId) return 'owner';
