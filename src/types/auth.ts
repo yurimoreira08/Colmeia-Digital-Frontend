@@ -5,7 +5,6 @@ export type User = {
   id: number;
   name: string;
   email: string;
-  passwordHash: string;
   photo?: string | null;
   terms_accepted_at?: string | null;
   terms_version?: string | null;

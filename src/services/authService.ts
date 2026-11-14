@@ -8,8 +8,52 @@ import type { User } from '../types/auth';
 
 export type AuthResponse = User & { token?: string };
 
+/** Chave do `app_config` (SQLite, sem criptografia) onde fica o usuário logado, usado no login offline. */
+const CURRENT_USER_KEY = 'currentUser';
+
+/**
+ * Remove do usuário tudo que não pode ficar gravado em texto puro no aparelho.
+ *
+ * O SQLite local não é criptografado e entra no backup do Android, então ali
+ * só vão dados de exibição. O token fica apenas no SecureStore, e o hash da
+ * senha nunca deveria chegar ao app (versões antigas do backend o enviavam).
+ */
+function toStorableUser(user: User | AuthResponse): User {
+  const { token: _token, passwordHash: _passwordHash, ...storable } =
+    user as AuthResponse & { passwordHash?: string };
+  return storable;
+}
+
+/** Grava o usuário logado (já sem dados sensíveis) e atualiza o cache de id do apiClient. */
+async function saveCurrentUser(user: User | AuthResponse): Promise<User> {
+  const storable = toStorableUser(user);
+  await setLocalConfigValue(CURRENT_USER_KEY, JSON.stringify(storable));
+  updateCachedUserId(String(storable.id));
+  return storable;
+}
+
+/**
+ * Limpa dados sensíveis que versões anteriores do app gravaram no SQLite
+ * (token e hash da senha dentro de `currentUser`). Roda a cada boot e não faz
+ * nada se o registro já estiver limpo.
+ */
+async function purgeSensitiveDataFromStoredUser(): Promise<void> {
+  const raw = await getLocalConfigValue(CURRENT_USER_KEY);
+  if (!raw) return;
+
+  try {
+    const stored = JSON.parse(raw);
+    if (stored && ('token' in stored || 'passwordHash' in stored)) {
+      await setLocalConfigValue(CURRENT_USER_KEY, JSON.stringify(toStorableUser(stored)));
+    }
+  } catch {
+    // Registro corrompido: não serve para login offline, então é descartado.
+    await setLocalConfigValue(CURRENT_USER_KEY, '');
+  }
+}
+
 async function handleUserSessionSwitch(newUserId: number): Promise<void> {
-  const previousUserStr = await getLocalConfigValue('currentUser');
+  const previousUserStr = await getLocalConfigValue(CURRENT_USER_KEY);
   let previousUserId: number | null = null;
   if (previousUserStr) {
     try {
@@ -33,6 +77,7 @@ export async function bootstrapAuth(): Promise<void> {
   try {
     // Inicializar o banco SQLite local offline
     await initializeLocalDb();
+    await purgeSensitiveDataFromStoredUser();
 
     // Só dispara sincronização se estiver online E houver token válido autenticado
     const isOnline = await checkServerConnection();
@@ -61,10 +106,9 @@ export async function register(params: {
     await secureSet('auth_token', result.token);
     updateCachedToken(result.token);
   }
-  await setLocalConfigValue('currentUser', JSON.stringify(result));
-  updateCachedUserId(String(result.id));
+  const storedUser = await saveCurrentUser(result);
   await markTermsAccepted(TERMS_CURRENT_VERSION);
-  return result;
+  return storedUser;
 }
 
 export async function login(params: {
@@ -77,8 +121,7 @@ export async function login(params: {
     await secureSet('auth_token', result.token);
     updateCachedToken(result.token);
   }
-  await setLocalConfigValue('currentUser', JSON.stringify(result));
-  updateCachedUserId(String(result.id));
+  const storedUser = await saveCurrentUser(result);
 
   // Se o usuário já aceitou os termos no aparelho mas o backend ainda não registrou:
   const acceptedLocally = await isTermsAccepted();
@@ -96,7 +139,7 @@ export async function login(params: {
     await markTermsAccepted(TERMS_CURRENT_VERSION);
   }
 
-  return result;
+  return storedUser;
 }
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -104,9 +147,7 @@ export async function getCurrentUser(): Promise<User | null> {
     const isOnline = await checkServerConnection();
     if (isOnline) {
       const user = await apiRequest<User>('/auth/me', 'GET');
-      await setLocalConfigValue('currentUser', JSON.stringify(user));
-      updateCachedUserId(String(user.id));
-      return user;
+      return saveCurrentUser(user);
     }
   } catch (error) {
     console.log('[authService] Falha ao consultar o servidor, usando login em cache.');
@@ -114,7 +155,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
   // Fallback para login offline
   try {
-    const cachedUserStr = await getLocalConfigValue('currentUser');
+    const cachedUserStr = await getLocalConfigValue(CURRENT_USER_KEY);
     if (cachedUserStr) {
       const user = JSON.parse(cachedUserStr) as User;
       updateCachedUserId(String(user.id));
@@ -141,7 +182,7 @@ export async function logout(): Promise<void> {
     // 2. Remover token e dados do usuário do Secure Store e SQLite
     await secureDelete('auth_token');
     await secureDelete('currentUser');
-    await setLocalConfigValue('currentUser', '');
+    await setLocalConfigValue(CURRENT_USER_KEY, '');
     await setLocalConfigValue('last_synced_user_id', '');
     updateCachedUserId(null);
     updateCachedToken(null);
@@ -154,9 +195,7 @@ export async function updateProfile(params: {
   photo?: string | null;
 }): Promise<User> {
   const user = await apiRequest<User>('/auth/profile', 'PUT', params);
-  await setLocalConfigValue('currentUser', JSON.stringify(user));
-  updateCachedUserId(String(user.id));
-  return user;
+  return saveCurrentUser(user);
 }
 
 export async function forgotPassword(email: string): Promise<{ success: boolean; message: string }> {
