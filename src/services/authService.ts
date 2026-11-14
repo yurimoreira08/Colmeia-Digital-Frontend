@@ -175,17 +175,23 @@ export async function logout(): Promise<void> {
   } catch (error) {
     console.warn('[authService] Failed to notify logout to backend:', error);
   } finally {
-    // 1. Limpar o banco SQLite local e cache de sessão ao sair para garantir isolamento
-    await clearLocalDatabase();
-    clearSessionStore();
-    // 2. Remover token e dados do usuário do Secure Store e SQLite
-    await secureDelete('auth_token');
-    await secureDelete('currentUser');
-    await setLocalConfigValue(CURRENT_USER_KEY, '');
-    await setLocalConfigValue('last_synced_user_id', '');
-    updateCachedUserId(null);
-    updateCachedToken(null);
+    await clearLocalSession();
   }
+}
+
+/**
+ * Apaga do aparelho tudo da sessão: o banco SQLite (isolamento entre contas),
+ * o token e os dados do usuário. Usado no logout e na exclusão da conta.
+ */
+export async function clearLocalSession(): Promise<void> {
+  await clearLocalDatabase();
+  clearSessionStore();
+  await secureDelete('auth_token');
+  await secureDelete('currentUser');
+  await setLocalConfigValue(CURRENT_USER_KEY, '');
+  await setLocalConfigValue('last_synced_user_id', '');
+  updateCachedUserId(null);
+  updateCachedToken(null);
 }
 
 export async function updateProfile(params: {

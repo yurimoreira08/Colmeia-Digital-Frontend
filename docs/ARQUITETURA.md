@@ -48,7 +48,7 @@ Este é o ponto mais delicado do app.
      - Cada item volta com um resultado. `created`/`updated` trocam o id local pelo do servidor. `conflict` (o registro mudou no servidor depois que o aparelho o baixou) mantém a versão do servidor e cria a notificação local "Alteração não aplicada". `rejected` tira o item da fila e força um download completo. `error` deixa o item para a próxima vez.
      - Para detectar conflito, cada registro guarda em `server_updated_at` o `updatedAt` do servidor, que vai como `baseUpdatedAt`.
   2. Notificações lidas (`legacy.ts`, uma requisição cada).
-  3. **Download incremental** (`pull.ts`, `GET /sync/changes?since=`): só o que mudou desde o `serverTime` guardado em `app_config.sync_since`, mais as exclusões feitas no servidor (o app apaga também os filhos). O primeiro download, o que vem depois de recusas e o que vem depois de limpar o banco (logout, troca de usuário) são completos e substituem o que está sincronizado, preservando as linhas ainda não enviadas.
+  3. **Download incremental** (`pull.ts`, `GET /sync/changes?since=`): só o que mudou desde o `serverTime` guardado em `app_config.sync_since`, mais as exclusões feitas no servidor (o app apaga também os filhos). O primeiro download, o que vem depois de recusas, o que vem depois de limpar o banco (logout, troca de usuário) e um a cada 7 dias (`app_config.sync_full_at`; renova as URLs assinadas das fotos, que valem 30 dias) são completos e substituem o que está sincronizado, preservando as linhas ainda não enviadas.
   - Servidor sem as rotas novas (404) ou que recusa o formato do lote (422): `legacy.ts` faz o sync antigo, uma requisição por registro e as listagens completas.
   - Testes em `tests/services/batchSync.test.ts`.
 - Quando um registro é criado no servidor, `updateRecordSyncStatus` troca o id local pelo id do servidor e re-aponta os filhos (`apiary_id`, `caixa_id`, `revisao_id`).
@@ -68,6 +68,17 @@ Este é o ponto mais delicado do app.
 ## Senhas
 
 Senhas novas (cadastro e redefinição) passam por `validateNewPassword()` de `src/utils/passwordPolicy.ts`: de 8 a 72 caracteres, sem trim (espaços contam). É a mesma regra do backend, que é quem decide. O login não valida tamanho, porque contas antigas podem ter senhas curtas. Nunca aplique `trim()` numa senha antes de enviar.
+
+## Dados pessoais (LGPD)
+
+Em Configurações:
+- **Exportar meus dados** (`services/accountService.ts`): baixa `GET /auth/export` num JSON e abre o compartilhamento do sistema.
+- **Excluir minha conta** (`components/DeleteAccountModal.tsx`): explica o que será apagado e pede a senha (enviada como digitada). `DELETE /auth/account` apaga a conta, os dados e as fotos no servidor; depois o app limpa o aparelho (`clearLocalSession`, a mesma limpeza do logout).
+- As duas exigem conexão.
+
+## Sentry
+
+`src/config/sentry.ts`, iniciado no `App.tsx`. Só liga com `EXPO_PUBLIC_SENTRY_DSN` no build. Sem IP, sem dados do usuário além do id, sem corpo, cookies nem cabeçalho `Authorization`, e sem query string nas URLs. O envio automático de source maps está desligado (`SENTRY_DISABLE_AUTO_UPLOAD` no `eas.json`) até a conta do Sentry ser configurada; para ligar, defina `SENTRY_AUTH_TOKEN`, a organização e o projeto nas variáveis do EAS e remova a flag. O SDK é nativo: precisa de um build novo.
 
 ## Arquivos mantidos de propósito
 

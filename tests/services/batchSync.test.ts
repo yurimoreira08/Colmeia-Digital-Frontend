@@ -210,6 +210,20 @@ describe('download incremental', () => {
     expect(rows("SELECT value FROM app_config WHERE key = 'sync_since'")).toEqual([{ value: T1 }]);
   });
 
+  it('baixa tudo de novo a cada 7 dias (renova as URLs assinadas das fotos)', async () => {
+    const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    mockRoutes['GET /sync/changes'] = () => emptyChanges();
+    await setLocalConfigValue('sync_since', T0);
+
+    await setLocalConfigValue('sync_full_at', daysAgo(1));
+    await syncOfflineData();
+    await setLocalConfigValue('sync_since', T0);
+    await setLocalConfigValue('sync_full_at', daysAgo(8));
+    await syncOfflineData();
+
+    expect(calls('GET /sync/changes').map((c) => c.route)).toEqual([`GET /sync/changes?since=${encodeURIComponent(T0)}`, 'GET /sync/changes']);
+  });
+
   it('limpar o banco local (logout ou troca de usuário) volta ao download completo', async () => {
     await setLocalConfigValue('sync_since', T0);
     await setLocalConfigValue('currentUser', JSON.stringify({ id: 2 }));

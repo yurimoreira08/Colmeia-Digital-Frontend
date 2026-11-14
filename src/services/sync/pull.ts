@@ -8,6 +8,14 @@ import { isRouteMissing } from './syncErrors';
 
 /** Chave do app_config com o `serverTime` do último download: vai como `since` no próximo. */
 export const SYNC_SINCE_KEY = 'sync_since';
+/** Quando foi o último download completo. */
+export const SYNC_FULL_AT_KEY = 'sync_full_at';
+/**
+ * Intervalo máximo entre downloads completos. Com o bucket de fotos privado,
+ * as URLs assinadas valem 30 dias, e o incremental não traz de novo um manejo
+ * que não mudou: o completo semanal renova as URLs antes de vencerem.
+ */
+export const FULL_PULL_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 
 type SyncChangesResponse = {
   serverTime: string;
@@ -33,7 +41,9 @@ export async function resetSyncSince(): Promise<void> {
  * Servidor sem a rota (404): usa o download completo antigo.
  */
 export async function pullChanges(options: { forceFull?: boolean } = {}): Promise<void> {
-  const since = options.forceFull ? '' : (await getLocalConfigValue(SYNC_SINCE_KEY)) || '';
+  const lastFull = Date.parse((await getLocalConfigValue(SYNC_FULL_AT_KEY)) || '');
+  const fullIsDue = !Number.isFinite(lastFull) || Date.now() - lastFull > FULL_PULL_INTERVAL_MS;
+  const since = options.forceFull || fullIsDue ? '' : (await getLocalConfigValue(SYNC_SINCE_KEY)) || '';
 
   let changes: SyncChangesResponse;
   try {
@@ -57,6 +67,7 @@ export async function pullChanges(options: { forceFull?: boolean } = {}): Promis
     { incremental },
   );
   if (incremental) await applyRemoteDeletions(changes.deletions ?? []);
+  else await setLocalConfigValue(SYNC_FULL_AT_KEY, new Date().toISOString());
 
   // Só depois de aplicar: se algo falhar antes, o próximo sync pede o mesmo período.
   await setLocalConfigValue(SYNC_SINCE_KEY, changes.serverTime);
