@@ -309,6 +309,9 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
                 style={styles.primaryButton}
                 onPress={handleResetPassword}
                 disabled={loading}
+                accessibilityRole="button"
+                accessibilityLabel="Redefinir senha"
+                accessibilityState={{ disabled: loading, busy: loading }}
                 onPressIn={onPressInPrimary}
                 onPressOut={onPressOutPrimary}
               >

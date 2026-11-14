@@ -189,6 +189,9 @@ export function RegisterScreen({ navigation }: Props) {
                 style={styles.primaryButton}
                 onPress={handleRegister}
                 disabled={loading}
+                accessibilityRole="button"
+                accessibilityLabel="Cadastrar"
+                accessibilityState={{ disabled: loading, busy: loading }}
                 onPressIn={onPressInPrimary}
                 onPressOut={onPressOutPrimary}
               >
