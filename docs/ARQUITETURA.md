@@ -46,7 +46,7 @@ Este é o ponto mais delicado do app.
   2. envia apiários → caixas → revisões → manejos (com upload de foto) → notificações lidas;
   3. baixa tudo e aplica com `replace*Local`, preservando as linhas ainda não sincronizadas.
 - Quando um registro é criado no servidor, `updateRecordSyncStatus` troca o id local pelo id do servidor e re-aponta os filhos (`apiary_id`, `caixa_id`, `revisao_id`).
-  - **Cuidado:** ids locais e do servidor dividem o mesmo espaço numérico. A colisão entre eles é o item F2 do relatório, documentado com `test.failing` em `tests/services/syncIdRemap.test.ts`.
+  - **Ids locais são negativos** (o servidor só gera positivos), então a troca nunca colide com outro registro local pendente. Registros pendentes de versões antigas, com ids positivos, são renumerados uma vez no `initializeLocalDb`. Testes em `tests/services/localIds.test.ts`. Na limpeza de caixas duplicadas fica a do servidor; entre caixas só locais, a mais antiga.
 - Revisões e manejos levam `client_uuid` para que o backend não duplique registros reenviados.
 - Erro 401 pausa o sync. Erro 403 de apiário marca o registro como resolvido.
 - Login ou cadastro de **outro usuário** limpa todo o SQLite (`handleUserSessionSwitch`). O logout também.

@@ -36,7 +36,7 @@ Convenções de código e de testes. A arquitetura está em [ARQUITETURA.md](ARQ
 - **Banco local e sync:** `tests/helpers/sqliteMemory.ts` troca o `expo-sqlite` por um SQLite em memória (better-sqlite3) com a mesma API (`execAsync`, `runAsync`, `getFirstAsync`, `getAllAsync`, `withTransactionAsync`).
   - O arquivo de teste precisa do docblock `@jest-environment node` e de `jest.mock('expo-sqlite', () => jest.requireActual('../helpers/sqliteMemory').expoSqliteMock)`.
   - No `beforeEach`, chame `resetMemoryDatabase()` e `initializeLocalDb()` para usar o schema real.
-  - O bug conhecido de colisão de ids (F2) está documentado com `test.failing` em `tests/services/syncIdRemap.test.ts`. Quando ele for corrigido, esse teste passa a falhar: troque `test.failing` por `test`.
+  - Ids de registros criados no aparelho são negativos: nos testes, use `insert*Local` para criar registros pendentes, e linhas com id positivo e `is_new = 1` só para simular dados de versões antigas (que o `initializeLocalDb` renumera).
 - **Telas e componentes:** React Native Testing Library 14 (`tests/screens/`).
   - Na versão 14, `render` e `fireEvent` são **assíncronos**: use sempre `await`.
   - Mocke `authService`, `ThemeContext`, `@expo/vector-icons` e `react-native-safe-area-context` como em `passwordScreens.test.tsx`.
