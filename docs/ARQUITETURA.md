@@ -22,7 +22,9 @@ src/components/                   componentes reutilizáveis (AppHeader, BottomD
 src/hooks/                        lógica das telas (useBoxManejo, useBoxesList, useReports, useAutoSync, ...)
 src/services/                     dados: *Service.ts lê e grava o SQLite local; syncService.ts conversa com a API
 src/services/apiClient.ts         fetch com Bearer token; erros viram Error com .status e .data
-src/services/localDbService.ts    schema do SQLite + CRUD local (arquivo grande, ~1600 linhas)
+src/services/localDbService.ts    ponto de entrada do banco local (reexporta localDb/)
+src/services/localDb/             SQLite por assunto: database, schema (migrações), config, syncState,
+                                  apiaries, boxes, reviewReports, manejos, notifications, remotePull
 src/utils/                        utilitários (datas, política de senha, ...)
 src/voice/                        comandos de voz (contexto, rotas de voz, botão global)
 src/types/                        tipos de domínio

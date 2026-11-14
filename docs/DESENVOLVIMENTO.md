@@ -7,7 +7,7 @@ Convenções de código e de testes. A arquitetura está em [ARQUITETURA.md](ARQ
 - **Tela nova:** registre em `AppNavigator.tsx`, use `AppHeader`/`BottomDock`, coloque os estilos em `screens/styles/<Tela>.styles.ts` e use as cores do `useTheme()` (sem hex fixo no código).
 - A lógica de dados fica em hooks e services, não no JSX. Toda mutação grava no SQLite com `synced = 0` e chama `triggerSyncBackground()`.
 - Mudança de contrato com a API precisa ser feita junto no backend (`src/types/mobile-models.ts` de lá).
-- Mexeu no schema do SQLite? Adicione uma migração idempotente em `initializeLocalDb`: os usuários já têm dados no aparelho.
+- Mexeu no schema do SQLite? Adicione uma migração idempotente em `initializeLocalDb` (`services/localDb/schema.ts`): os usuários já têm dados no aparelho.
 - Botões e ícones clicáveis precisam de `accessibilityRole`, `accessibilityLabel` e área de toque de pelo menos 44–48 dp.
 - Não registre no log o token, o `currentUser` nem dados pessoais.
 - Mudou fluxo, tela, comando ou configuração de build? Atualize o README e os `docs/` na mesma entrega.
@@ -16,7 +16,8 @@ Convenções de código e de testes. A arquitetura está em [ARQUITETURA.md](ARQ
 
 - **Telas só montam a interface.** Estado e efeitos ficam em `hooks/`, dados em `services/` e estilos em `screens/styles/`.
 - Componentes com mais de ~250 linhas ou com mais de uma responsabilidade são quebrados em subcomponentes em `components/`.
-- Ao mexer em `BoxReviewScreen`, `localDbService`, `useReports` ou `pdfExportService`, extraia a parte tocada para um arquivo próprio (ex.: `localDb/apiaries.ts`).
+- O banco local fica em `services/localDb/`, um arquivo por entidade. Código novo entra no arquivo da entidade, e telas, hooks e services continuam importando de `localDbService` (que só reexporta).
+- Ao mexer em `BoxReviewScreen`, `useReports` ou `pdfExportService`, extraia a parte tocada para um arquivo próprio.
 - **Nomes** descritivos e no vocabulário do domínio (`apiary`, `box`/`caixa`, `revision`, `manejo`). Componentes em `PascalCase`, hooks começando com `use`, booleanos com `is`, `has` ou `should`.
 - **Tipos:** sem `any` em código novo. Tipe as props de cada componente, os parâmetros de navegação (`RootStackParamList`) e as respostas da API (`src/types/`).
 - **Documentação:**
