@@ -50,3 +50,8 @@ npx expo start -c
 
 - **SQLite Database**: `colmeia_digital_offline.db`
 - Migrações automáticas estruturadas para suportar apenas as tabelas dos 5 módulos ativos.
+
+## 📚 Documentação
+
+- [Arquitetura](docs/ARQUITETURA.md): estrutura, endereço da API, sincronização offline, sessão e senhas.
+- [Desenvolvimento](docs/DESENVOLVIMENTO.md): convenções de código, testes e CI.
