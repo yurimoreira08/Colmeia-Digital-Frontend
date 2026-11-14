@@ -49,6 +49,8 @@ Este é o ponto mais delicado do app.
   - **Ids locais são negativos** (o servidor só gera positivos), então a troca nunca colide com outro registro local pendente. Registros pendentes de versões antigas, com ids positivos, são renumerados uma vez no `initializeLocalDb`. Testes em `tests/services/localIds.test.ts`. Na limpeza de caixas duplicadas fica a do servidor; entre caixas só locais, a mais antiga.
 - Revisões e manejos levam `client_uuid` para que o backend não duplique registros reenviados.
 - Erro 401 pausa o sync. Erro 403 de apiário marca o registro como resolvido.
+- **Conexão:** `checkServerConnection` (em `apiClient`) consulta o `/health` com timeout de 3 s, reaproveita o resultado (30 s online, 10 s offline) e junta chamadas simultâneas. Assim, o cold start do Render não trava a abertura nem o logout. Testes em `tests/services/connectionCheck.test.ts`.
+- **Indicador no cabeçalho:** o `AppHeader` mostra o `SyncStatusButton`, alimentado por `subscribeToSyncStatus` via `useSyncStatus`. Ele indica se está sincronizando, se há alterações pendentes (com contador), se o envio falhou ou se está tudo enviado. O toque pede um sync. O `syncOfflineData` avisa os inscritos também quando adia o sync (sem rede ou sem login), para que o contador inclua o que acabou de ser criado offline.
 - Login ou cadastro de **outro usuário** limpa todo o SQLite (`handleUserSessionSwitch`). O logout também.
 
 ## Sessão
