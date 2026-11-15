@@ -56,7 +56,7 @@ Este é o ponto mais delicado do app.
 - Revisões e manejos levam `client_uuid` para que o backend não duplique registros reenviados.
 - Erro 401 pausa o sync. Erro 403 de apiário marca o registro como resolvido.
 - **Conexão:** `checkServerConnection` (em `apiClient`) consulta o `/health` com timeout de 3 s, reaproveita o resultado (30 s online, 10 s offline) e junta chamadas simultâneas. Assim, o cold start do Render não trava a abertura nem o logout. Testes em `tests/services/connectionCheck.test.ts`.
-- **Indicador no cabeçalho:** o `AppHeader` mostra o `SyncStatusButton`, alimentado por `subscribeToSyncStatus` via `useSyncStatus`. Ele indica se está sincronizando, se há alterações pendentes (com contador), se o envio falhou ou se está tudo enviado. O toque pede um sync. O `syncOfflineData` avisa os inscritos também quando adia o sync (sem rede ou sem login), para que o contador inclua o que acabou de ser criado offline.
+- **Nada fica pendente para sempre:** antes de cada rodada, `releaseOrphans` libera registros cujo pai criado offline não existe mais no aparelho (o manejo perde só o vínculo com a revisão; caixa, revisão ou manejo sem apiário ou caixa sai da fila). Manejo cuja foto local sumiu sobe sem a foto; se a foto existe e só a rede falhou, ele espera. Não há indicador de sync na tela: o envio é automático (a cada 20 s, ao voltar para o app e após cada alteração).
 - Login ou cadastro de **outro usuário** limpa todo o SQLite (`handleUserSessionSwitch`). O logout também.
 
 ## Sessão
@@ -64,6 +64,7 @@ Este é o ponto mais delicado do app.
 - O token fica **só** no `expo-secure-store` (`auth_token`).
 - O `currentUser` fica em `app_config` do SQLite, em texto puro, e é usado para entrar sem internet. Sempre grave pelo `saveCurrentUser()` do `authService`, que remove `token` e `passwordHash`. Nunca use `setLocalConfigValue("currentUser", ...)` direto.
 - O backup automático do Android está desligado (`allowBackup: false`), com teste em `tests/config/appConfig.test.ts`.
+- **Sessão expirada:** o servidor renova a sessão a cada uso (30 dias desde o último uso). Se mesmo assim o sync receber 401, `handleSessionExpired` apaga só o token e o `AppNavigator` volta ao login, que mostra o aviso. Os registros e o usuário salvo ficam: ao entrar com a mesma conta nada é apagado, e as pendências sobem. A abertura do app (Splash) também manda ao login quando há usuário salvo sem token.
 
 ## Senhas
 
@@ -72,9 +73,8 @@ Senhas novas (cadastro e redefinição) passam por `validateNewPassword()` de `s
 ## Dados pessoais (LGPD)
 
 Em Configurações:
-- **Exportar meus dados** (`services/accountService.ts`): baixa `GET /auth/export` num JSON e abre o compartilhamento do sistema.
 - **Excluir minha conta** (`components/DeleteAccountModal.tsx`): explica o que será apagado e pede a senha (enviada como digitada). `DELETE /auth/account` apaga a conta, os dados e as fotos no servidor; depois o app limpa o aparelho (`clearLocalSession`, a mesma limpeza do logout).
-- As duas exigem conexão.
+- Exige conexão. A exportação dos dados existe no backend (`GET /auth/export`), mas não aparece no app.
 
 ## Sentry
 

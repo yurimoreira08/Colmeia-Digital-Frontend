@@ -50,7 +50,6 @@ export function DeleteAccountModal({ visible, onCancel, onConfirm }: Props) {
           <Text style={styles.message}>
             Seus apiários, caixas, revisões, manejos e fotos serão apagados do servidor e deste aparelho. Não dá para desfazer.
           </Text>
-          <Text style={styles.message}>Se quiser guardar uma cópia, use antes "Exportar meus dados".</Text>
 
           <Text style={styles.label}>Digite sua senha para confirmar</Text>
           <TextInput

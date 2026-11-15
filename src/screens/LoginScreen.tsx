@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-import { login } from '../services/authService';
+import { isSessionExpired, login } from '../services/authService';
 import { useAppTheme } from '../theme/ThemeContext';
 import type { RootStackParamList } from '../types/auth';
 
@@ -28,6 +28,12 @@ export function LoginScreen({ navigation }: Props) {
   const [secureText, setSecureText] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  // Sessão expirada: explica por que o login voltou e que nada foi perdido.
+  useEffect(() => {
+    void isSessionExpired().then(setSessionExpired).catch(() => undefined);
+  }, []);
   const logoAnim = useRef(new Animated.Value(0)).current;
   const formAnim = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
@@ -117,6 +123,14 @@ export function LoginScreen({ navigation }: Props) {
             <Text style={styles.brandHeader}>COLMEIA DIGITAL</Text>
             <Text style={styles.title}>Acesse sua conta</Text>
             <Text style={styles.subtitle}>Gestão e monitoramento inteligente de apiários</Text>
+            {sessionExpired ? (
+              <View style={styles.sessionNotice} accessibilityRole="alert">
+                <MaterialCommunityIcons name="information-outline" size={20} color="#2C4251" />
+                <Text style={styles.sessionNoticeText}>
+                  Sua sessão expirou. Entre de novo: os registros guardados neste aparelho serão enviados.
+                </Text>
+              </View>
+            ) : null}
           </Animated.View>
 
           <Animated.View
@@ -341,6 +355,24 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       color: colors.accent,
       fontSize: 13,
       fontWeight: '600',
+    },
+    sessionNotice: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 12,
+      padding: 12,
+      borderRadius: 12,
+      backgroundColor: '#E6F4F5',
+      borderWidth: 1,
+      borderColor: '#9FD1D4',
+    },
+    sessionNoticeText: {
+      flex: 1,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '600',
+      color: '#2C4251',
     },
     errorText: {
       color: colors.error,

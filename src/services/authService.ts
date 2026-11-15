@@ -3,6 +3,7 @@ import { apiRequest, checkServerConnection, updateCachedUserId, updateCachedToke
 import { initializeLocalDb, getLocalConfigValue, setLocalConfigValue, clearLocalDatabase } from './localDbService';
 import { clearSessionStore } from './sessionStore';
 import { secureSet, secureDelete } from './secureStorage';
+import { emitSessionExpired } from './sessionEvents';
 import type { User } from '../types/auth';
 
 export type AuthResponse = User & { token?: string };
@@ -121,6 +122,7 @@ export async function login(params: {
     updateCachedToken(result.token);
   }
   const storedUser = await saveCurrentUser(result);
+  await setLocalConfigValue(SESSION_EXPIRED_KEY, '');
 
   // Se o usuário já aceitou os termos no aparelho mas o backend ainda não registrou:
   const acceptedLocally = await isTermsAccepted();
@@ -164,6 +166,28 @@ export async function getCurrentUser(): Promise<User | null> {
     // Ignorar falhas de leitura
   }
   return null;
+}
+
+/** Marca no app_config que a sessão expirou: o login mostra o aviso. */
+export const SESSION_EXPIRED_KEY = 'session_expired';
+
+/**
+ * Sessão expirada (401 no sync): apaga só o token e leva ao login.
+ *
+ * Os registros do aparelho e o usuário salvo ficam: ao entrar de novo com a
+ * mesma conta, nada é apagado (handleUserSessionSwitch só limpa se a conta
+ * for outra) e as pendências sobem no próximo sync.
+ */
+export async function handleSessionExpired(): Promise<void> {
+  await secureDelete('auth_token');
+  updateCachedToken(null);
+  await setLocalConfigValue(SESSION_EXPIRED_KEY, '1');
+  emitSessionExpired();
+}
+
+/** A sessão expirou e o apicultor ainda não entrou de novo? */
+export async function isSessionExpired(): Promise<boolean> {
+  return (await getLocalConfigValue(SESSION_EXPIRED_KEY)) === '1';
 }
 
 export async function logout(): Promise<void> {

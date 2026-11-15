@@ -108,6 +108,15 @@ export function createStyles(colors: AppThemeColors) {
       alignItems: 'center',
       gap: 12,
       flex: 1,
+      // Pode encolher: o nome quebra linha em vez de empurrar os botões.
+      minWidth: 0,
+      marginRight: 8,
+    },
+    boxNameArea: {
+      flex: 1,
+      minWidth: 0,
+      alignItems: 'flex-start',
+      gap: 4,
     },
     boxIconWrap: {
       width: 44,
@@ -135,6 +144,8 @@ export function createStyles(colors: AppThemeColors) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
+      // Largura garantida para os botões: o título se ajusta ao espaço que sobra.
+      flexShrink: 0,
     },
     iconBtn: {
       width: 38,

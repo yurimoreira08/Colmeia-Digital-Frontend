@@ -37,6 +37,7 @@ import { GlobalVoiceButton } from "../voice/GlobalVoiceButton";
 import { useAutoSync } from "../hooks/useAutoSync";
 import { useDeepLinking } from "../hooks/useDeepLinking";
 import { requestNotificationPermissions } from "../services/notificationsService";
+import { onSessionExpired } from "../services/sessionEvents";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -53,6 +54,18 @@ export function AppNavigator() {
 
   // Escuta deep links
   useDeepLinking(navigationRef);
+
+  // Sessão expirada no sync: volta ao login. Os registros do aparelho ficam e sobem após o login.
+  useEffect(
+    () =>
+      onSessionExpired(() => {
+        const current = navigationRef.getCurrentRoute()?.name;
+        if (navigationRef.isReady() && current !== 'Login' && current !== 'Splash') {
+          navigationRef.reset({ index: 0, routes: [{ name: 'Login' }] });
+        }
+      }),
+    [navigationRef],
+  );
 
   return (
     <VoiceCommandProvider navigationRef={navigationRef}>

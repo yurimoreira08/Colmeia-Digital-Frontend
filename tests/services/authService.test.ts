@@ -167,3 +167,37 @@ describe('bootstrapAuth limpa dados sensíveis de versões antigas', () => {
     expect(mockLocalConfig.get('currentUser')).toBe('');
   });
 });
+
+describe('sessão expirada (401 no sync)', () => {
+  it('apaga só o token: os registros do aparelho e o usuário salvo ficam, e a navegação é avisada', async () => {
+    const { onSessionExpired } = jest.requireActual('../../src/services/sessionEvents');
+    const { clearLocalDatabase } = jest.requireMock('../../src/services/localDbService');
+    const listener = jest.fn();
+    const unsubscribe = onSessionExpired(listener);
+    mockSecureStore.set('auth_token', SESSION_TOKEN);
+    mockLocalConfig.set('currentUser', JSON.stringify({ id: 7 }));
+    jest.mocked(clearLocalDatabase).mockClear();
+
+    await authService.handleSessionExpired();
+    unsubscribe();
+
+    expect(mockSecureStore.has('auth_token')).toBe(false);
+    expect(mockLocalConfig.get('currentUser')).toBe(JSON.stringify({ id: 7 }));
+    expect(clearLocalDatabase).not.toHaveBeenCalled();
+    expect(await authService.isSessionExpired()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('entrar de novo com a mesma conta não apaga os registros e tira o aviso', async () => {
+    const { clearLocalDatabase } = jest.requireMock('../../src/services/localDbService');
+    mockLocalConfig.set('currentUser', JSON.stringify({ id: 7 }));
+    mockLocalConfig.set('session_expired', '1');
+    mockApiRequest.mockResolvedValueOnce({ ...legacyAuthResponse, token: SESSION_TOKEN });
+    jest.mocked(clearLocalDatabase).mockClear();
+
+    await authService.login({ email: 'teste@example.com', password: 'senha-forte-1' });
+
+    expect(clearLocalDatabase).not.toHaveBeenCalled();
+    expect(await authService.isSessionExpired()).toBe(false);
+  });
+});

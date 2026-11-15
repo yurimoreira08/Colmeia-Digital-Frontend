@@ -1,4 +1,5 @@
 import { checkServerConnection, getCachedToken } from './apiClient';
+import { handleSessionExpired } from './authService';
 import { clearLocalDatabase, getLocalConfigValue, getUnsyncedCount, setLocalConfigValue } from './localDbService';
 import { batchPush } from './sync/batchPush';
 import { legacyPush, pushNotificationReads } from './sync/legacy';
@@ -167,8 +168,12 @@ export async function syncOfflineData(): Promise<SyncResult> {
     lastSyncTime = new Date().toISOString();
     console.log('[Sync] Sincronização do Colmeia Digital concluída com sucesso!');
   } catch (err: any) {
-    if (err instanceof SyncAuthError) console.warn('[Sync] Sessão expirada (401). Sincronização pausada.');
-    else console.error('[Sync] Falha durante a sincronização:', err);
+    if (err instanceof SyncAuthError) {
+      console.warn('[Sync] Sessão expirada (401): pedindo login de novo, sem apagar os registros do aparelho.');
+      await handleSessionExpired();
+    } else {
+      console.error('[Sync] Falha durante a sincronização:', err);
+    }
     lastError = err?.message || 'Erro durante a sincronização.';
     syncErrors.push(lastError!);
   } finally {

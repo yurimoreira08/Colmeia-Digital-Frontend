@@ -1,6 +1,6 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -8,7 +8,7 @@ import { AppHeader } from '../components/AppHeader';
 import { BottomDock } from '../components/BottomDock';
 import { ConfirmModal } from '../components/ConfirmModal';
 import { DeleteAccountModal } from '../components/DeleteAccountModal';
-import { deleteAccount, exportAccountData } from '../services/accountService';
+import { deleteAccount } from '../services/accountService';
 import { useTestDataMode } from '../config/TestDataModeContext';
 import { logout, getCurrentUser } from '../services/authService';
 import { useAppTheme } from '../theme/ThemeContext';
@@ -97,20 +97,8 @@ export function SettingsScreen({ navigation }: Props) {
     setLogoutModalVisible(true);
   }
 
-  // LGPD: exportar e excluir a conta.
+  // LGPD: excluir a conta.
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [exporting, setExporting] = useState(false);
-
-  async function handleExportData(): Promise<void> {
-    setExporting(true);
-    try {
-      await exportAccountData();
-    } catch (err: any) {
-      Alert.alert('Não foi possível exportar', err?.message || 'Tente de novo em instantes.');
-    } finally {
-      setExporting(false);
-    }
-  }
 
   async function handleDeleteAccount(password: string): Promise<void> {
     await deleteAccount(password);
@@ -295,27 +283,7 @@ export function SettingsScreen({ navigation }: Props) {
 
           <View style={styles.rowDivider} />
 
-          {/* Meus dados (LGPD) */}
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ busy: exporting }}
-            style={styles.settingRow}
-            onPress={() => void handleExportData()}
-            disabled={exporting}
-          >
-            <View style={styles.iconCircle}>
-              <MaterialCommunityIcons name="download-outline" size={22} color={PALETTE.primaryDark} />
-            </View>
-            <Text style={styles.settingTitle}>Exportar meus dados</Text>
-            {exporting ? (
-              <ActivityIndicator style={{ marginLeft: 'auto' }} color={PALETTE.primaryDark} />
-            ) : (
-              <MaterialCommunityIcons name="chevron-right" size={24} color={PALETTE.secondaryDark} style={{ marginLeft: 'auto' }} />
-            )}
-          </Pressable>
-
-          <View style={styles.rowDivider} />
-
+          {/* Dados pessoais (LGPD) */}
           <Pressable accessibilityRole="button" style={styles.settingRow} onPress={() => setDeleteModalVisible(true)}>
             <View style={[styles.iconCircle, styles.logoutIconCircle]}>
               <MaterialCommunityIcons name="account-remove-outline" size={22} color={PALETTE.danger} />

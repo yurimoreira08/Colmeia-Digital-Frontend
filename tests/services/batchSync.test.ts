@@ -17,6 +17,9 @@ import {
   setLocalConfigValue,
   updateReviewReportLocal,
 } from '../../src/services/localDbService';
+import * as FileSystem from 'expo-file-system/legacy';
+import { handleSessionExpired } from '../../src/services/authService';
+import { uploadImageToServer } from '../../src/services/storageService';
 import { syncOfflineData } from '../../src/services/syncService';
 import { queryMemory, resetMemoryDatabase } from '../helpers/sqliteMemory';
 
@@ -44,6 +47,8 @@ jest.mock('../../src/services/apiClient', () => ({
 jest.mock('../../src/services/storageService', () => ({
   uploadImageToServer: jest.fn(async () => 'https://storage.example/foto.jpg'),
 }));
+jest.mock('expo-file-system/legacy', () => ({ getInfoAsync: jest.fn(async () => ({ exists: true })) }));
+jest.mock('../../src/services/authService', () => ({ handleSessionExpired: jest.fn(async () => undefined) }));
 
 const T0 = '2026-06-01T12:00:00.000Z';
 const T1 = '2026-06-02T12:00:00.000Z';
@@ -246,5 +251,72 @@ describe('servidor sem as rotas novas', () => {
     expect(result.errors).toEqual([]);
     expect(calls('POST').map((c) => c.route)).toEqual(['POST /sync', 'POST /apiaries']);
     expect(calls('GET').map((c) => c.route.split('?')[0])).toEqual(['GET /sync/changes', 'GET /apiaries', 'GET /boxes', 'GET /revisions', 'GET /manejos', 'GET /notifications']);
+  });
+});
+
+describe('nada fica pendente para sempre', () => {
+  it('sessão expirada (401): pede login de novo e mantém os registros para enviar depois', async () => {
+    jest.mocked(handleSessionExpired).mockClear();
+    await insertApiaryLocal({ name: 'Sede', location: 'T', box_count: 1, description: '' });
+    mockRoutes['POST /sync'] = () => {
+      const error: any = new Error('Não autorizado');
+      error.status = 401;
+      throw error;
+    };
+
+    const result = await syncOfflineData();
+
+    expect(handleSessionExpired).toHaveBeenCalledTimes(1);
+    expect(result.pendingCount).toBe(1);
+    expect(rows('SELECT name, synced FROM apiaries')).toEqual([{ name: 'Sede', synced: 0 }]);
+  });
+
+  it('foto cujo arquivo sumiu do aparelho: o manejo sobe sem ela', async () => {
+    const apiaryId = await insertApiaryLocal({ name: 'Sede', location: 'T', box_count: 1, description: '' });
+    const boxId = await insertBoxLocal({ apiary_id: apiaryId, name: 'Caixa 01', position: 1 });
+    await insertManejoLocal({ ...fields(apiaryId, boxId), photo_uri: 'file:///apagada.jpg' });
+    jest.mocked(uploadImageToServer).mockRejectedValueOnce(new Error('arquivo não encontrado'));
+    jest.mocked(FileSystem.getInfoAsync).mockResolvedValueOnce({ exists: false } as never);
+    await setLocalConfigValue('sync_since', T0);
+    mockRoutes['POST /sync'] = acceptAll(10);
+    mockRoutes['GET /sync/changes'] = () => emptyChanges();
+
+    const result = await syncOfflineData();
+
+    expect(calls('POST /sync')[0].body.manejos[0].photoUri).toBeUndefined();
+    expect(result.pendingCount).toBe(0);
+  });
+
+  it('foto que existe mas não subiu (rede): o manejo espera, para não perder a foto', async () => {
+    const apiaryId = await insertApiaryLocal({ name: 'Sede', location: 'T', box_count: 1, description: '' });
+    const boxId = await insertBoxLocal({ apiary_id: apiaryId, name: 'Caixa 01', position: 1 });
+    await insertManejoLocal({ ...fields(apiaryId, boxId), photo_uri: 'file:///foto.jpg' });
+    // Sem rede o sync inteiro (o envio tenta de novo na rodada seguinte).
+    jest.mocked(uploadImageToServer).mockRejectedValue(new Error('Network request failed'));
+    await setLocalConfigValue('sync_since', T0);
+    mockRoutes['POST /sync'] = acceptAll(10);
+    mockRoutes['GET /sync/changes'] = () => emptyChanges();
+
+    const result = await syncOfflineData();
+
+    expect(rows('SELECT photo_uri, synced FROM manejos')).toEqual([{ photo_uri: 'file:///foto.jpg', synced: 0 }]);
+    expect(result.pendingCount).toBe(1);
+    jest.mocked(uploadImageToServer).mockResolvedValue('https://storage.example/foto.jpg');
+  });
+
+  it('pai criado offline que não existe mais: manejo perde só o vínculo; caixa sem apiário sai da fila', async () => {
+    const apiaryId = await insertApiaryLocal({ name: 'Sede', location: 'T', box_count: 1, description: '' });
+    const boxId = await insertBoxLocal({ apiary_id: apiaryId, name: 'Caixa 01', position: 1 });
+    await insertManejoLocal({ ...fields(apiaryId, boxId), revisao_id: -999 });
+    await insertBoxLocal({ apiary_id: -500, name: 'Órfã', position: 2 });
+    await setLocalConfigValue('sync_since', T0);
+    mockRoutes['POST /sync'] = acceptAll(10);
+    mockRoutes['GET /sync/changes'] = () => emptyChanges();
+
+    const result = await syncOfflineData();
+
+    expect(calls('POST /sync')[0].body.manejos[0].revisaoId).toBeUndefined();
+    expect(rows("SELECT * FROM boxes WHERE name = 'Órfã'")).toEqual([]);
+    expect(result.pendingCount).toBe(0);
   });
 });

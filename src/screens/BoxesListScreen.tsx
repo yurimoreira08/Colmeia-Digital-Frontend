@@ -156,22 +156,21 @@ export function BoxesListScreen({ navigation, route }: Props) {
                             color={box.isHandled ? '#059669' : PALETTE.primaryDark}
                           />
                         </View>
-                        <View style={{ flex: 1 }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                            <Text style={styles.boxName}>{box.name}</Text>
-                            {box.isHandled ? (
-                              <View style={styles.handledBadge}>
-                                <MaterialCommunityIcons name="star-four-points" size={11} color="#059669" />
-                                <Text style={styles.handledBadgeText}>
-                                  {box.modificationType === 'manejo'
-                                    ? 'Manejo recente'
-                                    : box.modificationType === 'revisao'
-                                    ? 'Revisada recente'
-                                    : 'Atualizada recentemente'}
-                                </Text>
-                              </View>
-                            ) : null}
-                          </View>
+                        {/* Nome e selo um embaixo do outro: assim o selo nunca invade os botões ao lado. */}
+                        <View style={styles.boxNameArea}>
+                          <Text style={styles.boxName}>{box.name}</Text>
+                          {box.isHandled ? (
+                            <View style={styles.handledBadge}>
+                              <MaterialCommunityIcons name="star-four-points" size={11} color="#059669" />
+                              <Text style={styles.handledBadgeText}>
+                                {box.modificationType === 'manejo'
+                                  ? 'Manejo recente'
+                                  : box.modificationType === 'revisao'
+                                  ? 'Revisada recente'
+                                  : 'Atualizada recentemente'}
+                              </Text>
+                            </View>
+                          ) : null}
                         </View>
                       </View>
 

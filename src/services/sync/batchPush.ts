@@ -10,6 +10,7 @@ import {
   insertNotificationLocal,
   updateRecordSyncStatus,
 } from '../localDbService';
+import * as FileSystem from 'expo-file-system/legacy';
 import { uploadImageToServer } from '../storageService';
 import { isAuthError, isRouteMissing, SyncAuthError, type PushOutcome } from './syncErrors';
 
@@ -54,6 +55,35 @@ const base = (row: any) => ({
 /** O pai está no servidor (id positivo) ou vai neste mesmo lote? */
 const parentReady = (ref: number | null | undefined, inBatch: Set<number>) => ref == null || ref > 0 || inBatch.has(ref);
 
+/** O arquivo local (file://) ainda existe? Falha ao consultar conta como existente (melhor esperar que perder a foto). */
+async function localFileExists(uri: string): Promise<boolean> {
+  try {
+    return (await FileSystem.getInfoAsync(uri)).exists;
+  } catch {
+    return true;
+  }
+}
+
+/**
+ * Libera pendências que nunca poderiam subir porque o pai criado offline
+ * (id negativo) não existe mais no aparelho. Sem isto ficariam na fila para
+ * sempre e o sync nunca terminaria:
+ * - manejo ligado a uma revisão que sumiu: perde só o vínculo (como no servidor);
+ * - caixa, revisão ou manejo cujo apiário ou caixa sumiu: não tem onde ser
+ *   gravado e sai do aparelho. Só acontece se o pai foi excluído aqui.
+ */
+async function releaseOrphans(): Promise<void> {
+  const db = await getLocalDb();
+  const missing = (column: string, parent: string) => `${column} < 0 AND NOT EXISTS (SELECT 1 FROM ${parent} p WHERE p.id = ${column})`;
+  await db.runAsync(`UPDATE manejos SET revisao_id = NULL WHERE ${missing('manejos.revisao_id', 'review_reports')};`);
+  for (const table of ['manejos', 'review_reports']) {
+    await db.runAsync(
+      `DELETE FROM ${table} WHERE synced = 0 AND (${missing(`${table}.caixa_id`, 'boxes')} OR ${missing(`${table}.apiary_id`, 'apiaries')});`,
+    );
+  }
+  await db.runAsync(`DELETE FROM boxes WHERE synced = 0 AND ${missing('boxes.apiary_id', 'apiaries')};`);
+}
+
 /**
  * Monta uma rodada do lote com as pendências atuais. Filhos cujo pai
  * criado offline ainda não foi enviado ficam para a rodada seguinte, quando
@@ -61,6 +91,7 @@ const parentReady = (ref: number | null | undefined, inBatch: Set<number>) => re
  */
 async function buildRound(errors: string[]) {
   const db = await getLocalDb();
+  await releaseOrphans();
   const deletionRows = await db.getAllAsync<{ id: number; table_name: string; record_id: number }>(
     'SELECT * FROM offline_deletions ORDER BY id LIMIT 100;',
   );
@@ -94,8 +125,14 @@ async function buildRound(errors: string[]) {
         console.warn('[Sync] Falha no upload da foto do manejo:', err);
       }
       if (!uploadedUrl) {
-        errors.push(`Manejo da caixa "${m.caixa_name}": falha ao enviar a foto. O envio foi adiado para não perder a foto.`);
-        continue;
+        if (await localFileExists(m.photo_uri)) {
+          // Falha de rede ou do servidor: espera o próximo sync para não perder a foto.
+          errors.push(`Manejo da caixa "${m.caixa_name}": falha ao enviar a foto. O envio foi adiado para não perder a foto.`);
+          continue;
+        }
+        // O arquivo não existe mais no aparelho: não há foto para enviar, e esperar
+        // deixaria o manejo pendente para sempre. Sobe sem a foto.
+        console.warn('[Sync] Foto do manejo não existe mais no aparelho; enviando o manejo sem ela.');
       }
       await db.runAsync('UPDATE manejos SET photo_uri = ? WHERE id = ?;', [uploadedUrl, m.id]);
       m.photo_uri = uploadedUrl;

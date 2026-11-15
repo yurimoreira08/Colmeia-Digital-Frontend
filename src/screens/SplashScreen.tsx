@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { bootstrapAuth, getCurrentUser, isTermsAccepted } from '../services/authService';
+import { getCachedToken } from '../services/apiClient';
+import { bootstrapAuth, getCurrentUser, isTermsAccepted, SESSION_EXPIRED_KEY } from '../services/authService';
+import { setLocalConfigValue } from '../services/localDbService';
 import { PALETTE } from '../theme/themes';
 import type { RootStackParamList } from '../types/auth';
 
@@ -22,6 +24,9 @@ export function AppSplashScreen({ navigation }: Props) {
 
         const termsAccepted = await isTermsAccepted();
         const currentUser = await getCurrentUser();
+        // Usuário salvo sem token: a sessão expirou. Vai ao login sem apagar os registros do aparelho.
+        const hasToken = Boolean(await getCachedToken());
+        if (currentUser && !hasToken) await setLocalConfigValue(SESSION_EXPIRED_KEY, '1');
 
         if (!mounted) {
           return;
@@ -37,7 +42,7 @@ export function AppSplashScreen({ navigation }: Props) {
             return;
           }
 
-          if (currentUser) {
+          if (currentUser && hasToken) {
             navigation.replace('Home');
             return;
           }
